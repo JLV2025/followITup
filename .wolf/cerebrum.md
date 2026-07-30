@@ -24,6 +24,10 @@
 - **[2026-07-30] SQLite WAL 连接锁**：在同一个 `sql.DB` 连接上，如果 SELECT rows 未关闭就执行 UPDATE，会导致 SQLITE_BUSY。正确做法：先用 `rows.Scan` 收集数据到 slice → `rows.Close()` → 再执行写操作。
 - **[2026-07-30] dhtmlx-gantt v10 事件不可靠**：`onAfterTaskAdd` / `onTaskCreated` 事件在 Community Edition v10 中不触发，即使 `attachEvent` 返回 handler ID。改用 React 按钮直接调 API + fetchData 刷新，绕开 gantt 事件系统。
 - **[2026-07-30] React 甘特图容器竞态**：`gantt.init()` 需要 container DOM 已挂载。如果组件在 loading 状态返回不同的 JSX（不含 container div），useEffect([]) 运行时 containerRef 为 null，gantt 永远不初始化。修复：始终渲染 container div（用 display 控制可见性）。
+- **[2026-07-30] dhtmlx-gantt $rendered_type 不可靠**：当在数据中显式设置 `type: "task"` 时，dhtmlx 不会自动检测该任务有子任务而设 `$rendered_type = "project"`。改用 `gantt.hasChild(id)` 运行时判断更可靠。
+- **[2026-07-30] useEffect 闭包捕获过期值**：gantt 初始化 useEffect([]) 内的事件处理器捕获初始 `allTasks` 状态（空数组），后续更新触发的双击事件找不到任务。修复：用 `useRef(allTasksRef)` 存储最新值，事件处理器从 ref.current 读取。
+- **[2026-07-30] 前端产物复制顺序**：build.bat 和手动构建都必须先 `npm run build` → `cp -r frontend/dist backend/cmd/server/frontend-dist` → `go build`。如果先 `go build` 再复制前端产物，嵌入式二进制仍包含旧前端。
+- **[2026-07-30] onLinkDblClick setTimeout**：dhtmlx 内部状态在事件回调中尚未更新完毕，直接调用 `deleteLink()` 会报 `Cannot read properties of undefined (reading 'id')`。修复：`setTimeout(() => deleteLink(linkId), 50)` 推迟到 dhtmlx 内部状态落定后执行。
 
 ## Decision Log
 

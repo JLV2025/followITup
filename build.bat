@@ -29,3 +29,5 @@ echo  构建完成: backend\followitup.exe
 echo  运行: backend\followitup.exe config.yaml
 echo ========================================
 cd ..
+
+pause

@@ -26,6 +26,9 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/api/auth/login", h.Login)
 	r.Post("/api/auth/change-password", withAuth(h.mid, h.ChangePassword))
 	r.Get("/api/auth/me", withAuth(h.mid, h.Me))
+	// 管理员接口
+	r.Get("/api/admin/users", withAuth(h.mid, h.AdminOnly(h.ListUsers)))
+	r.Post("/api/admin/users", withAuth(h.mid, h.AdminOnly(h.CreateUser)))
 }
 
 // withAuth 包装需要认证的 handler
@@ -70,6 +73,56 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, u)
+}
+
+// ListUsers 列出所有用户（仅管理员）
+func (h *AuthHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.svc.ListUsers()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "查询用户失败")
+		return
+	}
+	writeJSON(w, http.StatusOK, users)
+}
+
+// CreateUser 创建本地用户（仅管理员）
+func (h *AuthHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		DisplayName string `json:"display_name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+	if req.Email == "" || req.Password == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "邮箱和密码不能为空")
+		return
+	}
+	if len(req.Password) < 6 {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "密码长度不少于6位")
+		return
+	}
+	if req.DisplayName == "" {
+		req.DisplayName = req.Email
+	}
+	if err := h.svc.CreateUser(req.Email, req.Password, req.DisplayName, "local", false); err != nil {
+		writeError(w, http.StatusConflict, "DUPLICATE", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"message": "用户创建成功"})
+}
+
+// AdminOnly 包装需要管理员权限的 handler
+func (h *AuthHandler) AdminOnly(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !auth.GetIsAdmin(r.Context()) {
+			writeError(w, http.StatusForbidden, "FORBIDDEN", "仅管理员可操作")
+			return
+		}
+		next(w, r)
+	}
 }
 
 // ChangePassword 修改密码

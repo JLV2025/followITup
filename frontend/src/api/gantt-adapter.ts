@@ -72,7 +72,7 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     end_date: endDate,
     duration: duration,
     progress: (t.progress_pct || 0) / 100,
-    type: t.task_type === "milestone" ? "milestone" : "task",
+    type: t.task_type === "milestone" ? "milestone" : undefined,
     $open: true,  // 数据加载时默认展开所有分支
     status: t.status,
     assignee: t.assignee,

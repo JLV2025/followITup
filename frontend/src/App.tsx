@@ -3,8 +3,8 @@ import { useAuthStore } from "./stores/authStore";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ProjectDetail from "./pages/ProjectDetail";
-import TaskListView from "./pages/TaskListView";
 import ProjectGantt from "./pages/ProjectGantt";
+import UserManagement from "./pages/UserManagement";
 import Navbar from "./components/Navbar";
 
 function App() {
@@ -25,8 +25,8 @@ function App() {
               index
               element={<ProjectGantt readonly={!isLoggedIn} />}
             />
-            <Route path="list" element={<TaskListView />} />
           </Route>
+          <Route path="/admin/users" element={<UserManagement />} />
         </Routes>
       </main>
     </div>

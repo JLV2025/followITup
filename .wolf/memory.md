@@ -459,3 +459,61 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:46 | Created .gitignore | — | ~65 |
 | 15:46 | Created .gitignore | — | ~60 |
 | 15:47 | Edited .gitignore | 5→9 lines | ~18 |
+| 15:49 | Session end: 108 writes across 24 files (Dashboard.tsx, components.css, sqlite.go, tasks.go, server.go) | 37 reads | ~75736 tok |
+| 15:50 | Session end: 108 writes across 24 files (Dashboard.tsx, components.css, sqlite.go, tasks.go, server.go) | 37 reads | ~75736 tok |
+| 15:55 | Session end: 108 writes across 24 files (Dashboard.tsx, components.css, sqlite.go, tasks.go, server.go) | 37 reads | ~75736 tok |
+| 15:56 | Created start.bat | — | ~34 |
+| 15:56 | Session end: 109 writes across 25 files (Dashboard.tsx, components.css, sqlite.go, tasks.go, server.go) | 37 reads | ~75773 tok |
+
+## Session: 2026-07-30 15:59
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:42 | Created frontend/src/components/TaskDetailModal.tsx | — | ~4914 |
+| 16:44 | Created frontend/src/pages/ProjectGantt.tsx | — | ~4340 |
+| 16:44 | Created frontend/src/App.tsx | — | ~278 |
+| 16:44 | Created frontend/src/pages/ProjectDetail.tsx | — | ~282 |
+| 16:44 | Created frontend/src/stores/ganttStore.ts | — | ~1160 |
+| 16:45 | Edited frontend/src/styles/components.css | expanded (+189 lines) | ~952 |
+| 16:47 | Created backend/internal/api/tasks.go | — | ~2988 |
+| 16:48 | Edited frontend/src/styles/components.css | CSS: display, flex-direction, flex | ~83 |
+| 16:49 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: actual_start, actual_end | ~259 |
+| 16:49 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~33 |
+| 16:50 | Created frontend/src/pages/ProjectGantt.tsx | — | ~4320 |
+| 16:51 | 甘特图大幅重构：禁用拖拽日期/进度（改为双击弹窗编辑），集成 TaskDetailModal（支持多前置任务批量输入、日期/进度/状态/负责人/约束一站式编辑），添加缩放控件（日月季年），父任务深色粗体+禁止连线，双击连线删除，删除任务自动清理依赖，调度器改为同步执行 | App.tsx ProjectGantt.tsx TaskDetailModal.tsx ProjectDetail.tsx ganttStore.ts tasks.go components.css | 前端+后端完整编译通过，测试全过 | ~15k |
+| 16:52 | Session end: 11 writes across 7 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 11 reads | ~41019 tok |
+| 17:03 | Edited frontend/src/api/gantt-adapter.ts | inline fix | ~19 |
+| 17:04 | Edited frontend/src/components/TaskDetailModal.tsx | added 3 condition(s) | ~170 |
+| 17:05 | Edited frontend/src/pages/ProjectGantt.tsx | 12→13 lines | ~157 |
+| 17:05 | Edited frontend/src/pages/ProjectGantt.tsx | 6→8 lines | ~78 |
+| 17:06 | Created frontend/src/pages/ProjectGantt.tsx | — | ~4204 |
+| 17:07 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: display, gap, flex | ~403 |
+| 17:07 | Edited frontend/src/styles/components.css | modified not() | ~198 |
+| 17:08 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~271 |
+| 17:08 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~133 |
+| 17:08 | Edited frontend/src/pages/ProjectGantt.tsx | getTask() → hasChild() | ~100 |
+| 17:10 | Session end: 21 writes across 8 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 14 reads | ~51958 tok |
+| 17:25 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~98 |
+| 17:26 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: 0 | ~116 |
+| 17:26 | Edited backend/internal/auth/auth.go | modified boolToInt() | ~194 |
+| 17:27 | Edited backend/internal/api/auth.go | modified RegisterRoutes() | ~103 |
+| 17:27 | Edited backend/internal/api/auth.go | modified ListUsers() | ~415 |
+| 17:27 | Created frontend/src/pages/UserManagement.tsx | — | ~1313 |
+| 17:28 | Edited frontend/src/App.tsx | added 1 import(s) | ~110 |
+| 17:28 | Edited frontend/src/App.tsx | 7→8 lines | ~83 |
+| 17:28 | Edited frontend/src/components/Navbar.tsx | expanded (+7 lines) | ~238 |
+| 17:28 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: name | ~148 |
+| 17:29 | Edited frontend/src/components/TaskDetailModal.tsx | modified if() | ~89 |
+| 17:29 | Edited frontend/src/components/TaskDetailModal.tsx | expanded (+7 lines) | ~131 |
+| 17:29 | Edited backend/internal/api/auth.go | 2→1 lines | ~10 |
+| 17:32 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 18 reads | ~58195 tok |
+
+## 2026-07-30 下午（重构）
+
+| 时间 | 描述 | 文件 | 结果 |
+|------|------|------|------|
+| 16:51 | 甘特图重构：双击弹窗编辑、缩放控件、父任务禁连线、调度器同步 | ProjectGantt.tsx TaskDetailModal.tsx tasks.go 等 | OK |
+| 17:03 | allTasksRef+readonlyRef 修复闭包过期 | ProjectGantt.tsx gantt-adapter.ts | OK |
+| 17:06 | 弹窗→←缩进升级按钮 | TaskDetailModal.tsx | OK |
+| 17:30 | #列、进度数字输入、用户管理页面 | ProjectGantt.tsx UserManagement.tsx auth.go | OK |
+| 17:34 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 18 reads | ~58195 tok |

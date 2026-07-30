@@ -659,6 +659,153 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-07-30T07:39:09.863Z"
+    },
+    {
+      "id": "bug-042",
+      "timestamp": "2026-07-30T08:48:12.673Z",
+      "error_message": "CSS fix: height",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "height: 100% → calc(100vh - 120px)",
+      "fix": "Changed height: 100% → calc(100vh - 120px)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-07-30T08:48:12.673Z"
+    },
+    {
+      "id": "bug-043",
+      "timestamp": "2026-07-30T09:03:19.690Z",
+      "error_message": "Wrong reference: task should be undefined",
+      "file": "frontend/src/api/gantt-adapter.ts",
+      "root_cause": "Used \"task\" instead of \"undefined\"",
+      "fix": "Changed task → undefined",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-07-30T09:03:19.690Z"
+    },
+    {
+      "id": "bug-044",
+      "timestamp": "2026-07-30T09:07:13.924Z",
+      "error_message": "CSS fix: background, border, border-radius",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "background: #f0f7ff → var(--accent); border: 1px dashed var(--accent) → 1px solid var(--card-border); border-radius: 6px → 5px",
+      "fix": "Changed background: #f0f7ff → var(--accent); border: 1px dashed var(--accent) → 1px solid var(--card-border); border-radius: 6px → 5px",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-07-30T09:07:13.924Z"
+    },
+    {
+      "id": "bug-045",
+      "timestamp": "2026-07-30T09:08:52.592Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 10→10 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-07-30T09:08:52.592Z"
+    },
+    {
+      "id": "bug-046",
+      "timestamp": "2026-07-30T09:25:51.856Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-07-30T09:25:51.856Z"
+    },
+    {
+      "id": "bug-047",
+      "timestamp": "2026-07-30T09:29:15.417Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-07-30T09:29:15.417Z"
+    },
+    {
+      "id": "bug-048",
+      "timestamp": "2026-07-30T09:03:00+08:00",
+      "error_message": "type: task 覆盖 dhtmlx 自动检测，父任务不显示深色粗体",
+      "file": "frontend/src/api/gantt-adapter.ts",
+      "root_cause": "toGanttTask 对所有非里程碑任务设置 type: task，阻止 dhtmlx 自动 rendered_type 检测",
+      "fix": "type 改为 undefined，并用 gantt.hasChild(id) 替代 rendered_type",
+      "tags": [
+        "dhtmlx-gantt",
+        "parent-task",
+        "ts"
+      ]
+    },
+    {
+      "id": "bug-049",
+      "timestamp": "2026-07-30T09:05:00+08:00",
+      "error_message": "双击任务弹窗不出现 — allTasks 空数组",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "useEffect([]) 闭包捕获初始 allTasks=[]，后续更新不传事件处理器",
+      "fix": "用 allTasksRef 存储最新值，事件处理器从 ref.current 读取",
+      "tags": [
+        "react",
+        "closure-stale",
+        "tsx"
+      ]
+    },
+    {
+      "id": "bug-050",
+      "timestamp": "2026-07-30T09:06:00+08:00",
+      "error_message": "双击连线删除崩溃 Cannot read properties of undefined (reading id)",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "deleteLink 调用时 dhtmlx 内部状态未更新",
+      "fix": "setTimeout 推迟 50ms 执行",
+      "tags": [
+        "dhtmlx-gantt",
+        "race-condition",
+        "tsx"
+      ]
+    },
+    {
+      "id": "bug-051",
+      "timestamp": "2026-07-30T09:30:00+08:00",
+      "error_message": "先 go build 后复制前端产物导致浏览器看到旧版 UI",
+      "file": "backend/cmd/server/frontend-dist/",
+      "root_cause": "构建顺序错误：go build 在前端复制之前执行",
+      "fix": "调整顺序：npm build → cp dist → go build",
+      "tags": [
+        "build",
+        "go-embed"
+      ]
     }
   ]
 }

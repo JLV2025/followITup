@@ -199,3 +199,29 @@ func boolToInt(b bool) int {
 	}
 	return 0
 }
+
+// ListUsers 返回所有活跃用户
+func (s *Service) ListUsers() ([]models.User, error) {
+	rows, err := s.db.Query(
+		`SELECT id, login, email, display_name, auth_source, is_admin, is_active
+		 FROM users WHERE is_active = 1 ORDER BY id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var u models.User
+		var isAdmin, isActive int
+		if err := rows.Scan(&u.ID, &u.Login, &u.Email, &u.DisplayName, &u.AuthSource, &isAdmin, &isActive); err == nil {
+			u.IsAdmin = isAdmin != 0
+			u.IsActive = isActive != 0
+			users = append(users, u)
+		}
+	}
+	if users == nil {
+		users = make([]models.User, 0)
+	}
+	return users, nil
+}

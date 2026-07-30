@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-07-30T07:47:32.344Z
-> Files: 65 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-07-30T09:29:57.120Z
+> Files: 68 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -15,6 +15,7 @@
 - `config.yaml.example` (~98 tok)
 - `README.html` — FollowITup — SmartSheet-like Project Management (~2529 tok)
 - `README.md` — Project documentation (~1488 tok)
+- `start.bat` (~34 tok)
 
 ## .claude/
 
@@ -72,15 +73,15 @@
 
 ## backend/internal/api/
 
-- `auth.go` — Struct: AuthHandler (~643 tok)
+- `auth.go` — Struct: AuthHandler (~1083 tok)
 - `calendar.go` — Struct: CalendarHandler (~660 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~213 tok)
 - `projects.go` — Struct: ProjectHandler (~2470 tok)
-- `tasks.go` — Struct: TaskHandler (~2926 tok)
+- `tasks.go` — Struct: TaskHandler (~2988 tok)
 
 ## backend/internal/auth/
 
-- `auth.go` — Struct: Service (~1435 tok)
+- `auth.go` — Struct: Service (~1612 tok)
 - `middleware.go` — Struct: Middleware (~820 tok)
 
 ## backend/internal/db/
@@ -121,38 +122,40 @@
 
 ## frontend/src/
 
-- `App.tsx` — App (~310 tok)
+- `App.tsx` — App (~313 tok)
 - `index.css` — Styles: 3 rules, 10 vars (~426 tok)
 - `main.tsx` (~93 tok)
 
 ## frontend/src/api/
 
 - `client.ts` — Declares api (~170 tok)
-- `gantt-adapter.ts` — dhtmlx-gantt 数据格式适配层 (~1051 tok)
+- `gantt-adapter.ts` — dhtmlx-gantt 数据格式适配层 (~1052 tok)
 - `ws-client.ts` — WebSocket 客户端 — 实时协作 (~814 tok)
 
 ## frontend/src/components/
 
-- `Navbar.tsx` — Navbar (~234 tok)
+- `Navbar.tsx` — Navbar (~318 tok)
+- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的 ID 并逐个创建依赖 (~5372 tok)
 
 ## frontend/src/pages/
 
 - `Dashboard.tsx` — Dashboard — renders form (~3654 tok)
 - `Login.tsx` — Login — renders form (~582 tok)
-- `ProjectDetail.tsx` — ProjectDetail (~467 tok)
-- `ProjectGantt.tsx` — 添加新任务（React 按钮，不依赖 gantt 事件） (~2675 tok)
-- `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3323 tok)
+- `ProjectDetail.tsx` — ProjectDetail (~282 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~4224 tok)
+- `TaskListView.tsx` — 🗑️ 已废弃（甘特图统一工作台取代） (~3323 tok)
+- `UserManagement.tsx` — UserManagement — renders form, table (~1313 tok)
 
 ## frontend/src/stores/
 
 - `authStore.ts` — API routes: POST (1 endpoints) (~388 tok)
 - `dashboardStore.ts` — API routes: GET (2 endpoints) (~533 tok)
-- `ganttStore.ts` — 聚焦信息：某用户正在查看/编辑某任务 (~1192 tok)
+- `ganttStore.ts` — 聚焦信息：某用户正在查看/编辑某任务 (~1160 tok)
 - `settingsStore.ts` — 根据日期和财年起始月计算财年编号 (~799 tok)
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 111 rules (~3908 tok)
+- `components.css` — Styles: 111 rules (~4992 tok)
 
 ## frontend/src/utils/
 

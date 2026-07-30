@@ -7,10 +7,9 @@ import type { GanttTask, GanttLink } from "../api/gantt-adapter";
 export interface FocusInfo {
   userName: string;
   color: string;
-  expires: number; // Date.now() + 10s，超时自动清除
+  expires: number;
 }
 
-/** 用户颜色色板（循环使用） */
 const USER_COLORS = [
   "#5B8DEF", "#F5A623", "#7ED321", "#D0021B", "#BD10E0",
   "#4A90D9", "#F8E71C", "#50E3C2", "#9013FE", "#FF6B6B",
@@ -32,7 +31,6 @@ interface GanttState {
   links: GanttLink[];
   loading: boolean;
   readonly: boolean;
-  /** taskId → FocusInfo */
   focusMap: Record<number, FocusInfo>;
   fetchData: (projectId: number, readonly: boolean) => Promise<void>;
   updateTask: (id: number, changes: Partial<GanttTask>, projectId: number) => Promise<boolean>;
@@ -72,7 +70,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
 
     try {
       await api.put(`/api/projects/${projectId}/tasks/${id}`, payload);
-      // 刷新全部任务数据（因为排程引擎可能修改了其他任务日期）
+      // 调度器现已同步执行，PUT 返回后数据库已是最新状态
       const fullRes = await api.get(`/api/projects/${projectId}/tasks`);
       const data = fullRes.data.data;
       set({
@@ -93,7 +91,6 @@ export const useGanttStore = create<GanttState>((set, get) => ({
     const payload = fromGanttLink(link);
     try {
       await api.post(`/api/projects/${projectId}/dependencies`, payload);
-      // 刷新：排程引擎可能改变任务日期
       get().fetchData(projectId, get().readonly);
     } catch {
       // ignore
@@ -116,7 +113,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         [taskId]: {
           userName,
           color: getUserColor(userName),
-          expires: Date.now() + 15000, // 15 秒无心跳则清除
+          expires: Date.now() + 15000,
         },
       },
     }));

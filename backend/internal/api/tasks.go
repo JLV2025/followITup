@@ -222,13 +222,11 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 触发自动排程（仅当日期/工期变更时）
+	// 触发自动排程（同步执行，确保结果落库后再返回前端）
 	if changed := triggersReschedule(t); changed {
-		go func() {
-			if _, err := scheduler.Recalculate(h.db, t.ProjectID, t.ID); err != nil {
-				log.Printf("[Scheduler] 项目 %d 重算失败: %v", t.ProjectID, err)
-			}
-		}()
+		if _, err := scheduler.Recalculate(h.db, t.ProjectID, t.ID); err != nil {
+			log.Printf("[Scheduler] 项目 %d 重算失败: %v", t.ProjectID, err)
+		}
 	}
 
 	// 广播变更给项目内其他用户
@@ -237,11 +235,19 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, t)
 }
 
-// DeleteTask 软删除任务
+// DeleteTask 软删除任务，同时清理关联的依赖关系
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID, _ := strconv.ParseInt(chi.URLParam(r, "taskID"), 10, 64)
 	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	// 软删除任务本身
 	h.db.Exec("UPDATE tasks SET deleted_at = datetime('now') WHERE id = ?", taskID)
+
+	// 清理引用此任务的所有依赖（作为前置或后置）
+	h.db.Exec("DELETE FROM dependencies WHERE predecessor_id = ? OR successor_id = ?", taskID, taskID)
+
+	// 删除后触发排程，确保受影响的后继任务日期重算
+	h.triggerReschedule(projectID, 0)
 	h.broadcastChange(r, projectID, taskID)
 	writeJSON(w, http.StatusOK, map[string]string{"message": "已移至回收站"})
 }
@@ -282,13 +288,14 @@ func (h *TaskHandler) DeleteDependency(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"message": "依赖已删除"})
 }
 
-// loadDependencies 加载项目的所有依赖
+// loadDependencies 加载项目的所有依赖（排除已删除任务的依赖）
 func (h *TaskHandler) loadDependencies(projectID int64) ([]models.Dependency, error) {
 	rows, err := h.db.Query(
 		`SELECT d.id, d.predecessor_id, d.successor_id, d.dep_type, d.lag_days
 		 FROM dependencies d
 		 JOIN tasks t ON t.id = d.predecessor_id
-		 WHERE t.project_id = ?`, projectID)
+		 WHERE t.project_id = ? AND t.deleted_at IS NULL
+		 ORDER BY d.id`, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -347,11 +354,9 @@ func (h *TaskHandler) validateParent(parentID, projectID, excludeID int64) error
 	return nil
 }
 
-// triggerReschedule 新增依赖后触发排程
+// triggerReschedule 触发排程（同步执行）
 func (h *TaskHandler) triggerReschedule(projectID int64, taskID int64) {
-	go func() {
-		if _, err := scheduler.Recalculate(h.db, projectID, taskID); err != nil {
-			log.Printf("[Scheduler] 项目 %d 重算失败: %v", projectID, err)
-		}
-	}()
+	if _, err := scheduler.Recalculate(h.db, projectID, taskID); err != nil {
+		log.Printf("[Scheduler] 项目 %d 重算失败: %v", projectID, err)
+	}
 }

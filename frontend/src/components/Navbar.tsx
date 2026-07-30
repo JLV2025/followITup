@@ -8,9 +8,16 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-brand">
-        FollowITup
-      </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <Link to="/" className="navbar-brand">
+          FollowITup
+        </Link>
+        {isLoggedIn && user?.is_admin && (
+          <Link to="/admin/users" style={{ fontSize: 13, color: "var(--text-secondary)", textDecoration: "none" }}>
+            用户管理
+          </Link>
+        )}
+      </div>
       <div className="navbar-actions">
         {isLoggedIn ? (
           <>
