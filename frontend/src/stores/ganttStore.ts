@@ -1,0 +1,146 @@
+import { create } from "zustand";
+import api from "../api/client";
+import { toGanttTask, toGanttLink, fromGanttTask, fromGanttLink } from "../api/gantt-adapter";
+import type { GanttTask, GanttLink } from "../api/gantt-adapter";
+
+/** 聚焦信息：某用户正在查看/编辑某任务 */
+export interface FocusInfo {
+  userName: string;
+  color: string;
+  expires: number; // Date.now() + 10s，超时自动清除
+}
+
+/** 用户颜色色板（循环使用） */
+const USER_COLORS = [
+  "#5B8DEF", "#F5A623", "#7ED321", "#D0021B", "#BD10E0",
+  "#4A90D9", "#F8E71C", "#50E3C2", "#9013FE", "#FF6B6B",
+];
+
+const userColorMap = new Map<string, string>();
+let colorIndex = 0;
+
+function getUserColor(userName: string): string {
+  if (!userColorMap.has(userName)) {
+    userColorMap.set(userName, USER_COLORS[colorIndex % USER_COLORS.length]);
+    colorIndex++;
+  }
+  return userColorMap.get(userName)!;
+}
+
+interface GanttState {
+  tasks: GanttTask[];
+  links: GanttLink[];
+  loading: boolean;
+  readonly: boolean;
+  /** taskId → FocusInfo */
+  focusMap: Record<number, FocusInfo>;
+  fetchData: (projectId: number, readonly: boolean) => Promise<void>;
+  updateTask: (id: number, changes: Partial<GanttTask>, projectId: number) => Promise<boolean>;
+  addLink: (link: GanttLink, projectId: number) => Promise<void>;
+  deleteLink: (linkId: number, projectId: number) => Promise<void>;
+  setFocus: (taskId: number, userName: string) => void;
+  clearFocus: (taskId: number) => void;
+  pruneExpired: () => void;
+}
+
+export const useGanttStore = create<GanttState>((set, get) => ({
+  tasks: [],
+  links: [],
+  loading: true,
+  readonly: true,
+  focusMap: {},
+
+  fetchData: async (projectId, readonly) => {
+    set({ loading: true, readonly });
+    try {
+      const res = await api.get(`/api/projects/${projectId}/tasks`);
+      const data = res.data.data;
+      const tasks = (data.tasks || []).map((t: any) => toGanttTask(t, readonly));
+      const links = (data.dependencies || []).map((d: any) => toGanttLink(d));
+      set({ tasks, links, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+
+  updateTask: async (id, changes, projectId) => {
+    const task = get().tasks.find((t) => t.id === id);
+    if (!task) return false;
+
+    const updatedGantt = { ...task, ...changes };
+    const payload = fromGanttTask(updatedGantt);
+
+    try {
+      await api.put(`/api/projects/${projectId}/tasks/${id}`, payload);
+      // 刷新全部任务数据（因为排程引擎可能修改了其他任务日期）
+      const fullRes = await api.get(`/api/projects/${projectId}/tasks`);
+      const data = fullRes.data.data;
+      set({
+        tasks: (data.tasks || []).map((t: any) => toGanttTask(t, get().readonly)),
+        links: (data.dependencies || []).map((d: any) => toGanttLink(d)),
+      });
+      return true;
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+        alert("任务已被他人修改，数据已刷新");
+        get().fetchData(projectId, get().readonly);
+      }
+      return false;
+    }
+  },
+
+  addLink: async (link, projectId) => {
+    const payload = fromGanttLink(link);
+    try {
+      await api.post(`/api/projects/${projectId}/dependencies`, payload);
+      // 刷新：排程引擎可能改变任务日期
+      get().fetchData(projectId, get().readonly);
+    } catch {
+      // ignore
+    }
+  },
+
+  deleteLink: async (linkId, projectId) => {
+    try {
+      await api.delete(`/api/projects/${projectId}/dependencies/${linkId}`);
+      get().fetchData(projectId, get().readonly);
+    } catch {
+      // ignore
+    }
+  },
+
+  setFocus: (taskId, userName) => {
+    set((s) => ({
+      focusMap: {
+        ...s.focusMap,
+        [taskId]: {
+          userName,
+          color: getUserColor(userName),
+          expires: Date.now() + 15000, // 15 秒无心跳则清除
+        },
+      },
+    }));
+  },
+
+  clearFocus: (taskId) => {
+    set((s) => {
+      const next = { ...s.focusMap };
+      delete next[taskId];
+      return { focusMap: next };
+    });
+  },
+
+  pruneExpired: () => {
+    const now = Date.now();
+    const next: Record<number, FocusInfo> = {};
+    let changed = false;
+    for (const [id, info] of Object.entries(get().focusMap)) {
+      if (info.expires > now) {
+        next[Number(id)] = info;
+      } else {
+        changed = true;
+      }
+    }
+    if (changed) set({ focusMap: next });
+  },
+}));

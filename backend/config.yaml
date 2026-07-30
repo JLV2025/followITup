@@ -1,0 +1,21 @@
+server:
+  port: 8080
+  data_dir: "./data"
+
+fiscal:
+  year_start_month: 4
+
+auth:
+  jwt_secret: "dev-secret-change-in-production"
+  session_hours: 8
+  bcrypt_cost: 12
+
+ldap:
+  enabled: false
+  host: "dc.company.local"
+  port: 389
+  bind_dn: "CN=svc_followitup,OU=Service,DC=company,DC=local"
+  bind_password: ""
+  base_dn: "DC=company,DC=local"
+  user_filter: "(sAMAccountName=%s)"
+  attributes: ["sAMAccountName", "mail", "displayName"]

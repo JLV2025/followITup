@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FollowITup — SmartSheet-like Project Management</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --card: #fff;
+    --border: #e5e7eb;
+    --text: #1a1a1a;
+    --text2: #6b7280;
+    --accent: #3b82f6;
+    --success: #22c55e;
+    --danger: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Inter", "Microsoft YaHei UI", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; max-width: 960px; margin: 0 auto; padding: 48px 24px;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; opacity: .025; pointer-events: none; z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
+  h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+  h2 { font-size: 24px; font-weight: 600; margin-top: 40px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 18px; font-weight: 600; margin-top: 24px; margin-bottom: 10px; }
+  .tagline { font-size: 18px; color: var(--text2); margin-bottom: 32px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; background: var(--accent); color: #fff; margin-right: 6px; margin-bottom: 6px; }
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+  .feature { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .feature strong { display: block; margin-bottom: 4px; }
+  .feature span { font-size: 14px; color: var(--text2); }
+  .divider { border: none; border-top: 2px solid var(--border); margin: 48px 0 32px; }
+  code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: "SF Mono", "Fira Code", "Consolas", monospace; }
+  pre { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 12px 0; }
+  pre code { background: none; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  th { font-weight: 600; color: var(--text2); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  .lang-section { margin-top: 8px; }
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text2); }
+  @media (max-width: 640px) {
+    .features { grid-template-columns: 1fr; }
+    body { padding: 24px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>FollowITup</h1>
+<p class="tagline">SmartSheet-like project management · Single-file deployment · Gantt-driven · v0.7.28</p>
+
+<div>
+  <span class="badge">Go</span>
+  <span class="badge">React</span>
+  <span class="badge">TypeScript</span>
+  <span class="badge">SQLite</span>
+  <span class="badge">WebSocket</span>
+</div>
+
+<!-- ====== ENGLISH ====== -->
+
+<h2>What is FollowITup?</h2>
+
+<p>FollowITup is a self-hosted, Gantt-chart-driven project management tool designed for small teams (~10 users). It helps you plan timelines, track progress, auto-schedule dependencies, and share project status — all from a single <code>.exe</code> running on Windows Server.</p>
+
+<div class="features">
+  <div class="feature">
+    <strong>📊 Gantt Chart</strong>
+    <span>Drag-and-drop editing, dependency links (FS/SS/FF/SF), WBS hierarchy, critical path, today marker</span>
+  </div>
+  <div class="feature">
+    <strong>⚡ Auto-Scheduling</strong>
+    <span>Task date changes cascade automatically to successors; locked tasks stay put with conflict warnings</span>
+  </div>
+  <div class="feature">
+    <strong>📋 Dashboard</strong>
+    <span>Cross-project overview: stat cards, health indicators (R/Y/G), mini Gantt, milestones, to-do list</span>
+  </div>
+  <div class="feature">
+    <strong>📝 Task List</strong>
+    <span>Spreadsheet-style inline editing with status badges, progress bars, priority labels</span>
+  </div>
+  <div class="feature">
+    <strong>🔗 Real-time Collaboration</strong>
+    <span>WebSocket-powered; edits broadcast to all online users in the same project</span>
+  </div>
+  <div class="feature">
+    <strong>👁 Public Read-only</strong>
+    <span>Anyone with the URL can view dashboard and Gantt charts; login to edit</span>
+  </div>
+  <div class="feature">
+    <strong>🗑 Soft Delete</strong>
+    <span>Deleted projects and tasks go to recycle bin — recoverable at any time</span>
+  </div>
+  <div class="feature">
+    <strong>📅 Fiscal Year</strong>
+    <span>Projects grouped and stats calculated by fiscal year (FY)</span>
+  </div>
+</div>
+
+<h2>Quick Start</h2>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>Windows Server 2019+ or Windows 10/11</li>
+  <li>No runtime dependencies (no Java, no Node.js, no IIS)</li>
+</ul>
+
+<h3>Deployment</h3>
+<pre><code># 1. Copy files to server
+copy followitup.exe C:\followitup\
+copy config.yaml C:\followitup\
+
+# 2. Edit config.yaml — set jwt_secret to a random string
+
+# 3. Run
+C:\followitup\followitup.exe -config C:\followitup\config.yaml
+
+# 4. Open browser → http://&lt;server&gt;:8080</code></pre>
+
+<p><strong>First-run admin account:</strong> <code>admin@followitup.local</code> / <code>admin123</code></p>
+
+<h3>Run as Windows Service</h3>
+<pre><code>sc create FollowITup binPath= "C:\followitup\followitup.exe -config C:\followitup\config.yaml" start= auto
+sc start FollowITup</code></pre>
+
+<h2>Tech Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th></tr>
+  <tr><td>Backend</td><td>Go 1.22+, chi router, modernc.org/sqlite (pure Go, no CGO)</td></tr>
+  <tr><td>Frontend</td><td>React 18, TypeScript, Zustand, dhtmlx-gantt (GPL v2)</td></tr>
+  <tr><td>Auth</td><td>bcrypt + JWT (local accounts); LDAP/AD ready (config toggle)</td></tr>
+  <tr><td>Real-time</td><td>gorilla/websocket (per-project rooms)</td></tr>
+  <tr><td>Build</td><td>go:embed frontend into single .exe</td></tr>
+</table>
+
+<h2>Documentation</h2>
+<ul>
+  <li><strong>Design requirements:</strong> <code>docs/design-requirements.md</code></li>
+  <li><strong>Implementation plan &amp; progress:</strong> <code>.wolf/memory.md</code></li>
+  <li><strong>API endpoints:</strong> see <code>backend/internal/api/</code></li>
+</ul>
+
+<h2>License</h2>
+<p>dhtmlx-gantt is GPL v2. This project is for internal use.</p>
+
+<hr class="divider">
+
+<!-- ====== 中文 ====== -->
+
+<h2>这是什么？（中文）</h2>
+
+<p>FollowITup 是一个自托管的甘特图驱动项目管理工具，面向 10 人左右的小型团队。它帮助你规划时间线、跟踪进度、自动排程依赖关系，并通过浏览器分享项目状态。只需一个 <code>.exe</code> 文件即可在 Windows Server 上运行。</p>
+
+<div class="features">
+  <div class="feature">
+    <strong>📊 甘特图</strong>
+    <span>拖拽编辑任务、创建依赖连线（FS/SS/FF/SF）、WBS 层级展开折叠、关键路径高亮、今日线</span>
+  </div>
+  <div class="feature">
+    <strong>⚡ 自动排程</strong>
+    <span>任务日期变更或超期后，后续任务级联自动延期；手动锁定的任务不受影响但显示冲突标记</span>
+  </div>
+  <div class="feature">
+    <strong>📋 综合看板</strong>
+    <span>跨项目总览：统计卡片、项目健康度（红/黄/绿灯）、迷你甘特图、近期里程碑、个人待办</span>
+  </div>
+  <div class="feature">
+    <strong>📝 任务列表</strong>
+    <span>电子表格式行内编辑，状态标签、进度条、优先级一目了然</span>
+  </div>
+  <div class="feature">
+    <strong>🔗 实时协作</strong>
+    <span>WebSocket 驱动，同一项目内编辑实时广播给所有在线用户</span>
+  </div>
+  <div class="feature">
+    <strong>👁 公开只读</strong>
+    <span>任何人打开浏览器就能看到看板和甘特图，登录后可以编辑</span>
+  </div>
+  <div class="feature">
+    <strong>🗑 软删除 + 回收站</strong>
+    <span>删除的项目和任务可以恢复</span>
+  </div>
+  <div class="feature">
+    <strong>📅 财年支持</strong>
+    <span>按财年（FY）分组展示和统计</span>
+  </div>
+</div>
+
+<h2>快速上手</h2>
+
+<h3>环境要求</h3>
+<ul>
+  <li>Windows Server 2019+ 或 Windows 10/11</li>
+  <li>无需运行时依赖（无需 Java、Node.js、IIS）</li>
+</ul>
+
+<h3>部署</h3>
+<pre><code># 1. 复制文件到服务器
+copy followitup.exe C:\followitup\
+copy config.yaml C:\followitup\
+
+# 2. 修改 config.yaml — 将 jwt_secret 改为随机字符串
+
+# 3. 运行
+C:\followitup\followitup.exe -config C:\followitup\config.yaml
+
+# 4. 打开浏览器 → http://&lt;服务器地址&gt;:8080</code></pre>
+
+<p><strong>首次运行管理员账号：</strong><code>admin@followitup.local</code> / <code>admin123</code></p>
+
+<h3>注册为 Windows 服务</h3>
+<pre><code>sc create FollowITup binPath= "C:\followitup\followitup.exe -config C:\followitup\config.yaml" start= auto
+sc start FollowITup</code></pre>
+
+<h2>技术栈</h2>
+<table>
+  <tr><th>层</th><th>技术</th></tr>
+  <tr><td>后端</td><td>Go 1.22+, chi 路由, modernc.org/sqlite（纯 Go，无需 CGO）</td></tr>
+  <tr><td>前端</td><td>React 18, TypeScript, Zustand 状态管理, dhtmlx-gantt（GPL v2）</td></tr>
+  <tr><td>认证</td><td>bcrypt + JWT（本地账号）；LDAP/AD 已预留开关</td></tr>
+  <tr><td>实时</td><td>gorilla/websocket（按项目分房间广播）</td></tr>
+  <tr><td>构建</td><td>go:embed 将前端打包进单个 .exe</td></tr>
+</table>
+
+<h2>相关文档</h2>
+<ul>
+  <li><strong>设计需求：</strong><code>docs/design-requirements.md</code></li>
+  <li><strong>实施计划与进展：</strong><code>.wolf/memory.md</code> 及计划文件</li>
+  <li><strong>API 端点：</strong>详见 <code>backend/internal/api/</code> 目录</li>
+</ul>
+
+<h2>许可证</h2>
+<p>dhtmlx-gantt 使用 GPL v2 许可证。本项目仅供内部使用。</p>
+
+<div class="footer">
+  <p>FollowITup v0.7.28 · Built 2026-07-28 · Go + React + SQLite</p>
+</div>
+
+</body>
+</html>

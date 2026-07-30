@@ -1,0 +1,32 @@
+# Cerebrum
+
+> OpenWolf's learning memory. Updated automatically as the AI learns from interactions.
+> Do not edit manually unless correcting an error.
+> Last updated: 2026-07-28
+
+## User Preferences
+
+<!-- How the user likes things done. Code style, tools, patterns, communication. -->
+
+## Key Learnings
+
+- **Project:** followITup
+
+## Do-Not-Repeat
+
+<!-- Mistakes made and corrected. Each entry prevents the same mistake recurring. -->
+<!-- Format: [YYYY-MM-DD] Description of what went wrong and what to do instead. -->
+- **[2026-07-29] 财年范围计算**：`FiscalYearRange()` 中，自然年（startMonth=1）的起始日历年 = `2000+fiscalYear`（FY27→2027），跨年财年（startMonth>1）的起始日历年 = `2000+fiscalYear-1`（FY27→2026）。自然年的结束日期是同年 12-31 而非次年。`FiscalYearFromDate()` 中，自然年直接 `year-2000`，不因月份做 +1 调整。
+- **[2026-07-29] 排程多前置取max**：`forwardPass()` 中遍历后继依赖时，原先用 `candidateStart == succ.StartDate` 判断是否跳过，多前置场景下后处理的早期前置会覆盖先处理的晚期前置的结果。修复为 `candidateStart > succ.StartDate` 才更新（只推后不拉前），且队列入队移到 if 外确保始终传播。
+- **[2026-07-29] 约束倒推排程**：tasks 表新增 `constraint_type`（''/start_no_earlier_than/finish_no_later_than）和 `constraint_date` 列。前向传播整合 SNET 约束（候选日期取 max(前置候选, 约束日期)）。后向传播从叶子任务和 deadline 约束出发逆推 LS/LF。TF = LS - ES，TF < 0 表示约束冲突。calcPredecessorLF 根据 4 种依赖类型反推前驱必须满足的完成/开始日期。
+- **[2026-07-30] SQLite WAL 连接池**：`modernc.org/sqlite` 使用 WAL 模式时 `SetMaxOpenConns(1)` 会导致写操作后读请求永久挂起（curl exit 28）。WAL 需要至少 2 个连接（1 读 + 1 写 checkpoint）。改为 `SetMaxOpenConns(4)` + `SetMaxIdleConns(2)`。
+- **[2026-07-30] modernc.org/sqlite 不能 scan time.Time**：`database/sql` 的 `rows.Scan` 不支持将 TEXT 列扫描到 `time.Time`。所有模型的 CreatedAt/UpdatedAt 必须使用 `string` 类型，JSON 序列化也返回字符串。
+- **[2026-07-30] SQLite WAL 连接锁**：在同一个 `sql.DB` 连接上，如果 SELECT rows 未关闭就执行 UPDATE，会导致 SQLITE_BUSY。正确做法：先用 `rows.Scan` 收集数据到 slice → `rows.Close()` → 再执行写操作。
+- **[2026-07-30] dhtmlx-gantt v10 事件不可靠**：`onAfterTaskAdd` / `onTaskCreated` 事件在 Community Edition v10 中不触发，即使 `attachEvent` 返回 handler ID。改用 React 按钮直接调 API + fetchData 刷新，绕开 gantt 事件系统。
+- **[2026-07-30] React 甘特图容器竞态**：`gantt.init()` 需要 container DOM 已挂载。如果组件在 loading 状态返回不同的 JSX（不含 container div），useEffect([]) 运行时 containerRef 为 null，gantt 永远不初始化。修复：始终渲染 container div（用 display 控制可见性）。
+
+## Decision Log
+
+<!-- Significant technical decisions with rationale. Why X was chosen over Y. -->
+- **[2026-07-29] 财年实现策略**：财年/自然年作为展示层过滤器，不改变数据层。后端 API 同时支持 `?year=`（自然年，strftime）和 `?fy=`（财年，BETWEEN 日期范围）。前端通过 localStorage 持久化用户的显示模式偏好，Dashboard 年度选择器根据模式动态切换标签（2026年 / FY27）。财年起始月在 `config.yaml` 中配置（`fiscal.year_start_month`）。
+- **[2026-07-29] 协作感知实现策略**：类似 Excel 协同编辑的选中可见性，而非硬锁定。前端通过 WebSocket 发送 task_focus/task_blur 消息，后端 broadcastExcept 广播给房间内其他用户（排除发送者）。甘特图通过 `gantt.addTaskLayer()` 渲染聚焦标签（用户名+色条）。TaskHandler 注入 Hub，所有写操作后调用 `BroadcastTaskUpdate` 通知其他客户端刷新。旧消息超时 15 秒自动清除。

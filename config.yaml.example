@@ -1,0 +1,21 @@
+server:
+  port: 8080
+  data_dir: "./data"
+
+fiscal:
+  year_start_month: 4
+
+auth:
+  jwt_secret: "change-me-to-a-random-string"
+  session_hours: 8
+  bcrypt_cost: 12
+
+ldap:
+  enabled: false
+  host: "dc.company.local"
+  port: 389
+  bind_dn: ""
+  bind_password: ""
+  base_dn: ""
+  user_filter: "(sAMAccountName=%s)"
+  attributes: ["sAMAccountName", "mail", "displayName"]
