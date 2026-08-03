@@ -72,10 +72,12 @@ func (h *ProjectHandler) DashboardStats(w http.ResponseWriter, r *http.Request) 
 		AND t.end_date >= date('now') AND t.end_date <= date('now', '+7 days')` + filter
 	h.db.QueryRow(query, args...).Scan(&dueThisWeek)
 
-	// 整体完成率
-	query = `SELECT COALESCE(AVG(t.progress_pct), 0) FROM tasks t
+	// 整体完成率（顶层任务时长加权，子任务进度经父任务汇总体现）
+	query = `SELECT COALESCE(SUM(t.duration_days * t.progress_pct) / NULLIF(SUM(t.duration_days), 0), 0)
+		FROM tasks t
 		JOIN projects p ON p.id = t.project_id
-		WHERE p.deleted_at IS NULL AND t.deleted_at IS NULL AND p.status = 'active'` + filter
+		WHERE p.deleted_at IS NULL AND t.deleted_at IS NULL AND p.status = 'active'
+		AND (t.parent_id IS NULL OR t.parent_id = 0)` + filter
 	h.db.QueryRow(query, args...).Scan(&overallPct)
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
@@ -127,7 +129,9 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		// 补充任务统计
 		h.db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE project_id = ? AND deleted_at IS NULL`, p.ID).Scan(&p.TaskCount)
 		h.db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE project_id = ? AND deleted_at IS NULL AND status = 'completed'`, p.ID).Scan(&p.CompletedCount)
-		h.db.QueryRow(`SELECT COALESCE(AVG(progress_pct), 0) FROM tasks WHERE project_id = ? AND deleted_at IS NULL`, p.ID).Scan(&p.Progress)
+		// 项目进度：顶层任务时长加权（子任务进度经父任务汇总体现）
+		h.db.QueryRow(`SELECT COALESCE(SUM(duration_days * progress_pct) / NULLIF(SUM(duration_days), 0), 0)
+			FROM tasks WHERE project_id = ? AND deleted_at IS NULL AND (parent_id IS NULL OR parent_id = 0)`, p.ID).Scan(&p.Progress)
 		h.db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE project_id = ? AND deleted_at IS NULL AND (status = 'delayed' OR status = 'overdue')`, p.ID).Scan(&p.RiskCount)
 		p.HasRisk = p.RiskCount > 0
 		// 下一里程碑
