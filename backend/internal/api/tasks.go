@@ -40,6 +40,7 @@ func (h *TaskHandler) RegisterRoutes(r chi.Router) {
 		r.Use(h.mid.RequireAuth)
 		r.Post("/api/projects/{id}/tasks", h.CreateTask)
 		r.Put("/api/projects/{id}/tasks/{taskID}", h.UpdateTask)
+		r.Patch("/api/projects/{id}/tasks/{taskID}/sort_order", h.UpdateTaskSortOrder)
 		r.Delete("/api/projects/{id}/tasks/{taskID}", h.DeleteTask)
 		r.Post("/api/projects/{id}/dependencies", h.AddDependency)
 		r.Delete("/api/projects/{id}/dependencies/{depID}", h.DeleteDependency)
@@ -251,6 +252,43 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, t)
+}
+
+// UpdateTaskSortOrder 仅更新排序序号（拖拽排序用），带乐观锁。
+// 不触发排程、不覆盖其他字段——UpdateTask 是全列覆盖 UPDATE，不能用于排序。
+func (h *TaskHandler) UpdateTaskSortOrder(w http.ResponseWriter, r *http.Request) {
+	taskID, _ := strconv.ParseInt(chi.URLParam(r, "taskID"), 10, 64)
+	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	var body struct {
+		SortOrder int `json:"sort_order"`
+		Version   int `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+
+	result, err := h.db.Exec(
+		`UPDATE tasks SET sort_order=?, version=version+1, updated_at=datetime('now')
+		 WHERE id=? AND project_id=? AND deleted_at IS NULL AND version=?`,
+		body.SortOrder, taskID, projectID, body.Version)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "更新排序失败")
+		return
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		writeError(w, http.StatusConflict, "CONFLICT", "任务已被他人修改，请刷新后重试")
+		return
+	}
+
+	h.broadcastChange(r, projectID, taskID)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"id":         taskID,
+		"sort_order": body.SortOrder,
+		"version":    body.Version + 1,
+	})
 }
 
 // fillActualDates 实际日期自动填充：
