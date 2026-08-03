@@ -491,6 +491,184 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-03T07:30:00.000Z"
+    },
+    {
+      "id": "bug-031",
+      "timestamp": "2026-08-03T07:39:22.400Z",
+      "error_message": "CSS fix: height, clip-path",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "height: 4px → 6px; clip-path: polygon(0 0, 0 100%, 100% 50%) → polygon(100% 0, 100% 100%, 0 50%)",
+      "fix": "Changed height: 4px → 6px; clip-path: polygon(0 0, 0 100%, 100% 50%) → polygon(100% 0, 100% 100%, 0 50%)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T07:39:22.400Z"
+    },
+    {
+      "id": "bug-032",
+      "timestamp": "2026-08-03T07:39:48.048Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check) | Also: /** 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 */; // 解析 \"1,2;3 5\" 这样的输入（行号 → 数据库 id）",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-03T07:39:58.064Z"
+    },
+    {
+      "id": "bug-033",
+      "timestamp": "2026-08-03T07:40:47.970Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Had `#${pred.id} ${pred.name}`",
+      "fix": "Changed to `#${displayNo(pred.id)} ${pred.name}`",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T07:40:47.970Z"
+    },
+    {
+      "id": "bug-034",
+      "timestamp": "2026-08-03T07:41:23.007Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T07:41:23.007Z"
+    },
+    {
+      "id": "bug-035",
+      "timestamp": "2026-08-03T08:01:54.257Z",
+      "error_message": "CSS fix: top, height, clip-path",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "top: 0 → 4px; height: 6px → 4px; clip-path: polygon(100% 0, 100% 100%, 0 50%) → polygon(100% 0, 100% 100%, 0 100%)",
+      "fix": "Changed top: 0 → 4px; height: 6px → 4px; clip-path: polygon(100% 0, 100% 100%, 0 50%) → polygon(100% 0, 100% 100%, 0 100%)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T08:01:54.257Z"
+    },
+    {
+      "id": "bug-036",
+      "timestamp": "2026-08-03T08:42:37.143Z",
+      "error_message": "Wrong operator: <= should be !=",
+      "file": "backend/internal/scheduler/scheduler_test.go",
+      "root_cause": "Used \"<=\" instead of \"!=\"",
+      "fix": "Changed operator <= → !=",
+      "tags": [
+        "auto-detected",
+        "operator-fix",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T08:42:37.143Z"
+    },
+    {
+      "id": "bug-037",
+      "timestamp": "2026-08-03T08:43:32.070Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/scheduler/scheduler.go",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 64→96 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T08:43:32.070Z"
+    },
+    {
+      "id": "bug-038",
+      "timestamp": "2026-08-03T08:50:12.569Z",
+      "error_message": "Wrong reference: triggerTaskID should be startQueue",
+      "file": "backend/internal/scheduler/scheduler.go",
+      "root_cause": "Used \"triggerTaskID\" instead of \"startQueue\"",
+      "fix": "Changed triggerTaskID → startQueue",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T08:50:12.569Z"
+    },
+    {
+      "id": "bug-039",
+      "timestamp": "2026-08-03T08:56:15.768Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 9→11 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T08:56:15.768Z"
+    },
+    {
+      "id": "bug-040",
+      "timestamp": "2026-08-03T08:56:42.309Z",
+      "error_message": "Incorrect value in code",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "Had `SELECT actual_start, actual_end FROM tasks WHERE ",
+      "fix": "Changed to `SELECT COALESCE(actual_start, '",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T08:56:42.309Z"
+    },
+    {
+      "id": "bug-026",
+      "timestamp": "2026-08-03T09:00:00.000Z",
+      "error_message": "清除基线后甘特图所有任务消失（显示'点击+添加任务开始规划'）",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "ListTasks/GetTask 的 SELECT 中 baseline_*/actual_* 列无 COALESCE，清除基线把它们置 NULL 后 rows.Scan(NULL → string/int) 失败，Scan 错误被 continue 静默跳过 → tasks 返回 null → 前端显示空。任务本身未删除",
+      "fix": "SELECT 加 COALESCE(baseline_*, '')/COALESCE(actual_*, '')/COALESCE(baseline_duration_days,0)/COALESCE(baseline_progress_pct,0)；UpdateTask 的 actual 查询同样加固",
+      "tags": [
+        "sql",
+        "null-scan",
+        "baseline",
+        "tasks-list",
+        "display"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T09:00:00.000Z"
     }
   ]
 }

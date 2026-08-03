@@ -866,3 +866,34 @@ cd backend && followitup.exe config.yaml   # 启动
 ## 教训
 - **双击连线删除是用户可见功能**：误操作会删除依赖导致排程变化、基线偏差——产品行为正确，用户需知悉"基线对比"正是显示这种偏差
 - **刷新按钮有效性的判断**：视图与后端一致 = 刷新有效；数据被删改时刷新不会"恢复"——需要区分"渲染问题"与"数据问题"
+| 16:23 | Session end: 57 writes across 13 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 21 reads | ~59510 tok |
+| 16:38 | Edited frontend/src/styles/components.css | removed 13 lines | ~34 |
+| 16:38 | Edited backend/internal/scheduler/scheduler.go | 13→14 lines | ~86 |
+| 16:38 | Edited backend/internal/scheduler/scheduler.go | modified Next() | ~167 |
+| 16:39 | Edited backend/internal/scheduler/scheduler.go | modified forwardPass() | ~755 |
+| 16:40 | Edited backend/internal/scheduler/scheduler.go | 5→6 lines | ~13 |
+| 16:41 | Edited backend/internal/scheduler/scheduler.go | expanded (+8 lines) | ~148 |
+| 16:41 | Edited backend/internal/api/tasks.go | 7→11 lines | ~99 |
+| 16:42 | Edited backend/internal/scheduler/scheduler_test.go | 8→8 lines | ~93 |
+| 16:43 | Edited backend/internal/scheduler/scheduler.go | modified buildImplicitPred() | ~762 |
+| 16:43 | Edited backend/internal/scheduler/scheduler.go | 2→2 lines | ~19 |
+| 16:44 | Edited backend/internal/scheduler/scheduler.go | removed 22 lines | ~27 |
+| 16:46 | Edited backend/internal/scheduler/scheduler.go | expanded (+6 lines) | ~106 |
+| 16:47 | Edited backend/internal/scheduler/scheduler.go | modified func() | ~575 |
+| 16:49 | Edited backend/internal/scheduler/scheduler.go | 3→3 lines | ~46 |
+| 16:50 | Edited backend/internal/scheduler/scheduler.go | modified Recalculate() | ~495 |
+| 16:50 | Edited backend/internal/scheduler/scheduler.go | inline fix | ~39 |
+| 16:50 | Edited backend/internal/scheduler/scheduler.go | 3→3 lines | ~27 |
+| 16:50 | Edited backend/internal/api/tasks.go | Recalculate() → RecalculateAll() | ~59 |
+| 16:56 | Edited backend/internal/api/tasks.go | 9→11 lines | ~212 |
+| 16:56 | Edited backend/internal/api/tasks.go | 8→9 lines | ~134 |
+| 16:56 | Edited backend/internal/api/tasks.go | 2→2 lines | ~56 |
+
+## Session: 2026-08-03 17:00（四连改:隐式依赖/双向跟随/基线清除bug）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:45 | 取消基线两端短竖线（用户确认恢复原状）| components.css | 提交 27d6b3b 后续修改（本会话合并提交）| ~200 |
+| 16:50 | 排程引擎大改：TaskInfo 加 SortOrder；buildImplicitPred 隐式顺序依赖（同分支 sort_order 相邻任务隐式 FS）；forwardPass 双向跟随（candidateStart==succ.StartDate 才跳过，前置变化后继含提前自动调整）+ 多前置/隐式综合取 max（applyCandidate 闭包）；RecalculateAll 全量重算（排序变化触发）；backwardPass 加隐式边 | scheduler.go, scheduler_test.go, tasks.go | 提交 6ba9181；13 用例全过；浏览器验证子任务严格串行（29→30→47 无缝衔接）+ 父任务范围=子任务范围（28: 08-03~08-13）| ~4K |
+| 17:00 | **严重 bug 修复（bug-026）**：用户点击"清除基线"后甘特图所有任务消失——非删除！ListTasks SELECT baseline/actual 列无 COALESCE，清除基线置 NULL 后 Scan 失败被 continue 跳过 → tasks=null。修复 COALESCE + GetTask/UpdateTask 同问题加固 | tasks.go | 提交 6ba9181；14 任务完好恢复显示 | ~800 |
+| 17:05 | 解释：清除基线逻辑正确（只清 baseline 列不删任务）；任务未丢是显示 bug | — | 用户已看到任务恢复 | — |
