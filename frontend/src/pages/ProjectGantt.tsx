@@ -582,7 +582,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
               onClick={(e) => { e.stopPropagation(); setBaselineMenuOpen(!baselineMenuOpen); }}
               title="基线管理"
             >
-              基线{baselineMeta ? ` ${baselineMeta.created_at.slice(5, 10)}` : ""} ▾
+              基线{baselineMeta ? " ✓" : " ▾"}
             </button>
             {baselineMenuOpen && (
               <div className="baseline-menu" onClick={(e) => e.stopPropagation()}>
@@ -627,6 +627,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
               </div>
             )}
           </div>
+          <span className="gantt-toolbar-sep" />
           <span className="gantt-zoom-label">缩放</span>
           <button className="btn-zoom" onClick={() => handleZoom(-1)} title="缩小">−</button>
           <span className="gantt-zoom-level">{ZOOM_LABELS[zoomLevel]}</span>

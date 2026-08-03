@@ -1187,3 +1187,16 @@
 /* 极小宽度：三角折叠成菱形干扰视线，隐藏只留细条 */
 .baseline-layer-bar.no-arrow::before, .baseline-layer-bar.no-arrow::after,
 .actual-layer-bar.no-arrow::before, .actual-layer-bar.no-arrow::after { display: none; }
+
+/* 基线管理按钮：覆盖 .btn-zoom 固定 26px 宽，文案自适应；
+   已创建状态浅底深字（对比度 ~9:1），替代原深绿底白字 */
+.btn-baseline {
+  width: auto; height: 26px; padding: 0 10px;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 500;
+}
+.btn-baseline.has-baseline {
+  background: #E8F2F1; color: #14532D; border-color: #2C6E6A; font-weight: 600;
+}
+/* 工具栏分组分隔线：基线组与缩放组之间 */
+.gantt-toolbar-sep { width: 1px; height: 18px; background: var(--card-border); margin: 0 4px; }
