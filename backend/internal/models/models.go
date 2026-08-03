@@ -21,6 +21,8 @@ type Project struct {
 	StartDate   string    `json:"start_date"`
 	EndDate     string    `json:"end_date"`
 	Status      string    `json:"status"` // active | completed | archived
+	BaselineCreatedAt string `json:"baseline_created_at"`
+	BaselineCreatedBy string `json:"baseline_created_by"`
 	IsPublic    bool      `json:"is_public"`
 	DeletedAt   *string   `json:"deleted_at,omitempty"`
 	CreatedAt   string    `json:"created_at"`
@@ -42,6 +44,10 @@ type Task struct {
 	EndDate         string    `json:"end_date"`
 	DurationDays    int       `json:"duration_days"`
 	ProgressPct     float64   `json:"progress_pct"`     // 0.0 ~ 100.0
+	BaselineStartDate    string    `json:"baseline_start_date"`
+	BaselineEndDate      string    `json:"baseline_end_date"`
+	BaselineDurationDays int       `json:"baseline_duration_days"`
+	BaselineProgressPct  float64   `json:"baseline_progress_pct"`
 	ActualStart     string    `json:"actual_start"`
 	ActualEnd       string    `json:"actual_end"`
 	ManualScheduled bool      `json:"manual_scheduled"` // false=自动排程 true=手动锁定

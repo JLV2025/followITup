@@ -173,6 +173,15 @@ var migrations = []migration{
 		);
 		CREATE INDEX IF NOT EXISTS idx_calendar_date ON calendar(date);
 		`},
+	{4, `
+	-- 基线对比（v4）
+	ALTER TABLE tasks ADD COLUMN baseline_start_date TEXT;
+	ALTER TABLE tasks ADD COLUMN baseline_end_date TEXT;
+	ALTER TABLE tasks ADD COLUMN baseline_duration_days INTEGER;
+	ALTER TABLE tasks ADD COLUMN baseline_progress_pct REAL;
+	ALTER TABLE projects ADD COLUMN baseline_created_at TEXT;
+	ALTER TABLE projects ADD COLUMN baseline_created_by TEXT;
+	`},
 }
 
 // migrate 执行所有未应用的迁移
