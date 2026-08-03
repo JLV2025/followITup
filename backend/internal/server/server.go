@@ -90,6 +90,10 @@ func Run(opts Options) error {
 	taskHandler := api.NewTaskHandler(database.Conn, authMid, wsHub)
 	taskHandler.RegisterRoutes(r)
 
+	// 注册基线 API（注入 Hub 支持实时广播）
+	baselineHandler := api.NewBaselineHandler(database.Conn, authMid, wsHub)
+	baselineHandler.RegisterRoutes(r)
+
 	// 注册工作日历 API
 	calHandler := api.NewCalendarHandler(database.Conn, authMid)
 	calHandler.RegisterRoutes(r)
