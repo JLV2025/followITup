@@ -75,7 +75,18 @@ export const useGanttStore = create<GanttState>((set, get) => ({
   fetchBaselineMeta: async (projectId) => {
     try {
       const res = await api.get(`/api/projects/${projectId}/baseline`);
-      set({ baselineMeta: res.data.data || null });
+      const data = res.data.data || {};
+      if (data.baseline_created_at) {
+        set({
+          baselineMeta: {
+            created_at: data.baseline_created_at,
+            created_by: data.baseline_created_by || "",
+            task_count: Array.isArray(data.tasks) ? data.tasks.length : 0,
+          },
+        });
+      } else {
+        set({ baselineMeta: null });
+      }
     } catch {
       set({ baselineMeta: null });
     }

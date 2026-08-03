@@ -24,6 +24,8 @@ interface Task {
   progress_pct: number;
   actual_start: string;
   actual_end: string;
+  baseline_start_date: string;
+  baseline_end_date: string;
   manual_scheduled: boolean;
   constraint_type: string;
   constraint_date: string;
@@ -90,11 +92,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const [modalTask, setModalTask] = useState<Task | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
 
   const {
-    tasks, links, focusMap, loading,
+    tasks, links, focusMap, loading, baselineMeta,
     fetchData, addLink, deleteLink,
     setFocus, clearFocus, pruneExpired,
+    fetchBaselineMeta, createBaseline, clearBaseline,
   } = useGanttStore();
 
   const user = useAuthStore((s) => s.user);
@@ -126,6 +130,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   useEffect(() => {
     fetchData(projectId, readonly);
   }, [projectId, readonly, fetchData]);
+
+  useEffect(() => {
+    fetchBaselineMeta(projectId);
+  }, [projectId, fetchBaselineMeta]);
 
   // 加载原始任务列表（用于弹窗）
   useEffect(() => {
@@ -306,6 +314,37 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       return classes.join(" ");
     };
 
+    // 基线层：基线条紧贴任务条顶边、实际执行条紧贴任务条底边（均在 28px 行内）
+    // 使用 onGanttRender 替代 addTaskLayer（dhtmlx-gantt MIT Edition 不支持 addTaskLayer）
+    gantt.attachEvent("onGanttRender", function () {
+      const dataArea = document.querySelector(".gantt_data_area");
+      if (!dataArea) return;
+      // 清除上一轮渲染的层元素
+      dataArea.querySelectorAll(".baseline-layer-bar, .actual-layer-bar").forEach(function (el) { el.remove(); });
+      gantt.eachTask(function (task: Record<string, any>) {
+        // 基线条
+        if (task.baseline_start_date && task.baseline_end_date) {
+          const startX = (gantt as any).posFromDate(new Date(task.baseline_start_date));
+          const endX = (gantt as any).posFromDate(new Date(task.baseline_end_date));
+          const el = document.createElement("div");
+          el.className = "baseline-layer-bar";
+          el.style.cssText = `position:absolute; left:${startX}px; top:0px; width:${Math.max(2, endX - startX)}px; height:4px; background:#6B7280; pointer-events:none;`;
+          const row = dataArea.querySelector(`.gantt_task_row[task_id="${task.id}"]`) as HTMLElement;
+          if (row) row.appendChild(el);
+        }
+        // 实际执行条
+        if (task.actual_start) {
+          const startX = (gantt as any).posFromDate(new Date(task.actual_start));
+          const endX = (gantt as any).posFromDate(new Date(task.actual_end || task.end_date));
+          const el = document.createElement("div");
+          el.className = "actual-layer-bar";
+          el.style.cssText = `position:absolute; left:${startX}px; bottom:0px; width:${Math.max(2, endX - startX)}px; height:4px; background:#86EFAC; pointer-events:none;`;
+          const row = dataArea.querySelector(`.gantt_task_row[task_id="${task.id}"]`) as HTMLElement;
+          if (row) row.appendChild(el);
+        }
+      });
+    });
+
     // 协作聚焦层
     if (typeof (gantt as any).addTaskLayer === "function") {
       (gantt as any).addTaskLayer(function drawFocus(task: Record<string, any>): any {
@@ -469,6 +508,57 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           <span className="gantt-toolbar-hint">双击任务编辑详情 · 双击连线删除</span>
         </div>
         <div className="gantt-toolbar-right">
+          <div className="baseline-menu-wrap">
+            <button
+              className={`btn-zoom btn-baseline${baselineMeta ? " has-baseline" : ""}`}
+              onClick={() => setBaselineMenuOpen(!baselineMenuOpen)}
+              title="基线管理"
+            >
+              基线{baselineMeta ? ` ${baselineMeta.created_at.slice(5, 10)}` : ""} ▾
+            </button>
+            {baselineMenuOpen && (
+              <div className="baseline-menu">
+                {baselineMeta ? (
+                  <>
+                    <div className="baseline-menu-info">
+                      创建: {baselineMeta.created_at} · {baselineMeta.created_by}
+                      <br />快照 {baselineMeta.task_count} 个任务
+                    </div>
+                    <button
+                      className="baseline-menu-item"
+                      onClick={async () => {
+                        if (!window.confirm("重新创建基线将覆盖当前基线，确定？")) return;
+                        const ok = await createBaseline(projectId);
+                        if (ok) setBaselineMenuOpen(false);
+                      }}
+                    >
+                      重新创建基线
+                    </button>
+                    <button
+                      className="baseline-menu-item danger"
+                      onClick={async () => {
+                        if (!window.confirm("清除基线后无法恢复，确定？")) return;
+                        const ok = await clearBaseline(projectId);
+                        if (ok) setBaselineMenuOpen(false);
+                      }}
+                    >
+                      清除基线
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="baseline-menu-item"
+                    onClick={async () => {
+                      const ok = await createBaseline(projectId);
+                      if (ok) setBaselineMenuOpen(false);
+                    }}
+                  >
+                    创建基线（快照当前计划）
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           <span className="gantt-zoom-label">缩放</span>
           <button className="btn-zoom" onClick={() => handleZoom(-1)} title="缩小">−</button>
           <span className="gantt-zoom-level">{ZOOM_LABELS[zoomLevel]}</span>

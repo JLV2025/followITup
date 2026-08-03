@@ -1141,3 +1141,14 @@
   opacity: 0.25;
   cursor: default;
 }
+
+/* 基线管理下拉 */
+.baseline-menu-wrap { position: relative; }
+.baseline-menu { position: absolute; right: 0; top: 34px; background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.08); padding: 8px; z-index: 30; min-width: 200px; }
+.baseline-menu-info { font-size: 12px; color: #6b7280; padding: 4px 8px 8px; line-height: 1.6; }
+.baseline-menu-item { display: block; width: 100%; text-align: left; padding: 6px 8px; font-size: 13px;
+  background: none; border: none; border-radius: 6px; cursor: pointer; color: #1a1a1a; }
+.baseline-menu-item:hover { background: #f3f4f6; }
+.baseline-menu-item.danger { color: #ef4444; }
+.btn-baseline.has-baseline { background: #2c6e6a; color: #fff; }

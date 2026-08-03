@@ -53,6 +53,7 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.db.Query(
 		`SELECT id, project_id, COALESCE(parent_id, 0), name, description, task_type, status, priority,
 		        assignee, start_date, end_date, duration_days, progress_pct,
+		        baseline_start_date, baseline_end_date, baseline_duration_days, baseline_progress_pct,
 		        actual_start, actual_end, manual_scheduled, constraint_type, constraint_date,
 		        sort_order, version,
 		        COALESCE(deleted_at, ''), created_at, updated_at
@@ -73,6 +74,7 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 		if err := rows.Scan(&t.ID, &t.ProjectID, &parentID, &t.Name, &t.Description,
 			&t.TaskType, &t.Status, &t.Priority, &t.Assignee,
 			&t.StartDate, &t.EndDate, &t.DurationDays, &t.ProgressPct,
+				&t.BaselineStartDate, &t.BaselineEndDate, &t.BaselineDurationDays, &t.BaselineProgressPct,
 			&t.ActualStart, &t.ActualEnd, &manualSched, &t.ConstraintType, &t.ConstraintDate,
 			&t.SortOrder, &t.Version,
 			&deletedAt, &t.CreatedAt, &t.UpdatedAt); err != nil {
