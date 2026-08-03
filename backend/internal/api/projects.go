@@ -80,11 +80,18 @@ func (h *ProjectHandler) DashboardStats(w http.ResponseWriter, r *http.Request) 
 		AND (t.parent_id IS NULL OR t.parent_id = 0)` + filter
 	h.db.QueryRow(query, args...).Scan(&overallPct)
 
+	// 基线完成率（顶层任务时长加权，baseline 口径；无基线时 SUM(NULL) → 0）
+	var baselineProgress float64
+	h.db.QueryRow(`SELECT COALESCE(SUM(t.baseline_progress_pct * t.baseline_duration_days) / NULLIF(SUM(t.baseline_duration_days), 0), 0)
+		FROM tasks t WHERE t.project_id IN (SELECT id FROM projects p WHERE p.deleted_at IS NULL AND p.status = 'active'`+filter+`)
+		AND t.deleted_at IS NULL AND (t.parent_id IS NULL OR t.parent_id = 0)`, args...).Scan(&baselineProgress)
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"active_projects":  activeCount,
-		"at_risk":          atRiskCount,
-		"due_this_week":    dueThisWeek,
-		"overall_progress": int(overallPct),
+		"active_projects":   activeCount,
+		"at_risk":           atRiskCount,
+		"due_this_week":     dueThisWeek,
+		"overall_progress":  int(overallPct),
+		"baseline_progress": int(baselineProgress),
 	})
 }
 
@@ -96,7 +103,9 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 
 	baseFilter := "WHERE p.deleted_at IS NULL AND p.status = 'active'" + filter
 
-	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public
+	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public,
+		COALESCE(p.baseline_created_at, '') as baseline_created_at,
+		COALESCE(p.baseline_created_by, '') as baseline_created_by
 		FROM projects p ` + baseFilter + ` ORDER BY
 		CASE p.status WHEN 'active' THEN 0 ELSE 1 END, p.created_at DESC`
 
@@ -115,6 +124,8 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		NextMilestone  string  `json:"next_milestone"`
 		RiskCount      int     `json:"risk_count"`
 		HasRisk        bool    `json:"has_risk"`
+		BaselineEnd    string  `json:"baseline_end"`
+		DelayDays      int     `json:"delay_days"`
 	}
 
 	var projects []ProjectSummary
@@ -122,7 +133,7 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		var p ProjectSummary
 		var isPublic int
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate,
-			&p.Status, &isPublic); err != nil {
+			&p.Status, &isPublic, &p.BaselineCreatedAt, &p.BaselineCreatedBy); err != nil {
 			continue
 		}
 		p.IsPublic = isPublic != 0
@@ -137,6 +148,13 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		// 下一里程碑
 		h.db.QueryRow(`SELECT name FROM tasks WHERE project_id = ? AND deleted_at IS NULL AND task_type = 'milestone'
 			AND status != 'completed' ORDER BY end_date ASC LIMIT 1`, p.ID).Scan(&p.NextMilestone)
+
+		// 基线项目结束日期 + 偏差天数（无基线时保持零值）
+		h.db.QueryRow(`SELECT COALESCE(MAX(baseline_end_date), '') FROM tasks WHERE project_id = ? AND deleted_at IS NULL`, p.ID).Scan(&p.BaselineEnd)
+		if p.BaselineEnd != "" {
+			h.db.QueryRow(`SELECT CAST(julianday(MAX(end_date)) - julianday(MAX(baseline_end_date)) AS INTEGER)
+				FROM tasks WHERE project_id = ? AND deleted_at IS NULL`, p.ID).Scan(&p.DelayDays)
+		}
 
 		projects = append(projects, p)
 	}

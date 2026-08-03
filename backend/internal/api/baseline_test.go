@@ -81,6 +81,44 @@ func TestCreateBaselineSnapshot(t *testing.T) {
 	}
 }
 
+// 聚合统计：顶层任务 baseline 加权完成率 + 项目偏差天数
+func TestBaselineAggregates(t *testing.T) {
+	conn := testBaselineDB(t)
+	now := time.Now().Format("2006-01-02")
+	var pid int64
+	conn.Exec(`INSERT INTO projects (name, start_date, end_date, status) VALUES ('测试项目', ?, ?, 'active')`, now, now)
+	conn.QueryRow(`SELECT id FROM projects ORDER BY id DESC LIMIT 1`).Scan(&pid)
+
+	// 顶层任务 A: 10天 40%进度；子任务 B: 5天 100%（应被过滤）；顶层任务 C: 无基线列但未打基线
+	conn.Exec(`INSERT INTO tasks (project_id, name, start_date, end_date, duration_days, progress_pct, status) VALUES (?, 'A', ?, ?, 10, 40, 'in_progress')`, pid, now, now)
+	var aID int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='A'`, pid).Scan(&aID)
+	conn.Exec(`INSERT INTO tasks (project_id, parent_id, name, start_date, end_date, duration_days, progress_pct, status) VALUES (?, ?, 'B', ?, ?, 5, 100, 'completed')`, pid, aID, now, now)
+
+	if err := createBaselineTx(conn, pid, "admin"); err != nil {
+		t.Fatalf("createBaselineTx: %v", err)
+	}
+
+	// 基线完成率 = 40%（A 10天×40% / 10天），B 不参与
+	var bp float64
+	conn.QueryRow(`SELECT COALESCE(SUM(baseline_progress_pct * baseline_duration_days) / NULLIF(SUM(baseline_duration_days), 0), 0)
+		FROM tasks WHERE project_id=? AND deleted_at IS NULL AND (parent_id IS NULL OR parent_id = 0)`, pid).Scan(&bp)
+	if bp != 40 {
+		t.Errorf("baseline 完成率 = %v, want 40", bp)
+	}
+
+	// 偏差天数：把 A 的当前结束改为基线后 +3 天
+	end := time.Now().AddDate(0, 0, 3).Format("2006-01-02")
+	conn.Exec(`UPDATE tasks SET end_date=? WHERE id=?`, end, aID)
+	var delay int
+	// MAX 聚合不可用于 WHERE 子句，用 HAVING 替代
+	conn.QueryRow(`SELECT CAST(julianday(MAX(end_date)) - julianday(MAX(baseline_end_date)) AS INTEGER)
+		FROM tasks WHERE project_id=? AND deleted_at IS NULL HAVING MAX(baseline_end_date) IS NOT NULL`, pid).Scan(&delay)
+	if delay != 3 {
+		t.Errorf("偏差天数 = %d, want 3", delay)
+	}
+}
+
 // 清除基线：baseline_* 全 NULL
 func TestClearBaseline(t *testing.T) {
 	conn := testBaselineDB(t)
