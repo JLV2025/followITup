@@ -26,12 +26,22 @@ function getUserColor(userName: string): string {
   return userColorMap.get(userName)!;
 }
 
+export interface BaselineMeta {
+  created_at: string;
+  created_by: string;
+  task_count: number;
+}
+
 interface GanttState {
   tasks: GanttTask[];
   links: GanttLink[];
   loading: boolean;
   readonly: boolean;
   focusMap: Record<number, FocusInfo>;
+  baselineMeta: BaselineMeta | null;
+  fetchBaselineMeta: (projectId: number) => Promise<void>;
+  createBaseline: (projectId: number) => Promise<boolean>;
+  clearBaseline: (projectId: number) => Promise<boolean>;
   fetchData: (projectId: number, readonly: boolean) => Promise<void>;
   updateTask: (id: number, changes: Partial<GanttTask>, projectId: number) => Promise<boolean>;
   addLink: (link: GanttLink, projectId: number) => Promise<void>;
@@ -47,6 +57,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
   loading: true,
   readonly: true,
   focusMap: {},
+  baselineMeta: null,
 
   fetchData: async (projectId, readonly) => {
     set({ loading: true, readonly });
@@ -58,6 +69,39 @@ export const useGanttStore = create<GanttState>((set, get) => ({
       set({ tasks, links, loading: false });
     } catch {
       set({ loading: false });
+    }
+  },
+
+  fetchBaselineMeta: async (projectId) => {
+    try {
+      const res = await api.get(`/api/projects/${projectId}/baseline`);
+      set({ baselineMeta: res.data.data || null });
+    } catch {
+      set({ baselineMeta: null });
+    }
+  },
+
+  createBaseline: async (projectId) => {
+    try {
+      await api.post(`/api/projects/${projectId}/baseline`);
+      const s = get();
+      await s.fetchData(projectId, s.readonly);
+      await s.fetchBaselineMeta(projectId);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  clearBaseline: async (projectId) => {
+    try {
+      await api.delete(`/api/projects/${projectId}/baseline`);
+      const s = get();
+      await s.fetchData(projectId, s.readonly);
+      set({ baselineMeta: null });
+      return true;
+    } catch {
+      return false;
     }
   },
 

@@ -21,6 +21,10 @@ export interface GanttTask {
   manual_scheduled?: boolean;
   constraint_type?: string;
   constraint_date?: string;
+  baseline_start_date?: string;
+  baseline_end_date?: string;
+  actual_start?: string;
+  actual_end?: string;
   version?: number;
   $readonly?: boolean;   // 只读模式
 }
@@ -80,6 +84,10 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     manual_scheduled: t.manual_scheduled,
     constraint_type: t.constraint_type || "",
     constraint_date: t.constraint_date || "",
+    baseline_start_date: t.baseline_start_date || "",
+    baseline_end_date: t.baseline_end_date || "",
+    actual_start: t.actual_start || "",
+    actual_end: t.actual_end || "",
     version: t.version,
     $readonly: readonly,
   };
