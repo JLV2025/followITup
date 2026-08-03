@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T06:21:12.621Z
-> Files: 84 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T09:58:18.480Z
+> Files: 86 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -54,6 +54,7 @@
 
 - `review-groovy-octopus.md` — 日期格式 + 工作日历方案 (~1191 tok)
 - `smartsheet-windows-cryptic-hennessy.md` — SmartSheet-Like 项目管理系统 — 实施计划 (~2629 tok)
+- `ui-bug-1-2-rosy-lobster.md` — 倒推排程 + 工期分配弹窗 实施计划 (~1464 tok)
 
 ## backend/
 
@@ -91,7 +92,7 @@
 - `calendar.go` — Struct: CalendarHandler (~660 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~213 tok)
 - `projects.go` — Struct: ProjectHandler (~2924 tok)
-- `tasks.go` — Struct: TaskHandler (~3550 tok)
+- `tasks.go` — Struct: TaskHandler (~4020 tok)
 - `zz_debug_test.go` — TestZZDebugRecalc (~126 tok)
 
 ## backend/internal/auth/
@@ -111,9 +112,10 @@
 ## backend/internal/scheduler/
 
 - `calendar.go` — Struct: CalendarEntry (~739 tok)
-- `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~2315 tok)
-- `scheduler.go` — Struct: Dep (~3148 tok)
+- `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~2324 tok)
+- `scheduler.go` — Struct: Dep (~4159 tok)
 - `zz_debug_test.go` — TestZZDebugLoad (~267 tok)
+- `zz_restore_test.go` — TestZZRestoreDeps (~336 tok)
 
 ## backend/internal/server/
 
@@ -154,20 +156,20 @@
 ## frontend/src/api/
 
 - `client.ts` — Declares api (~170 tok)
-- `gantt-adapter.ts` — dhtmlx-gantt 数据格式适配层 (~1135 tok)
-- `ws-client.ts` — WebSocket 客户端 — 实时协作 (~814 tok)
+- `gantt-adapter.ts` — dhtmlx-gantt 数据格式适配层 (~1156 tok)
+- `ws-client.ts` — WebSocket 客户端 — 实时协作 (~899 tok)
 
 ## frontend/src/components/
 
 - `Navbar.tsx` — Navbar (~343 tok)
-- `TaskDetailModal.tsx` — 任务编辑弹窗：基本信息、日期与进度、实际日期输入、基线偏差徽标、状态/优先级、前置任务管理、约束设置 (~6500 tok)
+- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~6463 tok)
 
 ## frontend/src/pages/
 
 - `Dashboard.tsx` — Dashboard — renders form (~3975 tok)
 - `Login.tsx` — Login — renders form (~582 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~282 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~7383 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~7738 tok)
 - `TaskListView.tsx` — 🗑️ 已废弃（甘特图统一工作台取代） (~3323 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~1326 tok)
 
@@ -180,7 +182,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — 组件样式：导航、卡片、按钮、弹窗、表单、前置任务、基线菜单、基线偏差徽标等 (~5900 tok)
+- `components.css` — Styles: 107 rules (~6317 tok)
 
 ## frontend/src/utils/
 
