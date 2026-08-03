@@ -357,11 +357,12 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
               var bsPos = (gantt as any).posFromDate(bsDate);
               var bePos = (gantt as any).posFromDate(beDate);
               var el = document.createElement("div");
-              el.className = "baseline-layer-bar";
               var left = line.offsetLeft + (bsPos - taskStartPos);
               var width = Math.max(2, bePos - bsPos);
+              // 静态样式（position/height/background/pointer-events/三角）在 components.css 的 .baseline-layer-bar；窄条隐藏三角
+              el.className = "baseline-layer-bar" + (width < 10 ? " no-arrow" : "");
               // 基线条紧贴任务条顶边：任务条 offsetTop - 4px（任务条高 20px 在 28px 行内居中，task bar top = line.offsetTop）
-              el.style.cssText = "position:absolute; left:" + left + "px; top:" + (line.offsetTop - 4) + "px; width:" + width + "px; height:4px; background:#6B7280; pointer-events:none;";
+              el.style.cssText = "left:" + left + "px; top:" + (line.offsetTop - 4) + "px; width:" + width + "px;";
               barsArea.appendChild(el);
             }
           }
@@ -386,11 +387,12 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
                 aePos = (gantt as any).posFromDate(task.end_date);
               }
               var el = document.createElement("div");
-              el.className = "actual-layer-bar";
               var left = line.offsetLeft + (asPos - taskStartPos);
               var width = Math.max(2, aePos - asPos);
+              // 静态样式（position/height/background/pointer-events/三角）在 components.css 的 .actual-layer-bar；窄条隐藏三角
+              el.className = "actual-layer-bar" + (width < 10 ? " no-arrow" : "");
               // 实际执行条紧贴任务条底边：任务条 offsetTop + offsetHeight
-              el.style.cssText = "position:absolute; left:" + left + "px; top:" + (line.offsetTop + line.offsetHeight) + "px; width:" + width + "px; height:4px; background:#86EFAC; pointer-events:none;";
+              el.style.cssText = "left:" + left + "px; top:" + (line.offsetTop + line.offsetHeight) + "px; width:" + width + "px;";
               barsArea.appendChild(el);
             }
           }

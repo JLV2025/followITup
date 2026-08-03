@@ -1167,3 +1167,23 @@
 .delay-badge { font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-right: 8px; }
 .delay-badge.pos { color: #15803d; background: #f0fdf4; }
 .delay-badge.neg { color: #ef4444; background: #fef2f2; }
+
+/* 基线层/实际执行层条：动态 left/top/width 由 JS 行内设置，此处管静态样式与两端三角
+   颜色同步点：#6B7280（灰基线）、#86EFAC（绿实际条）与 ProjectGantt.tsx 注释一致 */
+.baseline-layer-bar, .actual-layer-bar {
+  position: absolute; height: 4px; pointer-events: none;
+}
+.baseline-layer-bar { background: #6B7280; }
+.actual-layer-bar { background: #86EFAC; }
+/* 两端小三角：左尖朝左、右尖朝右，各 5px 宽与条同高 */
+.baseline-layer-bar::before, .baseline-layer-bar::after,
+.actual-layer-bar::before, .actual-layer-bar::after {
+  content: ""; position: absolute; top: 0; width: 5px; height: 4px;
+}
+.baseline-layer-bar::before { left: -4px; background: #6B7280; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+.baseline-layer-bar::after  { right: -4px; background: #6B7280; clip-path: polygon(0 0, 0 100%, 100% 50%); }
+.actual-layer-bar::before   { left: -4px; background: #86EFAC; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+.actual-layer-bar::after    { right: -4px; background: #86EFAC; clip-path: polygon(0 0, 0 100%, 100% 50%); }
+/* 极小宽度：三角折叠成菱形干扰视线，隐藏只留细条 */
+.baseline-layer-bar.no-arrow::before, .baseline-layer-bar.no-arrow::after,
+.actual-layer-bar.no-arrow::before, .actual-layer-bar.no-arrow::after { display: none; }
