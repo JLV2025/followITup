@@ -815,3 +815,27 @@ cd backend && followitup.exe config.yaml   # 启动
 
 提交：1349439(PATCH端点) fec4e80(原子化) a48b108(拖拽重排) 5c21070(#列+百分比) 8e57efe(三角) e16b0fd(基线按钮) e9e849c(刷新+WS重连) 556be9b(弹窗横版)
 已知代价：# 列行号与弹窗"前置任务快速添加"的 ID 提示不对应（用户已确认，后续可改按行号解析）
+| 15:23 | Session end: 38 writes across 12 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 19 reads | ~56493 tok |
+| 15:39 | Edited frontend/src/styles/components.css | 9→10 lines | ~202 |
+| 15:39 | Edited frontend/src/components/TaskDetailModal.tsx | 7→8 lines | ~59 |
+| 15:39 | Edited frontend/src/components/TaskDetailModal.tsx | added optional chaining | ~144 |
+| 15:39 | Edited frontend/src/components/TaskDetailModal.tsx | modified if() | ~148 |
+| 15:40 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: fontSize, color, margin | ~221 |
+| 15:40 | Edited frontend/src/components/TaskDetailModal.tsx | 9→10 lines | ~90 |
+| 15:40 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: marginTop | ~250 |
+| 15:40 | Edited frontend/src/components/TaskDetailModal.tsx | 5→5 lines | ~58 |
+| 15:40 | Edited frontend/src/components/TaskDetailModal.tsx | 3→3 lines | ~55 |
+| 15:40 | Edited frontend/src/components/TaskDetailModal.tsx | 7→9 lines | ~71 |
+| 15:41 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: map, t | ~163 |
+| 15:41 | Edited frontend/src/pages/ProjectGantt.tsx | 5→6 lines | ~38 |
+| 15:41 | Edited frontend/src/pages/ProjectGantt.tsx | modified if() | ~56 |
+| 15:41 | Edited frontend/src/pages/ProjectGantt.tsx | 7→8 lines | ~76 |
+
+## Session: 2026-08-03 15:45（三连问：三角/父任务/前置序号）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:45 | 基线三角改订书钉形：clip-path 互换（左三角直角边最左、右三角直角边最右）+ 高 6px 向下凸出标定起止点 | components.css | 提交 5caab09，DOM 验证 polygon 方向正确 | ~400 |
+| 15:50 | 父任务禁用：有子任务时开始/结束/工期 disabled + 提示"由子任务自动汇总"；前置任务区显示提示并隐藏编辑 UI | TaskDetailModal.tsx | 提交 dfe8f75，浏览器验证 #2 弹窗禁用生效 | ~600 |
+| 15:55 | 前置任务行号化：ProjectGantt buildRowNumbers（gantt.eachTask 树序）传 rowNumbers prop；弹窗依赖显示 #行号 名称、快速添加输入行号解析为 id、下拉显示行号 | ProjectGantt.tsx, TaskDetailModal.tsx | 提交 dfe8f75；端到端验证：输入"1"→解析 id27 创建"#1 拆除"依赖→已删除恢复 | ~1K |
+| 15:58 | 解释用户第3问：依赖绑定数据库 id（排序变化不影响前置任务，稳定正确），行号仅是显示/输入层 | — | 用户选择"显示也改行号"已实现 | — |
