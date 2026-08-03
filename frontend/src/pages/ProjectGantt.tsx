@@ -316,31 +316,72 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // 基线层：基线条紧贴任务条顶边、实际执行条紧贴任务条底边（均在 28px 行内）
     // 使用 onGanttRender 替代 addTaskLayer（dhtmlx-gantt MIT Edition 不支持 addTaskLayer）
+    // 坐标系：append 到 .gantt_bars_area（与 .gantt_task_line 同容器），left 通过任务条 offsetLeft + 日期像素差计算
+    // 日期解析：用 new Date(y, m-1, d) 构造本地时间，避免 new Date("YYYY-MM-DD") 的 UTC 时区偏移
     gantt.attachEvent("onGanttRender", function () {
-      const dataArea = document.querySelector(".gantt_data_area");
+      var dataArea = document.querySelector(".gantt_data_area");
       if (!dataArea) return;
       // 清除上一轮渲染的层元素
-      dataArea.querySelectorAll(".baseline-layer-bar, .actual-layer-bar").forEach(function (el) { el.remove(); });
+      dataArea.querySelectorAll(".baseline-layer-bar, .actual-layer-bar").forEach(function (el: any) { el.remove(); });
+      var barsArea = dataArea.querySelector(".gantt_bars_area") as HTMLElement;
+      if (!barsArea) return;
       gantt.eachTask(function (task: Record<string, any>) {
+        // 空日期防御：任务无有效 start_date 则跳过
+        var taskStart = task.start_date;
+        if (!taskStart || (taskStart instanceof Date && isNaN(taskStart.getTime()))) return;
+        var taskStartPos = (gantt as any).posFromDate(taskStart);
+        // 查找任务条元素（用于获取坐标系基准 offsetLeft）
+        var line = barsArea.querySelector('.gantt_task_line[task_id="' + task.id + '"]') as HTMLElement;
+        if (!line) return;
+
         // 基线条
         if (task.baseline_start_date && task.baseline_end_date) {
-          const startX = (gantt as any).posFromDate(new Date(task.baseline_start_date));
-          const endX = (gantt as any).posFromDate(new Date(task.baseline_end_date));
-          const el = document.createElement("div");
-          el.className = "baseline-layer-bar";
-          el.style.cssText = `position:absolute; left:${startX}px; top:0px; width:${Math.max(2, endX - startX)}px; height:4px; background:#6B7280; pointer-events:none;`;
-          const row = dataArea.querySelector(`.gantt_task_row[task_id="${task.id}"]`) as HTMLElement;
-          if (row) row.appendChild(el);
+          var bsParts = task.baseline_start_date.split("-");
+          var beParts = task.baseline_end_date.split("-");
+          if (bsParts.length === 3 && beParts.length === 3) {
+            var bsDate = new Date(parseInt(bsParts[0]), parseInt(bsParts[1]) - 1, parseInt(bsParts[2]));
+            var beDate = new Date(parseInt(beParts[0]), parseInt(beParts[1]) - 1, parseInt(beParts[2]));
+            if (!isNaN(bsDate.getTime()) && !isNaN(beDate.getTime())) {
+              var bsPos = (gantt as any).posFromDate(bsDate);
+              var bePos = (gantt as any).posFromDate(beDate);
+              var el = document.createElement("div");
+              el.className = "baseline-layer-bar";
+              var left = line.offsetLeft + (bsPos - taskStartPos);
+              var width = Math.max(2, bePos - bsPos);
+              // 基线条紧贴任务条顶边：任务条 offsetTop - 4px（任务条高 20px 在 28px 行内居中，task bar top = line.offsetTop）
+              el.style.cssText = "position:absolute; left:" + left + "px; top:" + (line.offsetTop - 4) + "px; width:" + width + "px; height:4px; background:#6B7280; pointer-events:none;";
+              barsArea.appendChild(el);
+            }
+          }
         }
         // 实际执行条
         if (task.actual_start) {
-          const startX = (gantt as any).posFromDate(new Date(task.actual_start));
-          const endX = (gantt as any).posFromDate(new Date(task.actual_end || task.end_date));
-          const el = document.createElement("div");
-          el.className = "actual-layer-bar";
-          el.style.cssText = `position:absolute; left:${startX}px; bottom:0px; width:${Math.max(2, endX - startX)}px; height:4px; background:#86EFAC; pointer-events:none;`;
-          const row = dataArea.querySelector(`.gantt_task_row[task_id="${task.id}"]`) as HTMLElement;
-          if (row) row.appendChild(el);
+          var asParts = task.actual_start.split("-");
+          if (asParts.length === 3) {
+            var asDate = new Date(parseInt(asParts[0]), parseInt(asParts[1]) - 1, parseInt(asParts[2]));
+            if (!isNaN(asDate.getTime())) {
+              var asPos = (gantt as any).posFromDate(asDate);
+              // actual_end 是字符串（可能为空），end_date 是 Date 对象
+              var aeStr = task.actual_end;
+              var aePos = asPos;
+              if (aeStr && typeof aeStr === "string") {
+                var aeParts2 = aeStr.split("-");
+                if (aeParts2.length === 3) {
+                  var aeDate = new Date(parseInt(aeParts2[0]), parseInt(aeParts2[1]) - 1, parseInt(aeParts2[2]));
+                  if (!isNaN(aeDate.getTime())) aePos = (gantt as any).posFromDate(aeDate);
+                }
+              } else if (task.end_date instanceof Date) {
+                aePos = (gantt as any).posFromDate(task.end_date);
+              }
+              var el = document.createElement("div");
+              el.className = "actual-layer-bar";
+              var left = line.offsetLeft + (asPos - taskStartPos);
+              var width = Math.max(2, aePos - asPos);
+              // 实际执行条紧贴任务条底边：任务条 offsetTop + offsetHeight
+              el.style.cssText = "position:absolute; left:" + left + "px; top:" + (line.offsetTop + line.offsetHeight) + "px; width:" + width + "px; height:4px; background:#86EFAC; pointer-events:none;";
+              barsArea.appendChild(el);
+            }
+          }
         }
       });
     });

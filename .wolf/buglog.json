@@ -32,6 +32,213 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-03T00:38:42.581Z"
+    },
+    {
+      "id": "bug-003",
+      "timestamp": "2026-08-03T01:42:45.335Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/projects.go",
+      "root_cause": "4 lines replaced/restructured",
+      "fix": "Rewrote 8→15 lines (4 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T01:42:45.335Z"
+    },
+    {
+      "id": "bug-004",
+      "timestamp": "2026-08-03T01:55:55.462Z",
+      "error_message": "Type error",
+      "file": "frontend/src/stores/ganttStore.ts",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T01:55:55.462Z"
+    },
+    {
+      "id": "bug-005",
+      "timestamp": "2026-08-03T01:56:18.606Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/stores/ganttStore.ts",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T01:56:18.606Z"
+    },
+    {
+      "id": "bug-006",
+      "timestamp": "2026-08-03T02:00:37.971Z",
+      "error_message": "Missing guard clause",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "No early return/throw for edge case: typeof (gantt as any",
+      "fix": "Added guard clause: if (typeof (gantt as any)",
+      "tags": [
+        "auto-detected",
+        "guard-clause",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:00:37.971Z"
+    },
+    {
+      "id": "bug-007",
+      "timestamp": "2026-08-03T02:00:50.051Z",
+      "error_message": "Missing await",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Async call without await — returned Promise instead of value",
+      "fix": "Added await to async call",
+      "tags": [
+        "auto-detected",
+        "async-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:00:50.051Z"
+    },
+    {
+      "id": "bug-008",
+      "timestamp": "2026-08-03T02:00:59.440Z",
+      "error_message": "CSS fix: cursor",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "cursor: default → pointer",
+      "fix": "Changed cursor: default → pointer",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:00:59.440Z"
+    },
+    {
+      "id": "bug-009",
+      "timestamp": "2026-08-03T02:15:11.740Z",
+      "error_message": "Wrong operator: === should be &&",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Used \"===\" instead of \"&&\"",
+      "fix": "Changed operator === → &&",
+      "tags": [
+        "auto-detected",
+        "operator-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:15:11.740Z"
+    },
+    {
+      "id": "bug-015",
+      "timestamp": "2026-08-03T02:18:59.255Z",
+      "error_message": "dhtmlx-gantt MIT Edition (v10.0.0) 中 addTaskLayer 被 mo() 函数删除，协作聚焦层和基线层均无法渲染",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "dhtmlxgantt.es.js 第18317行 delete e.addTaskLayer —— MIT Edition 移除 PRO 版 layers API",
+      "fix": "改用 gantt.attachEvent(\"onGanttRender\") + gantt.eachTask() + 手动 DOM 操作实现基线/实际条绘制",
+      "tags": [
+        "dhtmlx-gantt",
+        "addTaskLayer",
+        "MIT-edition",
+        "baseline",
+        "layers"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:18:59.259Z"
+    },
+    {
+      "id": "bug-016",
+      "timestamp": "2026-08-03T02:18:59.259Z",
+      "error_message": "基线创建后 API 返回数据中 baseline_start_date 为空字符串，导致前端基线条不渲染",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "ListTasks SELECT 查询未包含 baseline_start_date/end_date/duration/progress 四列（Task 1 迁移 v4 遗漏）",
+      "fix": "SELECT 补全 baseline_start_date, baseline_end_date, baseline_duration_days, baseline_progress_pct; Scan 补全对应字段",
+      "tags": [
+        "baseline",
+        "sql",
+        "missing-columns",
+        "ListTasks"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:18:59.259Z"
+    },
+    {
+      "id": "bug-012",
+      "timestamp": "2026-08-03T02:24:26.528Z",
+      "error_message": "Incorrect value in code",
+      "file": "backend/internal/api/zz_debug_test.go",
+      "root_cause": "Had \"HTTP %d, body=%q, content-length=%d\"",
+      "fix": "Changed to \"HTTP %d, body=%q\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:24:26.528Z"
+    },
+    {
+      "id": "bug-013",
+      "timestamp": "2026-08-03T02:32:19.786Z",
+      "error_message": "CSS fix: left, width",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "left: ${startX → ${left; width: ${Math.max(2, endX - startX) → ${width",
+      "fix": "Changed left: ${startX → ${left; width: ${Math.max(2, endX - startX) → ${width",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-03T02:34:34.861Z"
+    },
+    {
+      "id": "bug-014",
+      "timestamp": "2026-08-03T02:44:10.383Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Had \"px; top:0px; width:\"",
+      "fix": "Changed to \"px; top:\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-03T02:44:18.845Z"
+    },
+    {
+      "id": "bug-015",
+      "timestamp": "2026-08-03T02:50:00.000Z",
+      "error_message": "基线层条全部堆叠到 bars_area 顶部（top:0px 固定），未按各自任务条行定位",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "onGanttRender 回调 append 到了 .gantt_bars_area（共享容器）但 top 硬编码 0px/bottom 0px，导致所有基线/实际条堆叠在容器顶部。需要基于 line.offsetTop 逐条计算 top 位置",
+      "fix": "基线条 top 改为 line.offsetTop - 4（紧贴任务条顶边），实际执行条 top 改为 line.offsetTop + line.offsetHeight（紧贴任务条底边）",
+      "tags": ["baseline", "gantt", "rendering", "positioning"],
+      "related_bugs": ["bug-012", "bug-013", "bug-014"],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T02:50:00.000Z"
     }
   ]
 }

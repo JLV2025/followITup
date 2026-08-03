@@ -3,6 +3,8 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+| 10:50 | 修复基线层 top 定位：bars_area 共享容器内基线条 top = line.offsetTop - 4、实际条 top = line.offsetTop + line.offsetHeight，前端构建+Go exe 构建成功 | frontend/src/pages/ProjectGantt.tsx | Playwright 验证：4 条基线 leftDiff=0、topDiff=-4、各自 top 不同，TS 无错误 | ~3k |
+
 ## 待办事项
 
 1. **财年定义**：FY27 = 2026-04-01 ~ 2027-03-31，年度切换和统计按财年计算
@@ -647,3 +649,72 @@ cd backend && followitup.exe config.yaml   # 启动
 | 08:38 | Edited backend/internal/api/projects.go | 5→7 lines | ~100 |
 | 08:38 | Edited backend/internal/api/projects.go | 1→3 lines | ~70 |
 | 08:40 | 收尾 7/31 遗留:编译错误已确认修复;看板进度改顶层任务时长加权(projects.go 两处 AVG→SUM加权,仅统计顶层任务) ;清理 0 字节临时文件 succ.StartDate/`{`;s1/s2.jpg 设计参考图入 .gitignore | projects.go, .gitignore, memory.md | ✅ 后端测试/前端 tsc/完整 exe 构建通过 | ~2K tok |
+| 08:42 | Session end: 2 writes across 1 files (projects.go) | 2 reads | ~5801 tok |
+
+## Session: 2026-08-03 08:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 09:00 | Created docs/superpowers/specs/2026-08-03-baseline-comparison-design.md | — | ~1132 |
+| 09:01 | Session end: 1 writes across 1 files (2026-08-03-baseline-comparison-design.md) | 3 reads | ~5699 tok |
+| 09:06 | Created docs/superpowers/plans/2026-08-03-baseline-comparison.md | — | ~8762 |
+| 09:07 | Session end: 2 writes across 2 files (2026-08-03-baseline-comparison-design.md, 2026-08-03-baseline-comparison.md) | 7 reads | ~29807 tok |
+| 09:08 | Created .superpowers/sdd/2026-08-03-baseline-comparison/progress.md | — | ~21 |
+| 09:10 | Created backend/internal/db/sqlite_test.go | — | ~268 |
+| 09:11 | Edited backend/internal/models/models.go | 2→4 lines | ~60 |
+| 09:11 | Edited backend/internal/models/models.go | 2→6 lines | ~97 |
+| 09:11 | Edited backend/internal/db/sqlite.go | expanded (+9 lines) | ~119 |
+| 09:12 | Commit: 迁移v4基线列 (fd278a5) | db/sqlite.go, db/sqlite_test.go, models/models.go | PASS | ~60 |
+| 09:12 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-1-report.md | — | ~719 |
+| 09:16 | Created backend/internal/api/baseline_test.go | — | ~265 |
+| 09:17 | Edited backend/internal/api/tasks.go | 3→4 lines | ~10 |
+| 09:17 | Edited backend/internal/api/tasks.go | 6→11 lines | ~113 |
+| 09:17 | Edited backend/internal/api/tasks.go | modified fillActualDates() | ~116 |
+| 08:40 | Task2 实际日期自动填充:fillActualDates 纯函数+UpdateTask 集成(先读旧值不覆盖),测试5例全过 | backend/internal/api/tasks.go, baseline_test.go | DONE 提交 338d659 | ~1200 |
+| 09:20 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-2-report.md | — | ~884 |
+| 09:26 | Edited backend/internal/api/baseline_test.go | modified testBaselineDB() | ~108 |
+| 09:26 | Edited backend/internal/api/baseline_test.go | modified TestCreateBaselineSnapshot() | ~663 |
+| 09:27 | Created backend/internal/api/baseline.go | — | ~1351 |
+| 09:27 | Edited backend/internal/server/server.go | 5→9 lines | ~75 |
+| 09:29 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-3-report.md | — | ~752 |
+| 09:29 | Task3 基线API: baseline.go（BaselineHandler+create/clearBaselineTx+GetBaseline）+ 路由注册 + WS广播 + 测试3例全量通过 | backend/internal/api/baseline.go, server.go, baseline_test.go | DONE 提交 53c365c | ~4200 |
+| 09:35 | 修复评审finding: 移除createBaselineTx未使用的userID参数 | backend/internal/api/baseline.go, baseline_test.go | DONE 提交 6da3b8a | ~400 |
+| 09:33 | Edited backend/internal/api/baseline.go | modified createBaselineTx() | ~31 |
+| 09:34 | Edited backend/internal/api/baseline.go | inline fix | ~19 |
+| 09:34 | Edited backend/internal/api/baseline_test.go | inline fix | ~17 |
+| 09:36 | Edited .superpowers/sdd/2026-08-03-baseline-comparison/task-3-report.md | expanded (+33 lines) | ~317 |
+| 09:41 | Edited backend/internal/api/baseline_test.go | modified TestBaselineAggregates() | ~505 |
+| 09:41 | Edited backend/internal/api/baseline_test.go | inline fix | ~17 |
+| 09:42 | Edited backend/internal/api/projects.go | expanded (+7 lines) | ~200 |
+| 09:43 | Edited backend/internal/api/projects.go | 2→4 lines | ~48 |
+| 09:43 | Edited backend/internal/api/projects.go | 2→4 lines | ~71 |
+| 09:50 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-4-report.md | — | ~1091 |
+| 09:51 | Task 4: DashboardStats基线完成率 + ProjectList基线字段 + TestBaselineAggregates | projects.go, baseline_test.go | 全量测试通过, 提交 18a043c | ~1.5k |
+| 09:51 | Edited .superpowers/sdd/2026-08-03-baseline-comparison/progress.md | modified minor() | ~68 |
+| 09:55 | Edited frontend/src/api/gantt-adapter.ts | 3→7 lines | ~53 |
+| 09:55 | Edited frontend/src/api/gantt-adapter.ts | 3→7 lines | ~85 |
+| 09:55 | Edited frontend/src/stores/ganttStore.ts | expanded (+6 lines) | ~36 |
+| 09:56 | Edited frontend/src/stores/ganttStore.ts | 2→6 lines | ~92 |
+| 09:56 | Edited frontend/src/stores/ganttStore.ts | 1→2 lines | ~11 |
+| 09:56 | Edited frontend/src/stores/ganttStore.ts | added error handling | ~260 |
+| 09:57 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-5-report.md | — | ~213 |
+| 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: baseline_start_date, baseline_end_date | ~39 |
+| 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | 3→4 lines | ~38 |
+| 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | 5→6 lines | ~61 |
+| 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | 5→9 lines | ~60 |
+| 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | added 3 condition(s) | ~406 |
+| 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | added 5 condition(s) | ~618 |
+| 10:00 | Edited frontend/src/styles/components.css | expanded (+11 lines) | ~226 |
+| 10:04 | Edited frontend/src/stores/ganttStore.ts | added 1 condition(s) | ~163 |
+| 10:09 | Edited backend/internal/api/tasks.go | 6→7 lines | ~134 |
+| 10:15 | Edited frontend/src/pages/ProjectGantt.tsx | added 2 condition(s) | ~520 |
+| 10:18 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-6-report.md | — | ~636 |
+| 10:18 | Task 6: 基线绘制层(onGanttRender替代addTaskLayer) + 工具栏基线下拉 | ProjectGantt.tsx, components.css, ganttStore.ts, tasks.go | 提交 fc335b9, tsc 无错误, 浏览器实测14条基线条+1条实际条 | ~3500 tok |
+| 10:23 | Created backend/internal/api/zz_debug_test.go | — | ~251 |
+| 10:24 | Edited backend/internal/api/zz_debug_test.go | 3→3 lines | ~26 |
+| 10:32 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: asPos | ~786 |
+| 10:34 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: el | ~1018 |
+| 10:35 | Edited frontend/src/pages/ProjectGantt.tsx | added 3 condition(s) | ~416 |
+| 10:44 | Edited frontend/src/pages/ProjectGantt.tsx | 1→2 lines | ~83 |
+| 10:44 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: top | ~75 |
+| 10:56 | Edited .superpowers/sdd/2026-08-03-baseline-comparison/task-6-report.md | expanded (+64 lines) | ~538 |

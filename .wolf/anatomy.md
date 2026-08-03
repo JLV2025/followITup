@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T00:38:42.531Z
-> Files: 68 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T02:56:31.237Z
+> Files: 81 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -37,6 +37,16 @@
 ## .claude/skills/project-status/
 
 - `SKILL.md` — 项目周报生成 (~161 tok)
+
+## .superpowers/sdd/2026-08-03-baseline-comparison/
+
+- `progress.md` — SDD ledger — plan: docs/superpowers/plans/2026-08-03-baseline-comparison.md (~205 tok)
+- `task-1-report.md` — Task 1 报告：迁移 v4（基线列）+ 模型字段 (~674 tok)
+- `task-2-report.md` — Task 2 报告：实际日期自动填充 (~829 tok)
+- `task-3-report.md` — Task 3 报告：baseline.go API (~997 tok)
+- `task-4-report.md` — Task 4 报告：DashboardStats + ProjectList 基线统计 (~1023 tok)
+- `task-5-report.md` — Task 5 实施报告: 前端适配层 + ganttStore (~200 tok)
+- `task-6-report.md` — Task 6 实施报告：甘特图基线绘制层 + 工具栏基线下拉 (~1085 tok)
 
 ## C:/Users/jingl/.claude/plans/
 
@@ -74,10 +84,13 @@
 ## backend/internal/api/
 
 - `auth.go` — Struct: AuthHandler (~1083 tok)
+- `baseline_test.go` — TestFillActualDates, TestCreateBaselineSnapshot, TestBaselineAggregates, TestClearBaseline (~1474 tok)
+- `baseline.go` — Struct: BaselineHandler (~1347 tok)
 - `calendar.go` — Struct: CalendarHandler (~660 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~213 tok)
-- `projects.go` — Struct: ProjectHandler (~2537 tok)
-- `tasks.go` — Struct: TaskHandler (~3214 tok)
+- `projects.go` — Struct: ProjectHandler (~2728 tok)
+- `tasks.go` — Struct: TaskHandler (~3503 tok)
+- `zz_debug_test.go` — TestDebugProjectList (~240 tok)
 
 ## backend/internal/auth/
 
@@ -86,11 +99,12 @@
 
 ## backend/internal/db/
 
-- `sqlite.go` — Struct: DB (~1587 tok)
+- `sqlite_test.go` — TestMigrationV4BaselineColumns (~268 tok)
+- `sqlite.go` — Struct: DB (~1778 tok)
 
 ## backend/internal/models/
 
-- `models.go` — Struct: User (~1027 tok)
+- `models.go` — Struct: User (~1122 tok)
 
 ## backend/internal/scheduler/
 
@@ -101,7 +115,7 @@
 ## backend/internal/server/
 
 - `config.go` — Struct: Config (~427 tok)
-- `server.go` — Struct: Options (~1164 tok)
+- `server.go` — Struct: Options (~1201 tok)
 
 ## backend/internal/util/
 
@@ -116,6 +130,14 @@
 
 - `design-requirements.md` — 综合报告看板 — 设计需求文档 (~2407 tok)
 
+## docs/superpowers/plans/
+
+- `2026-08-03-baseline-comparison.md` — 基线对比功能 Implementation Plan (~8214 tok)
+
+## docs/superpowers/specs/
+
+- `2026-08-03-baseline-comparison-design.md` — 基线对比功能 — 设计文档 (~1062 tok)
+
 ## frontend/
 
 - `vite.config.ts` — https://vite.dev/config/ (~106 tok)
@@ -129,7 +151,7 @@
 ## frontend/src/api/
 
 - `client.ts` — Declares api (~170 tok)
-- `gantt-adapter.ts` — dhtmlx-gantt 数据格式适配层 (~1052 tok)
+- `gantt-adapter.ts` — dhtmlx-gantt 数据格式适配层 (~1135 tok)
 - `ws-client.ts` — WebSocket 客户端 — 实时协作 (~814 tok)
 
 ## frontend/src/components/
@@ -142,7 +164,7 @@
 - `Dashboard.tsx` — Dashboard — renders form (~3789 tok)
 - `Login.tsx` — Login — renders form (~582 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~282 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~5421 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~7240 tok)
 - `TaskListView.tsx` — 🗑️ 已废弃（甘特图统一工作台取代） (~3323 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~1326 tok)
 
@@ -150,12 +172,12 @@
 
 - `authStore.ts` — API routes: POST (1 endpoints) (~388 tok)
 - `dashboardStore.ts` — API routes: GET (2 endpoints) (~533 tok)
-- `ganttStore.ts` — 聚焦信息：某用户正在查看/编辑某任务 (~1160 tok)
+- `ganttStore.ts` — 聚焦信息：某用户正在查看/编辑某任务 (~1583 tok)
 - `settingsStore.ts` — 根据日期和财年起始月计算财年编号 (~799 tok)
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 107 rules (~5489 tok)
+- `components.css` — Styles: 107 rules (~5696 tok)
 
 ## frontend/src/utils/
 
