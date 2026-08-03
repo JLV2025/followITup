@@ -443,21 +443,34 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // === 事件 ===
 
-    // 拖拽排序后同步 sort_order
-    gantt.attachEvent("onAfterTaskDrag", async function (id: unknown, mode: string) {
+    // 拖拽排序后同步 sort_order（全局重排：按当前树展示顺序重新编号，跳过未变任务）
+    gantt.attachEvent("onAfterTaskDrag", async function (_id: unknown, mode: string) {
       if (readonlyRef.current || mode !== "move") return;
       try {
-        const task = gantt.getTask(Number(id)) as Record<string, any> | null;
-        if (!task) return;
-        const parent = task.parent || 0;
-        const siblings: { taskId: number; order: number }[] = [];
-        gantt.eachTask(function (t: Record<string, any>) {
-          if ((t.parent || 0) === parent) siblings.push({ taskId: t.id as number, order: (t as any).$index || 0 });
-        });
-        for (const s of siblings) {
-          await api.put(`/api/projects/${projectId}/tasks/${s.taskId}`, { sort_order: s.order, version: 0 });
+        // eachTask 深度优先遍历 = 展示顺序
+        const order: number[] = [];
+        gantt.eachTask(function (t: Record<string, any>) { order.push(t.id as number); });
+        let changed = 0;
+        for (let idx = 0; idx < order.length; idx++) {
+          const g = gantt.getTask(order[idx]) as Record<string, any>;
+          if (g.sort_order === idx) continue; // 未变动的任务跳过，减少请求
+          try {
+            await api.patch(`/api/projects/${projectId}/tasks/${order[idx]}/sort_order`, {
+              sort_order: idx,
+              version: g.version ?? 0,
+            });
+            changed++;
+          } catch (err: any) {
+            if (err.response?.status === 409) {
+              alert("排序保存失败：任务已被他人修改，数据已刷新");
+            } else {
+              alert("排序保存失败，请重试");
+            }
+            fetchData(projectId, readonlyRef.current);
+            return;
+          }
         }
-        fetchData(projectId, readonlyRef.current);
+        if (changed > 0) fetchData(projectId, readonlyRef.current);
       } catch { /* ignore */ }
     });
 

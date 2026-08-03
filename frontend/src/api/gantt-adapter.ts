@@ -26,6 +26,7 @@ export interface GanttTask {
   actual_start?: string;
   actual_end?: string;
   version?: number;
+  sort_order?: number;   // 项目内排序序号（拖拽持久化用）
   $readonly?: boolean;   // 只读模式
 }
 
@@ -89,6 +90,7 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     actual_start: t.actual_start || "",
     actual_end: t.actual_end || "",
     version: t.version,
+    sort_order: t.sort_order,
     $readonly: readonly,
   };
 }
