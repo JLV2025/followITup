@@ -897,3 +897,20 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:50 | 排程引擎大改：TaskInfo 加 SortOrder；buildImplicitPred 隐式顺序依赖（同分支 sort_order 相邻任务隐式 FS）；forwardPass 双向跟随（candidateStart==succ.StartDate 才跳过，前置变化后继含提前自动调整）+ 多前置/隐式综合取 max（applyCandidate 闭包）；RecalculateAll 全量重算（排序变化触发）；backwardPass 加隐式边 | scheduler.go, scheduler_test.go, tasks.go | 提交 6ba9181；13 用例全过；浏览器验证子任务严格串行（29→30→47 无缝衔接）+ 父任务范围=子任务范围（28: 08-03~08-13）| ~4K |
 | 17:00 | **严重 bug 修复（bug-026）**：用户点击"清除基线"后甘特图所有任务消失——非删除！ListTasks SELECT baseline/actual 列无 COALESCE，清除基线置 NULL 后 Scan 失败被 continue 跳过 → tasks=null。修复 COALESCE + GetTask/UpdateTask 同问题加固 | tasks.go | 提交 6ba9181；14 任务完好恢复显示 | ~800 |
 | 17:05 | 解释：清除基线逻辑正确（只清 baseline 列不删任务）；任务未丢是显示 bug | — | 用户已看到任务恢复 | — |
+| 16:58 | Session end: 78 writes across 15 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 21 reads | ~64442 tok |
+| 17:12 | Edited backend/internal/scheduler/scheduler.go | CountWorkDays() → len() | ~294 |
+| 17:12 | Edited backend/internal/scheduler/scheduler.go | expanded (+11 lines) | ~114 |
+
+## Session: 2026-08-03 17:30（排程语义共识落地）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 17:20 | 排程语义三项：①显式前置完全决定（有前置任务时忽略隐式顺序，用户确认"与顺序无关"）②duration 固定（用户定义的时长不被排程改写，只调 start/end）③迭代收敛（父任务 rollup 值参与下一轮传播，5 轮上限）| scheduler.go | 提交 e0df1cb；13 测试全过 | ~1.5K |
+| 17:25 | 验证子任务→父任务联动：改 47 完成 → 父任务 28 日期自动收窄（08-13→08-12）+ 进度自动汇总 27.27%（时长加权）+ 47 duration 保持 3 | API 实测 | 联动已生效（rollup + recalcParentProgress）| ~600 |
+
+## 排程语义共识（用户确认版）
+1. 默认开始时间 = 前面任务结束时间（父任务作为前驱时用其汇总结束时间）
+2. 定义了前置（一个或多个）→ 开始时间完全由前置完成时间决定（多前置取最晚），与顺序无关
+3. duration 是用户定义属性：拖动/排程后不变，只调开始/结束；前置不变则开始不变；后续任务会因拖入任务变化（除非有显式前置）
+4. 刷新 = 按最新数据重新放置进度条 + 重新连线
+5. 子任务保存 → 父任务日期（rollup）与进度（时长加权）同步更新
