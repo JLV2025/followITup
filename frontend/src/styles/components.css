@@ -1159,3 +1159,11 @@
 .baseline-diff-badge { font-style: normal; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #f3f4f6; }
 .baseline-diff-badge.neg { color: #ef4444; background: #fef2f2; }
 .baseline-diff-badge.pos { color: #15803d; background: #f0fdf4; }
+
+/* 统计卡偏差与项目卡偏差徽标 */
+.stat-delta { font-size: 14px; font-weight: 600; margin-top: 2px; }
+.stat-delta.pos { color: #15803d; }
+.stat-delta.neg { color: #ef4444; }
+.delay-badge { font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-right: 8px; }
+.delay-badge.pos { color: #15803d; background: #f0fdf4; }
+.delay-badge.neg { color: #ef4444; background: #fef2f2; }

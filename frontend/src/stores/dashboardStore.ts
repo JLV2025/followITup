@@ -7,6 +7,8 @@ interface DashboardStats {
   at_risk: number;
   due_this_week: number;
   overall_progress: number;
+  baseline_progress: number;
+  has_baseline: boolean;
 }
 
 interface ProjectSummary {
@@ -22,6 +24,8 @@ interface ProjectSummary {
   next_milestone: string;
   risk_count: number;
   has_risk: boolean;
+  baseline_created_at: string;
+  delay_days: number;
 }
 
 interface DashboardState {

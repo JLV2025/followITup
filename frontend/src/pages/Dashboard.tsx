@@ -137,6 +137,12 @@ export default function Dashboard() {
           <span className="stat-value">
             {stats?.overall_progress ?? 0}%
           </span>
+          {stats && stats.has_baseline && (
+            <div className={`stat-delta ${stats.overall_progress - stats.baseline_progress >= 0 ? "pos" : "neg"}`}>
+              Δ {stats.overall_progress - stats.baseline_progress >= 0 ? "+" : ""}
+              {Math.round(stats.overall_progress - stats.baseline_progress)}%
+            </div>
+          )}
           <div className="stat-progress-ring">
             <svg width="48" height="48" viewBox="0 0 48 48">
               <circle cx="24" cy="24" r="20" fill="none" stroke="var(--bg-light)" strokeWidth="4" />
@@ -220,6 +226,11 @@ export default function Dashboard() {
                       style={{ background: statusColor(p) }}
                     />
                     <span className="project-name">{p.name}</span>
+                    {p.baseline_created_at && p.delay_days !== 0 && (
+                      <span className={`delay-badge ${p.delay_days > 0 ? "neg" : "pos"}`}>
+                        Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} 天
+                      </span>
+                    )}
                     <div className="project-card-progress">
                       <div className="progress-bar">
                         <div
