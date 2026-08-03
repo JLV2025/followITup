@@ -13,7 +13,7 @@ export default function Dashboard() {
   const { stats, projects, period, loading, fetchStats, fetchProjects, setPeriod } =
     useDashboardStore();
 
-  const { displayMode, fiscalStartMonth, setDisplayMode } = useSettingsStore();
+  const { displayMode, fiscalStartMonth, setDisplayMode, setFiscalStartMonth } = useSettingsStore();
 
   // 创建项目模态框状态
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -176,6 +176,18 @@ export default function Dashboard() {
         >
           {displayMode === "fiscal" ? "📅 财年" : "🗓 自然年"}
         </button>
+        {displayMode === "fiscal" && (
+          <select
+            className="fiscal-month-select"
+            value={fiscalStartMonth}
+            onChange={(e) => setFiscalStartMonth(Number(e.target.value))}
+            title="财年起始月份"
+          >
+            {["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"].map((label, i) => (
+              <option key={i + 1} value={i + 1}>{label}起始</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* 主体双栏 */}
@@ -208,31 +220,29 @@ export default function Dashboard() {
                       style={{ background: statusColor(p) }}
                     />
                     <span className="project-name">{p.name}</span>
-                    <span className="project-link">详情 →</span>
-                  </div>
-                  <div className="project-card-progress">
-                    <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        style={{
-                          width: `${p.progress}%`,
-                          background: statusColor(p),
-                        }}
-                      />
+                    <div className="project-card-progress">
+                      <div className="progress-bar">
+                        <div
+                          className="progress-fill"
+                          style={{
+                            width: `${p.progress}%`,
+                            background: statusColor(p),
+                          }}
+                        />
+                      </div>
+                      <span className="progress-text">{Math.round(p.progress)}%</span>
                     </div>
-                    <span className="progress-text">{Math.round(p.progress)}%</span>
+                    <span className="project-link">详情 →</span>
                   </div>
                   <div className="project-card-meta">
                     {p.next_milestone && (
                       <span>下个节点: {p.next_milestone}</span>
                     )}
                     {p.end_date && <span>截止: {p.end_date}</span>}
+                    {p.has_risk && (
+                      <span style={{ color: "var(--danger)" }}>⚠ {p.risk_count} 项超期</span>
+                    )}
                   </div>
-                  {p.has_risk && (
-                    <div className="project-card-warning">
-                      ⚠ {p.risk_count} 项任务已超期
-                    </div>
-                  )}
                 </Link>
               ))}
             </div>

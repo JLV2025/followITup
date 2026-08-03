@@ -32,8 +32,8 @@ interface Task {
 }
 
 const USER_COLORS = [
-  "#5B8DEF", "#F5A623", "#7ED321", "#D0021B", "#BD10E0",
-  "#4A90D9", "#F8E71C", "#50E3C2", "#9013FE", "#FF6B6B",
+  "#2C6E6A", "#0891B2", "#C88C4A", "#7C9A92", "#4A7C7A",
+  "#5B8DEF", "#A78BFA", "#4D9B91", "#D97706", "#6B9E9A",
 ];
 
 const userColorCache = new Map<string, string>();
@@ -46,8 +46,29 @@ function getUserColor(name: string): string {
   return userColorCache.get(name)!;
 }
 
-const ZOOM_LABELS = ["日", "周", "月", "季", "年"];
-const ZOOM_LEVELS = ["day", "week", "month", "quarter", "year"];
+const ZOOM_LABELS = ["日", "3日", "周", "2周", "月", "2月", "季", "年"];
+const ZOOM_LEVELS: dhtmlxZoomLevel[] = [
+  { name: "day", scale_height: 40, min_column_width: 80, scales: [{ unit: "day", step: 1, format: "%d" }] },
+  { name: "3days", scale_height: 40, min_column_width: 60, scales: [{ unit: "day", step: 3, format: "%m/%d" }] },
+  { name: "week", scale_height: 40, min_column_width: 60,
+    scales: [{ unit: "week", step: 1, format: "W%W" }, { unit: "day", step: 1, format: "%a" }] },
+  { name: "2weeks", scale_height: 40, min_column_width: 50,
+    scales: [{ unit: "week", step: 2, format: "W%W-%W" }, { unit: "day", step: 1, format: "%d" }] },
+  { name: "month", scale_height: 40, min_column_width: 90,
+    scales: [{ unit: "month", step: 1, format: "%M" }, { unit: "day", step: 1, format: "%d" }] },
+  { name: "2months", scale_height: 40, min_column_width: 70,
+    scales: [{ unit: "month", step: 2, format: "%M-%M" }, { unit: "day", step: 1, format: "%d" }] },
+  { name: "quarter", scale_height: 40, min_column_width: 80,
+    scales: [{ unit: "month", step: 3, format: "%M" }, { unit: "day", step: 1, format: "%d" }] },
+  { name: "year", scale_height: 40, min_column_width: 50, scales: [{ unit: "month", step: 1, format: "%m月" }] },
+];
+
+type dhtmlxZoomLevel = {
+  name: string;
+  scale_height: number;
+  min_column_width: number;
+  scales: Array<{ unit: string; step: number; format: string }>;
+};
 
 export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +82,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   readonlyRef.current = readonly;
 
   const [ganttReady, setGanttReady] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(2);
+  const [zoomLevel, setZoomLevel] = useState(4); // 默认"月"
+  const autoZoomDoneRef = useRef(false);
+  const selectedTaskRef = useRef<number | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   const [modalTask, setModalTask] = useState<Task | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -146,15 +170,57 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     }).catch(() => {});
   };
 
-  /** 缩放 */
   const handleZoom = (dir: -1 | 1) => {
     const newLevel = zoomLevel + dir;
     if (newLevel < 0 || newLevel >= ZOOM_LEVELS.length) return;
     setZoomLevel(newLevel);
     try {
-      (gantt.ext as any).zoom.setLevel(ZOOM_LEVELS[newLevel]);
+      (gantt.ext as any).zoom.setLevel(ZOOM_LEVELS[newLevel].name);
     } catch { /* ignore */ }
   };
+
+  /** 自动缩放：在当前页面宽度内完整显示项目全部时间范围，无滚动条 */
+  const handleAutoZoom = () => {
+    if (tasks.length === 0) return;
+    const dates = tasks.map(t => new Date(t.start_date).getTime())
+      .concat(tasks.map(t => new Date(t.end_date).getTime()));
+    const min = new Date(Math.min(...dates));
+    const max = new Date(Math.max(...dates));
+    const rangeDays = Math.max(1, Math.ceil((max.getTime() - min.getTime()) / 86400000));
+    // 可用图表宽度 = 容器宽度 - 左侧列表宽度 - 右侧留白
+    const containerWidth = containerRef.current?.clientWidth || 1200;
+    const chartWidth = Math.max(containerWidth - 270, 200);
+    // 每个级别估算项目渲染宽度（cols × min_column_width），选最细且不超宽的级别
+    let bestLevel = ZOOM_LEVELS.length - 1; // 默认最粗（年）
+    for (let i = 0; i < ZOOM_LEVELS.length; i++) {
+      const lv = ZOOM_LEVELS[i];
+      const colWidth = lv.min_column_width;
+      const unit = lv.scales[0].unit;
+      const step = lv.scales[0].step;
+      let daysPerCol: number;
+      if (unit === "day") daysPerCol = step;
+      else if (unit === "week") daysPerCol = step * 7;
+      else if (unit === "month") daysPerCol = step * 30;
+      else daysPerCol = step * 365;
+      const cols = Math.ceil(rangeDays / daysPerCol);
+      const projectPixelWidth = cols * colWidth;
+      if (projectPixelWidth <= chartWidth) {
+        bestLevel = i; // 选中的是最细的"能完整放下"的级别
+        break;
+      }
+    }
+    setZoomLevel(bestLevel);
+    try {
+      (gantt.ext as any).zoom.setLevel(ZOOM_LEVELS[bestLevel].name);
+    } catch { /* ignore */ }
+  };
+
+  // 甘特图页面全屏宽度
+  useEffect(() => {
+    const mainEl = document.querySelector(".main-content");
+    if (mainEl) mainEl.classList.add("gantt-page");
+    return () => { if (mainEl) mainEl.classList.remove("gantt-page"); };
+  }, []);
 
   // === 初始化甘特图（仅一次）===
   useEffect(() => {
@@ -168,7 +234,9 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     gantt.config.drag_resize = false;
     gantt.config.drag_progress = false;
     gantt.config.autosize = "y";
-    gantt.config.row_height = 36;
+    gantt.config.row_height = 28;
+    gantt.config.scale_height = 40;
+    gantt.config.min_column_width = 40;
     gantt.config.open_tree_initially = true;
     gantt.config.order_branch = true;
     gantt.config.order_branch_free = false;
@@ -184,23 +252,24 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // 左侧列
     gantt.config.columns = [
-      { name: "id_col", label: "#", width: 46, align: "center",
+      { name: "id_col", label: "#", width: 36, align: "center",
         template: function (task: Record<string, any>) {
-          return `<span style="color:var(--text-muted);font-size:12px;">${task.id}</span>`;
+          return `<span style="color:var(--text-muted);font-size:11px;">${task.id}</span>`;
         } as any,
       },
-      { name: "text", label: "任务名称", width: "*", tree: true,
+      { name: "text", label: "任务名称", width: 220, tree: true,
         template: function (task: Record<string, any>) {
           const statusColors: Record<string, string> = {
-            open: "#9ca3af", in_progress: "#3b82f6", completed: "#22c55e", delayed: "#ef4444",
+            open: "#A3B0AE", in_progress: "#2C6E6A", completed: "#22C55E", delayed: "#DC2626",
           };
-          const color = statusColors[task.status] || "#9ca3af";
+          const color = statusColors[task.status] || "#A3B0AE";
           const isParent = gantt.hasChild(task.id);
           const nameStyle = isParent ? "font-weight:600;color:var(--text-primary);" : "";
-          return `<span style="display:inline-flex;align-items:center;gap:6px;">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
-            <span style="${nameStyle}">${task.text || ""}</span>
-            ${isParent ? '<span style="font-size:10px;color:var(--text-muted);">▾</span>' : ""}
+          const taskText = task.text || "";
+          return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;" title="${taskText.replace(/"/g, '&quot;')}">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+            <span style="${nameStyle}">${taskText}</span>
+            ${isParent ? '<span style="font-size:9px;color:var(--text-muted);">▾</span>' : ""}
           </span>`;
         } as any,
       },
@@ -208,8 +277,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         template: function (task: Record<string, any>) {
           const pct = Math.round((task.progress || 0) * 100);
           return `<div style="display:flex;align-items:center;gap:6px;padding:0 4px;">
-            <div style="flex:1;height:6px;border-radius:3px;background:#f3f4f6;overflow:hidden;">
-              <div style="height:100%;width:${pct}%;border-radius:3px;background:${pct >= 100 ? '#22c55e' : '#3b82f6'};"></div>
+            <div style="flex:1;height:6px;border-radius:3px;background:var(--surface-alt);overflow:hidden;">
+              <div style="height:100%;width:${pct}%;border-radius:3px;background:${pct >= 100 ? '#22C55E' : '#2C6E6A'};"></div>
             </div>
             <span style="font-size:11px;color:var(--text-secondary);min-width:28px;text-align:right;">${pct}%</span>
           </div>`;
@@ -226,11 +295,12 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       return Math.round((task.progress || 0) * 100) + "%";
     };
 
-    // 任务条样式：父任务深色粗体、超期红色
+    // 任务条样式：父任务深色粗体、超期红色、选中高亮
     (gantt.templates as any).task_class = function (_s: Date, _e: Date, task: Record<string, any>) {
       const classes: string[] = [];
       if (task.status === "delayed") classes.push("gantt-task-delayed");
       if (gantt.hasChild(task.id)) classes.push("gantt-task-parent");
+      if (selectedTaskRef.current === task.id) classes.push("gantt-row-selected");
       const fm = useGanttStore.getState().focusMap;
       if (fm[task.id as number]) classes.push("gantt-task-focus");
       return classes.join(" ");
@@ -258,22 +328,26 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // 缩放
     try {
-      (gantt.ext as any).zoom.init({
-        levels: [
-          { name: "day", scale_height: 50, min_column_width: 80, scales: [{ unit: "day", step: 1, format: "%d" }] },
-          { name: "week", scale_height: 50, min_column_width: 60,
-            scales: [{ unit: "week", step: 1, format: "W%W" }, { unit: "day", step: 1, format: "%a" }] },
-          { name: "month", scale_height: 50, min_column_width: 120,
-            scales: [{ unit: "month", step: 1, format: "%M" }, { unit: "day", step: 1, format: "%d" }] },
-          { name: "quarter", scale_height: 50, min_column_width: 100,
-            scales: [{ unit: "month", step: 3, format: "%M" }, { unit: "day", step: 1, format: "%d" }] },
-          { name: "year", scale_height: 50, min_column_width: 80, scales: [{ unit: "month", step: 1, format: "%m月" }] },
-        ],
-      });
+      (gantt.ext as any).zoom.init({ levels: ZOOM_LEVELS });
+      (gantt.ext as any).zoom.setLevel(ZOOM_LEVELS[4].name); // 默认"月"
     } catch (_) {}
+
+    // 甘特图条悬停提示
+    gantt.templates.tooltip_text = function (_s: Date, _e: Date, task: Record<string, any>) {
+      const statusMap: Record<string, string> = { open: "未开始", in_progress: "进行中", completed: "已完成", delayed: "已延期" };
+      const status = statusMap[task.status] || task.status || "—";
+      const days = Math.ceil((new Date(task.end_date).getTime() - new Date(task.start_date).getTime()) / 86400000) + 1;
+      return [
+        `<b>${task.text}</b>`,
+        `状态: ${status}　进度: ${Math.round((task.progress || 0) * 100)}%`,
+        `日期: ${task.start_date} → ${task.end_date}（${days}天）`,
+        task.assignee ? `负责人: ${task.assignee}` : "",
+      ].filter(Boolean).join("<br>");
+    };
 
     gantt.init(containerRef.current);
     setGanttReady(true);
+    selectedTaskRef.current = null;
 
     // === 事件 ===
 
@@ -335,9 +409,19 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       return true;
     });
 
-    // 协作聚焦
-    gantt.attachEvent("onTaskClick", function (id: unknown) { handleTaskClick(Number(id)); return true; });
-    gantt.attachEvent("onEmptyClick", function () { handleEmptyClick(); return true; });
+    // 协作聚焦 + 行选中（通过 state 触发 render，不干扰双击）
+    gantt.attachEvent("onTaskClick", function (id: unknown) {
+      handleTaskClick(Number(id));
+      selectedTaskRef.current = Number(id);
+      setSelectedTaskId(Number(id));
+      return true;
+    });
+    gantt.attachEvent("onEmptyClick", function () {
+      handleEmptyClick();
+      selectedTaskRef.current = null;
+      setSelectedTaskId(null);
+      return true;
+    });
 
     return () => { gantt.clearAll(); initRef.current = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -351,6 +435,12 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     gantt.config.drag_links = !readonly;
     if (tasks.length > 0) {
       (gantt as any).parse({ data: tasks, links: links });
+      if (!autoZoomDoneRef.current) {
+        autoZoomDoneRef.current = true;
+        setTimeout(() => {
+          try { handleAutoZoom(); } catch { /* ignore */ }
+        }, 100);
+      }
     }
   }, [tasks, links, readonly, loading]);
 
@@ -359,6 +449,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     if (!ganttReady) return;
     gantt.render();
   }, [focusMap]);
+
+  // 行选中重绘（通过 useEffect 延迟 render，不干扰双击事件）
+  useEffect(() => {
+    if (!ganttReady) return;
+    gantt.render();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTaskId]);
 
   return (
     <div className="gantt-wrapper">
@@ -376,6 +473,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           <button className="btn-zoom" onClick={() => handleZoom(-1)} title="缩小">−</button>
           <span className="gantt-zoom-level">{ZOOM_LABELS[zoomLevel]}</span>
           <button className="btn-zoom" onClick={() => handleZoom(1)} title="放大">+</button>
+          <button className="btn-zoom btn-auto-zoom" onClick={handleAutoZoom} title="自动适应项目时间范围">⊡</button>
         </div>
       </div>
 

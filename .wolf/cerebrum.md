@@ -34,3 +34,12 @@
 <!-- Significant technical decisions with rationale. Why X was chosen over Y. -->
 - **[2026-07-29] 财年实现策略**：财年/自然年作为展示层过滤器，不改变数据层。后端 API 同时支持 `?year=`（自然年，strftime）和 `?fy=`（财年，BETWEEN 日期范围）。前端通过 localStorage 持久化用户的显示模式偏好，Dashboard 年度选择器根据模式动态切换标签（2026年 / FY27）。财年起始月在 `config.yaml` 中配置（`fiscal.year_start_month`）。
 - **[2026-07-29] 协作感知实现策略**：类似 Excel 协同编辑的选中可见性，而非硬锁定。前端通过 WebSocket 发送 task_focus/task_blur 消息，后端 broadcastExcept 广播给房间内其他用户（排除发送者）。甘特图通过 `gantt.addTaskLayer()` 渲染聚焦标签（用户名+色条）。TaskHandler 注入 Hub，所有写操作后调用 `BroadcastTaskUpdate` 通知其他客户端刷新。旧消息超时 15 秒自动清除。
+
+## User Preferences
+
+- **UI风格偏好**：暖白底色（参考 s2.jpg）+ 潭绿冷绿点缀的冷静配色；不要纯黑高对比、不要过于花哨的仪表盘风格；密度紧凑合适，可容纳 5+ 项目
+- **配色决策流程**：先让 ui-ux-pro-max 生成候选设计系统（python scripts/search.py --design-system），再让 frontend-design 批判筛选以避免 AI 模板化外观
+
+- **[2026-07-31] 自动缩放算法**：从最细档位遍历，找到第一个"项目总像素宽度 ≤ 可用图表宽度"的级别，确保首次打开无滚动条完整显示全部任务。手动放大后允许滚动条。
+- **[2026-07-31] dhtmlx-gantt 双击与 render 冲突**：`onTaskClick` 内调用 `gantt.render()` 会重置内部"第一次点击"状态导致双击永远无法触发。解决方案：通过 React state 触发 useEffect 延迟 render，避免在 click 事件处理器内同步调用 render。
+- **[2026-07-31] dhtmlx-gantt 行高密度**：`row_height: 28` + `scale_height: 40` + `min_column_width: 40` 可在 1920px 屏幕显示约 36 行任务。

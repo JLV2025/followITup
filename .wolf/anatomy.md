@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-07-30T09:29:57.120Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T00:38:42.531Z
 > Files: 68 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
@@ -76,8 +76,8 @@
 - `auth.go` — Struct: AuthHandler (~1083 tok)
 - `calendar.go` — Struct: CalendarHandler (~660 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~213 tok)
-- `projects.go` — Struct: ProjectHandler (~2470 tok)
-- `tasks.go` — Struct: TaskHandler (~2988 tok)
+- `projects.go` — Struct: ProjectHandler (~2537 tok)
+- `tasks.go` — Struct: TaskHandler (~3214 tok)
 
 ## backend/internal/auth/
 
@@ -101,7 +101,7 @@
 ## backend/internal/server/
 
 - `config.go` — Struct: Config (~427 tok)
-- `server.go` — Struct: Options (~1155 tok)
+- `server.go` — Struct: Options (~1164 tok)
 
 ## backend/internal/util/
 
@@ -123,7 +123,7 @@
 ## frontend/src/
 
 - `App.tsx` — App (~313 tok)
-- `index.css` — Styles: 3 rules, 10 vars (~426 tok)
+- `index.css` — Styles: 4 rules, 17 vars (~512 tok)
 - `main.tsx` (~93 tok)
 
 ## frontend/src/api/
@@ -134,17 +134,17 @@
 
 ## frontend/src/components/
 
-- `Navbar.tsx` — Navbar (~318 tok)
-- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的 ID 并逐个创建依赖 (~5372 tok)
+- `Navbar.tsx` — Navbar (~343 tok)
+- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的 ID 并逐个创建依赖 (~5602 tok)
 
 ## frontend/src/pages/
 
-- `Dashboard.tsx` — Dashboard — renders form (~3654 tok)
+- `Dashboard.tsx` — Dashboard — renders form (~3789 tok)
 - `Login.tsx` — Login — renders form (~582 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~282 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~4224 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~5421 tok)
 - `TaskListView.tsx` — 🗑️ 已废弃（甘特图统一工作台取代） (~3323 tok)
-- `UserManagement.tsx` — UserManagement — renders form, table (~1313 tok)
+- `UserManagement.tsx` — UserManagement — renders form, table (~1326 tok)
 
 ## frontend/src/stores/
 
@@ -155,7 +155,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 111 rules (~4992 tok)
+- `components.css` — Styles: 107 rules (~5489 tok)
 
 ## frontend/src/utils/
 

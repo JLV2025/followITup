@@ -104,7 +104,7 @@ export default function UserManagement() {
                 <td className="cell-id">{u.id}</td>
                 <td style={{ fontWeight: 500 }}>{u.display_name || u.email}</td>
                 <td className="text-secondary">{u.email}</td>
-                <td><span className="status-badge" style={{ background: u.auth_source === "local" ? "#f3f4f6" : "#dbeafe", color: u.auth_source === "local" ? "#6b7280" : "#2563eb" }}>{u.auth_source === "local" ? "本地" : "LDAP"}</span></td>
+                <td><span className="status-badge" style={{ background: u.auth_source === "local" ? "var(--surface-alt)" : "rgba(8, 145, 178, 0.1)", color: u.auth_source === "local" ? "var(--text-secondary)" : "var(--accent)" }}>{u.auth_source === "local" ? "本地" : "LDAP"}</span></td>
                 <td>{u.is_admin ? "管理员" : "成员"}</td>
               </tr>
             ))}

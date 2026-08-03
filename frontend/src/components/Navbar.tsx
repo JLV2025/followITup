@@ -10,7 +10,8 @@ export default function Navbar() {
     <nav className="navbar">
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <Link to="/" className="navbar-brand">
-          FollowITup
+          <img src="/logo.gif" alt="FollowITup" className="navbar-logo" />
+          <span>FollowITup</span>
         </Link>
         {isLoggedIn && user?.is_admin && (
           <Link to="/admin/users" style={{ fontSize: 13, color: "var(--text-secondary)", textDecoration: "none" }}>

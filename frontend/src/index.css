@@ -1,17 +1,24 @@
-/* 全局样式 — FollowITup 0.7.28 */
+/* 全局样式 — FollowITup 0.8.0 */
 @import "./styles/components.css";
 
 :root {
-  --page-bg: #fafaf9;
-  --card-bg: #ffffff;
-  --card-border: #e5e7eb;
-  --text-primary: #1a1a1a;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --accent: #3b82f6;
+  --page-bg: #F7F6F3;
+  --card-bg: #FFFFFF;
+  --card-border: #E8E5E0;
+  --surface-alt: #F0F2F0;
+  --text-primary: #1E3835;
+  --text-secondary: #7A8D8B;
+  --text-muted: #A3B0AE;
+  --primary: #2C6E6A;
+  --primary-hover: #235C59;
+  --accent: #0891B2;
+  --accent-hover: #067A96;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #DC2626;
+  --radius: 10px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 *,
@@ -62,8 +69,14 @@ body::before {
   width: 100%;
 }
 
+/* 甘特图页面：满屏宽度，像 Excel */
+.main-content.gantt-page {
+  max-width: none;
+  padding: 0;
+}
+
 a {
-  color: var(--accent);
+  color: var(--primary);
   text-decoration: none;
 }
 

@@ -129,7 +129,7 @@ func mountFrontend(r *chi.Mux, frontendFS fs.FS) error {
 			return
 		}
 		// 静态资源直接返回
-		if stringsHasSuffix(r.URL.Path, ".js", ".css", ".png", ".svg", ".ico", ".woff", ".woff2", ".ttf") {
+		if stringsHasSuffix(r.URL.Path, ".js", ".css", ".png", ".svg", ".ico", ".woff", ".woff2", ".ttf", ".gif", ".jpg", ".jpeg", ".webp") {
 			fileServer.ServeHTTP(w, r)
 			return
 		}

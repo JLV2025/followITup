@@ -191,6 +191,22 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
     } catch { /* ignore */ }
   };
 
+  /** 删除任务 */
+  const handleDelete = async () => {
+    if (!task) return;
+    const taskName = name || `#${task.id}`;
+    if (!confirm(`确认删除任务「${taskName}」？\n\n此操作不可撤销。如有子任务，请先手动处理。`)) return;
+    setSaving(true);
+    try {
+      await api.delete(`/api/projects/${projectId}/tasks/${task.id}`);
+      onSaved();
+    } catch (err: any) {
+      setError(`删除失败：${err?.response?.data?.message || err?.message || "请重试"}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError("");
@@ -591,16 +607,27 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
         )}
 
         <div className="modal-actions">
-          <button className="btn btn-link" onClick={onClose}>
-            取消
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "保存中..." : isNew ? "创建任务" : "确认修改"}
-          </button>
+          {!isNew && (
+            <button
+              className="btn btn-delete-task"
+              onClick={handleDelete}
+              disabled={saving}
+            >
+              {saving ? "删除中..." : "删除任务"}
+            </button>
+          )}
+          <div className="modal-actions-right">
+            <button className="btn btn-link" onClick={onClose}>
+              取消
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "保存中..." : isNew ? "创建任务" : "确认修改"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

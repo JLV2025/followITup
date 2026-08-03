@@ -517,3 +517,133 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:06 | 弹窗→←缩进升级按钮 | TaskDetailModal.tsx | OK |
 | 17:30 | #列、进度数字输入、用户管理页面 | ProjectGantt.tsx UserManagement.tsx auth.go | OK |
 | 17:34 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 18 reads | ~58195 tok |
+| 17:37 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 18 reads | ~58195 tok |
+| 17:38 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 18 reads | ~58195 tok |
+| 17:39 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 18 reads | ~58195 tok |
+| 17:41 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 20 reads | ~58195 tok |
+| 17:43 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 20 reads | ~58195 tok |
+| 17:45 | 收工：推送到 GitHub master 成功 | — | HEAD 768ad26 | — |
+| 17:46 | Session end: 34 writes across 11 files (TaskDetailModal.tsx, ProjectGantt.tsx, App.tsx, ProjectDetail.tsx, ganttStore.ts) | 20 reads | ~58195 tok |
+
+## Session: 2026-07-31 08:51
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 09:03 | Edited frontend/src/components/Navbar.tsx | 3→3 lines | ~40 |
+| 09:03 | Edited frontend/src/styles/components.css | CSS: width | ~90 |
+| 09:07 | Session end: 2 writes across 2 files (Navbar.tsx, components.css) | 5 reads | ~1040 tok |
+| 09:10 | Edited backend/internal/server/server.go | inline fix | ~36 |
+| 09:11 | Session end: 3 writes across 3 files (Navbar.tsx, components.css, server.go) | 9 reads | ~2374 tok |
+| 09:12 | Edited frontend/src/components/Navbar.tsx | 3→4 lines | ~49 |
+| 09:12 | Edited frontend/src/styles/components.css | expanded (+9 lines) | ~67 |
+| 09:13 | Edited frontend/src/styles/components.css | reduced (-6 lines) | ~54 |
+| 09:14 | Session end: 6 writes across 3 files (Navbar.tsx, components.css, server.go) | 10 reads | ~7590 tok |
+| 09:17 | Session end: 6 writes across 3 files (Navbar.tsx, components.css, server.go) | 13 reads | ~10008 tok |
+| 09:19 | Session end: 6 writes across 3 files (Navbar.tsx, components.css, server.go) | 13 reads | ~10008 tok |
+| 09:26 | Session end: 6 writes across 3 files (Navbar.tsx, components.css, server.go) | 13 reads | ~10008 tok |
+| 09:35 | Session end: 6 writes across 3 files (Navbar.tsx, components.css, server.go) | 16 reads | ~10008 tok |
+| 09:39 | Edited frontend/src/index.css | expanded (+7 lines) | ~151 |
+| 09:39 | Edited frontend/src/index.css | 4→4 lines | ~16 |
+| 09:40 | Edited frontend/src/styles/components.css | 15→15 lines | ~62 |
+| 09:40 | Edited frontend/src/styles/components.css | 5→5 lines | ~39 |
+| 09:40 | Edited frontend/src/styles/components.css | 7→7 lines | ~48 |
+| 09:40 | Edited frontend/src/styles/components.css | 12→12 lines | ~95 |
+| 09:40 | Edited frontend/src/styles/components.css | 6→6 lines | ~32 |
+| 09:40 | Edited frontend/src/styles/components.css | 7→7 lines | ~34 |
+| 09:41 | Edited frontend/src/styles/components.css | 7→7 lines | ~36 |
+| 09:41 | Edited frontend/src/styles/components.css | 38→38 lines | ~178 |
+| 09:41 | Edited frontend/src/styles/components.css | 21→21 lines | ~124 |
+| 09:41 | Edited frontend/src/styles/components.css | 13→13 lines | ~67 |
+| 09:41 | Edited frontend/src/styles/components.css | modified not() | ~27 |
+| 09:41 | Edited frontend/src/styles/components.css | 8→8 lines | ~56 |
+| 09:41 | Edited frontend/src/styles/components.css | 5→5 lines | ~28 |
+| 09:41 | Edited frontend/src/styles/components.css | 10→10 lines | ~61 |
+| 09:42 | Edited frontend/src/styles/components.css | 8→8 lines | ~48 |
+| 09:42 | Edited frontend/src/styles/components.css | 7→7 lines | ~49 |
+| 09:42 | Edited frontend/src/styles/components.css | 4→4 lines | ~25 |
+| 09:42 | Edited frontend/src/styles/components.css | modified not() | ~34 |
+| 09:42 | Edited frontend/src/styles/components.css | 9→9 lines | ~58 |
+| 09:42 | Edited frontend/src/styles/components.css | 10→10 lines | ~67 |
+| 09:42 | Edited frontend/src/styles/components.css | 10→10 lines | ~66 |
+| 09:42 | Edited frontend/src/styles/components.css | 7→7 lines | ~51 |
+| 09:42 | Edited frontend/src/styles/components.css | 10→10 lines | ~67 |
+| 09:43 | Edited frontend/src/styles/components.css | 6→6 lines | ~41 |
+| 09:43 | Edited frontend/src/styles/components.css | 9→9 lines | ~60 |
+| 09:44 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~33 |
+| 09:44 | Edited frontend/src/pages/ProjectGantt.tsx | "#9ca3af" → "#A3B0AE" | ~27 |
+| 09:45 | Edited frontend/src/pages/ProjectGantt.tsx | "#9ca3af" → "#A3B0AE" | ~18 |
+| 09:45 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~68 |
+| 09:45 | Edited frontend/src/pages/UserManagement.tsx | inline fix | ~77 |
+| 09:48 | Session end: 38 writes across 6 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 17 reads | ~16081 tok |
+| 09:55 | 设计系统 v1.0 落地：暖白#F7F6F3 + 潭绿#2C6E6A + 冷青#0891B2，前端完整重构确认 | index.css, components.css, ProjectGantt.tsx, UserManagement.tsx, server.go | 用户确认"还不错" | ~16000 tok |
+| 09:56 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~29 |
+| 09:56 | Edited frontend/src/pages/Dashboard.tsx | expanded (+12 lines) | ~154 |
+| 09:56 | Edited frontend/src/styles/components.css | expanded (+17 lines) | ~115 |
+| 09:58 | Session end: 41 writes across 7 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 20 reads | ~21004 tok |
+| 10:00 | Edited frontend/src/styles/components.css | 48→47 lines | ~234 |
+| 10:00 | Edited frontend/src/styles/components.css | expanded (+8 lines) | ~268 |
+| 10:00 | Edited frontend/src/pages/Dashboard.tsx | CSS: color | ~379 |
+| 10:02 | Session end: 44 writes across 7 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 21 reads | ~22122 tok |
+| 09:58 | 财年起始月份选择器：Dashboard.tsx 切换财年模式时显示月份下拉（1月-12月起始），CSS新增 .fiscal-month-select | Dashboard.tsx, components.css | 完成 | ~400 tok |
+| 10:03 | Session end: 44 writes across 7 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 21 reads | ~22122 tok |
+| 10:08 | Edited frontend/src/index.css | expanded (+6 lines) | ~55 |
+| 10:08 | Edited frontend/src/styles/components.css | 11→11 lines | ~68 |
+| 10:08 | Edited frontend/src/styles/components.css | CSS: flex-shrink | ~68 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+21 lines) | ~401 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~17 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | 9→8 lines | ~81 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | 1→3 lines | ~32 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | removed 15 lines | ~49 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~516 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | 6→7 lines | ~138 |
+| 10:11 | Edited frontend/src/styles/components.css | CSS: margin-left, font-size, font-weight | ~50 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~332 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~112 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | 1→2 lines | ~28 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~133 |
+| 10:12 | Edited frontend/src/styles/components.css | CSS: padding, padding | ~98 |
+| 10:15 | Session end: 60 writes across 7 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 23 reads | ~25558 tok |
+| 10:18 | Edited frontend/src/pages/ProjectGantt.tsx | added 3 condition(s) | ~311 |
+| 10:19 | Session end: 61 writes across 7 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 23 reads | ~25934 tok |
+| 10:23 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~426 |
+| 10:25 | Session end: 62 writes across 7 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 23 reads | ~26302 tok |
+| 10:28 | Edited frontend/src/components/TaskDetailModal.tsx | expanded (+11 lines) | ~200 |
+| 10:28 | Edited frontend/src/components/TaskDetailModal.tsx | added error handling | ~143 |
+| 10:28 | Edited frontend/src/styles/components.css | modified not() | ~175 |
+| 10:29 | Edited frontend/src/components/TaskDetailModal.tsx | "确认删除任务「${name}」？\n此操作不可撤销" → "确认删除任务「${name}」？\n\n此操作不可" | ~20 |
+| 10:30 | Edited frontend/src/components/TaskDetailModal.tsx | 5→5 lines | ~55 |
+| 10:31 | Session end: 67 writes across 8 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~35255 tok |
+| 10:36 | Edited frontend/src/pages/ProjectGantt.tsx | 2→3 lines | ~50 |
+| 10:36 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~226 |
+| 10:37 | Edited frontend/src/pages/ProjectGantt.tsx | modified attachEvent() | ~78 |
+| 10:37 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~134 |
+| 10:38 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~28 |
+| 10:38 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~158 |
+| 10:38 | Edited frontend/src/pages/ProjectGantt.tsx | setSelectedTaskId() → render() | ~107 |
+| 10:38 | Edited frontend/src/pages/ProjectGantt.tsx | 3→3 lines | ~28 |
+| 10:38 | Edited frontend/src/pages/ProjectGantt.tsx | 6→7 lines | ~186 |
+| 10:39 | Edited frontend/src/styles/components.css | CSS: background | ~52 |
+| 10:40 | Session end: 77 writes across 8 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~36892 tok |
+| 10:43 | Edited frontend/src/pages/ProjectGantt.tsx | 6→6 lines | ~139 |
+| 10:44 | Session end: 78 writes across 8 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~37143 tok |
+| 11:00 | Edited frontend/src/pages/ProjectGantt.tsx | 2→3 lines | ~50 |
+| 11:00 | Edited frontend/src/pages/ProjectGantt.tsx | render() → setSelectedTaskId() | ~121 |
+| 11:00 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~85 |
+| 11:03 | Session end: 81 writes across 8 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~37378 tok |
+| 11:04 | Edited frontend/src/styles/components.css | expanded (+10 lines) | ~86 |
+| 11:05 | Session end: 82 writes across 8 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~37509 tok |
+| 11:06 | Session end: 82 writes across 8 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~37509 tok |
+| 11:07 | Session end: 82 writes across 8 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~37509 tok |
+| 11:08 | Edited backend/internal/api/tasks.go | modified triggerReschedule() | ~271 |
+| 11:09 | Edited frontend/src/styles/components.css | 9→4 lines | ~26 |
+| 11:09 | Edited backend/internal/api/tasks.go | 6→9 lines | ~48 |
+| 11:15 | 会话结束：设计系统落地、甘特图全屏+密度+缩放、任务删除入口、行选中+悬停提示、父任务进度重算进行中 | 15+ files | 未完成项：父任务进度重算编译错误待修复、项目看板进度改为顶层任务时长加权 | ~28000 tok |
+| 11:16 | Session end: 85 writes across 9 files (Navbar.tsx, components.css, server.go, index.css, ProjectGantt.tsx) | 25 reads | ~38162 tok |
+
+## Session: 2026-08-03 08:33
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:38 | Edited backend/internal/api/projects.go | 5→7 lines | ~100 |
+| 08:38 | Edited backend/internal/api/projects.go | 1→3 lines | ~70 |
+| 08:40 | 收尾 7/31 遗留:编译错误已确认修复;看板进度改顶层任务时长加权(projects.go 两处 AVG→SUM加权,仅统计顶层任务) ;清理 0 字节临时文件 succ.StartDate/`{`;s1/s2.jpg 设计参考图入 .gitignore | projects.go, .gitignore, memory.md | ✅ 后端测试/前端 tsc/完整 exe 构建通过 | ~2K tok |

@@ -172,6 +172,9 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	t.ProjectID = projectID
 
 	h.broadcastChange(r, projectID, id)
+	if t.ParentID != nil && *t.ParentID > 0 {
+		h.recalcParentProgress(id)
+	}
 
 	writeJSON(w, http.StatusCreated, t)
 }
@@ -231,6 +234,9 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	// 广播变更给项目内其他用户
 	h.broadcastChange(r, t.ProjectID, taskID)
+	if t.ParentID != nil && *t.ParentID > 0 {
+		h.recalcParentProgress(taskID)
+	}
 
 	writeJSON(w, http.StatusOK, t)
 }
@@ -239,6 +245,10 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID, _ := strconv.ParseInt(chi.URLParam(r, "taskID"), 10, 64)
 	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	// 记录父任务 ID，删除后重算进度
+	var oldParentID int64
+	h.db.QueryRow("SELECT COALESCE(parent_id, 0) FROM tasks WHERE id = ?", taskID).Scan(&oldParentID)
 
 	// 软删除任务本身
 	h.db.Exec("UPDATE tasks SET deleted_at = datetime('now') WHERE id = ?", taskID)
@@ -249,6 +259,9 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	// 删除后触发排程，确保受影响的后继任务日期重算
 	h.triggerReschedule(projectID, 0)
 	h.broadcastChange(r, projectID, taskID)
+	if oldParentID > 0 {
+		h.recalcParentProgress(taskID)
+	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "已移至回收站"})
 }
 
@@ -359,4 +372,27 @@ func (h *TaskHandler) triggerReschedule(projectID int64, taskID int64) {
 	if _, err := scheduler.Recalculate(h.db, projectID, taskID); err != nil {
 		log.Printf("[Scheduler] 项目 %d 重算失败: %v", projectID, err)
 	}
+}
+
+// recalcParentProgress 递归向上重算父任务进度（时长加权平均）
+// 无子任务的任务保持原进度不变（手动设置）
+func (h *TaskHandler) recalcParentProgress(taskID int64) {
+	var parentID int64
+	h.db.QueryRow("SELECT COALESCE(parent_id, 0) FROM tasks WHERE id = ? AND deleted_at IS NULL", taskID).Scan(&parentID)
+	if parentID == 0 {
+		return
+	}
+
+	// 时长加权平均：SUM(duration_days * progress_pct) / SUM(duration_days)
+	var weightedPct float64
+	h.db.QueryRow(
+		`SELECT COALESCE(SUM(duration_days * progress_pct) / NULLIF(SUM(duration_days), 0), 0)
+		 FROM tasks WHERE parent_id = ? AND deleted_at IS NULL`, parentID,
+	).Scan(&weightedPct)
+
+	h.db.Exec("UPDATE tasks SET progress_pct = ?, updated_at = datetime('now') WHERE id = ? AND deleted_at IS NULL",
+		weightedPct, parentID)
+
+	// 递归向上
+	h.recalcParentProgress(parentID)
 }
