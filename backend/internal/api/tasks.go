@@ -153,18 +153,18 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		t.EndDate = scheduler.AddWorkDays(nil, t.StartDate, t.DurationDays)
 	}
 
-	// 获取下一个 sort_order
-	var maxSort int
-	h.db.QueryRow("SELECT COALESCE(MAX(sort_order), -1) + 1 FROM tasks WHERE project_id = ? AND deleted_at IS NULL", projectID).Scan(&maxSort)
-
+	// 分配下一个 sort_order（单条 INSERT...SELECT 原子完成，消除并发创建重复序号）
 	result, err := h.db.Exec(
 		`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
 		 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
 		 constraint_type, constraint_date, sort_order)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+		        COALESCE(MAX(sort_order), -1) + 1
+		 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`,
 		projectID, t.ParentID, t.Name, t.Description, t.TaskType, t.Status, t.Priority,
 		t.Assignee, t.StartDate, t.EndDate, t.DurationDays, t.ProgressPct,
-		boolToInt2(t.ManualScheduled), t.ConstraintType, t.ConstraintDate, maxSort,
+		boolToInt2(t.ManualScheduled), t.ConstraintType, t.ConstraintDate,
+		projectID,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "创建任务失败")
