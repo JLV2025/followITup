@@ -198,6 +198,10 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	h.db.QueryRow(`SELECT actual_start, actual_end FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&oldActualStart, &oldActualEnd)
 	t.ActualStart, t.ActualEnd = fillActualDates(t.Status, oldActualStart, oldActualEnd)
 
+	// URL 参数回填（请求体不含 id/project_id，排程级联需要）
+	t.ID = taskID
+	t.ProjectID = projectID
+
 	// 校验 parent_id
 	if t.ParentID != nil {
 		if err := h.validateParent(*t.ParentID, projectID, taskID); err != nil {

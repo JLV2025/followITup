@@ -54,7 +54,7 @@ func (h *ProjectHandler) DashboardStats(w http.ResponseWriter, r *http.Request) 
 	var overallPct float64
 
 	// 活跃项目数
-	query := "SELECT COUNT(*) FROM projects WHERE deleted_at IS NULL AND status = 'active'" + filter
+	query := "SELECT COUNT(*) FROM projects p WHERE p.deleted_at IS NULL AND p.status = 'active'" + filter
 	h.db.QueryRow(query, args...).Scan(&activeCount)
 
 	// 有风险/超期项目数
@@ -86,12 +86,18 @@ func (h *ProjectHandler) DashboardStats(w http.ResponseWriter, r *http.Request) 
 		FROM tasks t WHERE t.project_id IN (SELECT id FROM projects p WHERE p.deleted_at IS NULL AND p.status = 'active'`+filter+`)
 		AND t.deleted_at IS NULL AND (t.parent_id IS NULL OR t.parent_id = 0)`, args...).Scan(&baselineProgress)
 
+	// 是否有基线（任一活跃项目打过基线快照；进度为 0 的基线也应显示 Δ 对比）
+	var hasBaseline bool
+	h.db.QueryRow(`SELECT EXISTS(
+		SELECT 1 FROM projects p WHERE p.deleted_at IS NULL AND p.status = 'active' AND p.baseline_created_at IS NOT NULL`+filter+`)`, args...).Scan(&hasBaseline)
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"active_projects":   activeCount,
 		"at_risk":           atRiskCount,
 		"due_this_week":     dueThisWeek,
 		"overall_progress":  int(overallPct),
 		"baseline_progress": int(baselineProgress),
+		"has_baseline":      hasBaseline,
 	})
 }
 
