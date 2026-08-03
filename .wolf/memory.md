@@ -914,3 +914,15 @@ cd backend && followitup.exe config.yaml   # 启动
 3. duration 是用户定义属性：拖动/排程后不变，只调开始/结束；前置不变则开始不变；后续任务会因拖入任务变化（除非有显式前置）
 4. 刷新 = 按最新数据重新放置进度条 + 重新连线
 5. 子任务保存 → 父任务日期（rollup）与进度（时长加权）同步更新
+| 17:13 | Session end: 80 writes across 15 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 21 reads | ~65146 tok |
+| 17:56 | Created C:/Users/jingl/.claude/plans/ui-bug-1-2-rosy-lobster.md | — | ~1389 |
+| 17:58 | Edited C:/Users/jingl/.claude/plans/ui-bug-1-2-rosy-lobster.md | expanded (+10 lines) | ~229 |
+
+## Session: 2026-08-03 18:00（倒推排程+工期分配 规划完成，明日实施）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 17:40 | 排程语义确认：手动 end=deadline 倒推（end+duration 固定→start 倒推，沿前驱链到链头，手动任务锚点不被改）；冲突时工期分配弹窗（时间段内所有任务重新分配天数，总和=规定才可保存）| 讨论 | 用户决策：倒推到链头；弹窗逐任务输入天数+总和校验 | ~1K |
+| 17:50 | 交互确认：工具栏按钮→点击起点任务/终点任务→红色竖线→弹窗；父任务不参与（子任务展开）；无部分包裹（边界由任务锚定）| 讨论 | 用户确认 | ~500 |
+| 17:55 | 计划已保存 C:\Users\jingl\.claude\plans\ui-bug-1-2-rosy-lobster.md（含多包裹共存设计：任务级锚点天然支持多包裹+互斥校验+重叠检测+共享边界+多deadline取更早）| 计划文件 | 明日实施 | ~300 |
+| 18:00 | 收工。git 工作区干净，exe 运行中（8080）| — | 待办：倒推pass + 锚点v5迁移 + 工期分配弹窗 + 批量API | — |
