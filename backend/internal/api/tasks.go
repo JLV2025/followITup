@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"followitup/internal/auth"
 	"followitup/internal/models"
@@ -190,6 +191,11 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 实际日期自动填充（需先读旧值，已有值不覆盖）
+	var oldActualStart, oldActualEnd string
+	h.db.QueryRow(`SELECT actual_start, actual_end FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&oldActualStart, &oldActualEnd)
+	t.ActualStart, t.ActualEnd = fillActualDates(t.Status, oldActualStart, oldActualEnd)
+
 	// 校验 parent_id
 	if t.ParentID != nil {
 		if err := h.validateParent(*t.ParentID, projectID, taskID); err != nil {
@@ -239,6 +245,19 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, t)
+}
+
+// fillActualDates 实际日期自动填充：
+// status 变为 in_progress 且无实际开始 → 记今天；变为 completed 且无实际结束 → 记今天；已有值不覆盖
+func fillActualDates(status, actualStart, actualEnd string) (string, string) {
+	today := time.Now().Format("2006-01-02")
+	if status == "in_progress" && actualStart == "" {
+		actualStart = today
+	}
+	if status == "completed" && actualEnd == "" {
+		actualEnd = today
+	}
+	return actualStart, actualEnd
 }
 
 // DeleteTask 软删除任务，同时清理关联的依赖关系
