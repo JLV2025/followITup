@@ -129,7 +129,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     const unsub = wsClient.subscribe((msg) => {
       if (msg.type === "task_focus" && msg.task_id && msg.user_name) setFocus(msg.task_id, msg.user_name);
       else if (msg.type === "task_blur" && msg.task_id) clearFocus(msg.task_id);
-      else if (msg.type === "task_update") fetchData(projectId, readonlyRef.current);
+      else if (msg.type === "task_update" || msg.type === "reconnected") fetchData(projectId, readonlyRef.current);
     });
     return unsub;
   }, [projectId, fetchData, setFocus, clearFocus]);
@@ -573,6 +573,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
               + 添加任务
             </button>
           )}
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => fetchData(projectId, readonly)}
+            title="重新加载数据"
+          >
+            ↻ 刷新
+          </button>
           <span className="gantt-toolbar-hint">双击任务编辑详情 · 双击连线删除</span>
         </div>
         <div className="gantt-toolbar-right">

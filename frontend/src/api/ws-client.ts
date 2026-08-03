@@ -22,6 +22,7 @@ class WsClient {
   private projectId: number = 0;
   private userId: number = 0;
   private userName: string = "";
+  private hasConnectedOnce = false;
 
   connect(projectId: number, userId: number, userName: string) {
     if (this.ws && this.projectId === projectId) return;
@@ -37,6 +38,11 @@ class WsClient {
     this.ws = new WebSocket(url);
     this.ws.onopen = () => {
       console.log("[WS] 已连接到项目", projectId);
+      if (this.hasConnectedOnce) {
+        // 断线重连成功：通知订阅者补拉数据（首次连接不通知，避免与挂载时的 fetchData 重复）
+        this.listeners.forEach((fn) => fn({ type: "reconnected", project_id: projectId }));
+      }
+      this.hasConnectedOnce = true;
       // 每 25 秒发送心跳
       this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), 25000);
     };
@@ -59,6 +65,7 @@ class WsClient {
   }
 
   disconnect() {
+    this.hasConnectedOnce = false;
     this.clearHeartbeat();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
