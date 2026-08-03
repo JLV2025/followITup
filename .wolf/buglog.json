@@ -235,10 +235,165 @@
       "file": "frontend/src/pages/ProjectGantt.tsx",
       "root_cause": "onGanttRender 回调 append 到了 .gantt_bars_area（共享容器）但 top 硬编码 0px/bottom 0px，导致所有基线/实际条堆叠在容器顶部。需要基于 line.offsetTop 逐条计算 top 位置",
       "fix": "基线条 top 改为 line.offsetTop - 4（紧贴任务条顶边），实际执行条 top 改为 line.offsetTop + line.offsetHeight（紧贴任务条底边）",
-      "tags": ["baseline", "gantt", "rendering", "positioning"],
-      "related_bugs": ["bug-012", "bug-013", "bug-014"],
+      "tags": [
+        "baseline",
+        "gantt",
+        "rendering",
+        "positioning"
+      ],
+      "related_bugs": [
+        "bug-012",
+        "bug-013",
+        "bug-014"
+      ],
       "occurrences": 1,
       "last_seen": "2026-08-03T02:50:00.000Z"
+    },
+    {
+      "id": "bug-016",
+      "timestamp": "2026-08-03T03:11:37.954Z",
+      "error_message": "Missing guard clause",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "No early return/throw for edge case: !baselineMenuOpen",
+      "fix": "Added guard clause: if (!baselineMenuOpen)",
+      "tags": [
+        "auto-detected",
+        "guard-clause",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T03:11:37.954Z"
+    },
+    {
+      "id": "bug-017",
+      "timestamp": "2026-08-03T03:23:43.174Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T03:23:43.174Z"
+    },
+    {
+      "id": "bug-018",
+      "timestamp": "2026-08-03T03:24:29.060Z",
+      "error_message": "CSS fix: background, color",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "background: #2c6e6a → #f0fdf4; color: #fff → #15803d",
+      "fix": "Changed background: #2c6e6a → #f0fdf4; color: #fff → #15803d",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T03:24:29.060Z"
+    },
+    {
+      "id": "bug-019",
+      "timestamp": "2026-08-03T06:06:00.918Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T06:06:00.918Z"
+    },
+    {
+      "id": "bug-020",
+      "timestamp": "2026-08-03T06:09:09.148Z",
+      "error_message": "Incorrect value in code",
+      "file": "backend/internal/api/projects.go",
+      "root_cause": "Had \"SELECT COUNT(*) FROM projects WHERE deleted_at IS",
+      "fix": "Changed to \"SELECT COUNT(*) FROM projects p WHERE p.deleted_a",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T06:09:09.148Z"
+    },
+    {
+      "id": "bug-021",
+      "timestamp": "2026-08-03T06:09:27.276Z",
+      "error_message": "Wrong reference: baseline_progress should be has_baseline",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Used \"baseline_progress\" instead of \"has_baseline\"",
+      "fix": "Changed baseline_progress → has_baseline",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T06:09:27.276Z"
+    },
+    {
+      "id": "bug-022",
+      "timestamp": "2026-08-03T06:16:38.790Z",
+      "error_message": "Incorrect value in code",
+      "file": "backend/internal/api/zz_debug_test.go",
+      "root_cause": "Had \"../data/followitup.db?_journal_mode=WAL&_busy_tim",
+      "fix": "Changed to \"file:F:/projects/followITup/backend/data/followit",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T06:16:38.790Z"
+    },
+    {
+      "id": "bug-023",
+      "timestamp": "2026-08-03T06:25:00.000Z",
+      "error_message": "active_projects 恒为 0（带 year/fy 过滤时）",
+      "file": "backend/internal/api/projects.go",
+      "root_cause": "DashboardStats 活跃项目数查询 FROM projects 无表别名，而 buildTimeFilter 生成的过滤条件引用 p.created_at → SQL 报错 no such column: p.created_at，QueryRow.Scan 错误被忽略 → activeCount 保持 0",
+      "fix": "查询改为 FROM projects p，与 ProjectList 一致",
+      "tags": [
+        "sql",
+        "alias",
+        "dashboard",
+        "stats"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T06:25:00.000Z"
+    },
+    {
+      "id": "bug-024",
+      "timestamp": "2026-08-03T06:25:00.000Z",
+      "error_message": "任务日期更新后依赖链从不级联重排（Recalculate 收到 projectID=0, taskID=0）",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "UpdateTask 调用 scheduler.Recalculate(h.db, t.ProjectID, t.ID) 时 t.ID/t.ProjectID 来自请求体 decode 未回填，恒为 0 → Recalculate(0,0) 加载空任务 → 前向传播无后继可推。CreateTask 有 t.ID=id; t.ProjectID=projectID 赋值（174-175 行），UpdateTask 遗漏",
+      "fix": "UpdateTask 中 URL 参数回填 t.ID = taskID; t.ProjectID = projectID",
+      "tags": [
+        "scheduler",
+        "cascade",
+        "core-bug",
+        "optimistic-lock"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T06:25:00.000Z"
     }
   ]
 }

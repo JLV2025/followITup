@@ -28,6 +28,10 @@
 - **[2026-07-30] useEffect 闭包捕获过期值**：gantt 初始化 useEffect([]) 内的事件处理器捕获初始 `allTasks` 状态（空数组），后续更新触发的双击事件找不到任务。修复：用 `useRef(allTasksRef)` 存储最新值，事件处理器从 ref.current 读取。
 - **[2026-07-30] 前端产物复制顺序**：build.bat 和手动构建都必须先 `npm run build` → `cp -r frontend/dist backend/cmd/server/frontend-dist` → `go build`。如果先 `go build` 再复制前端产物，嵌入式二进制仍包含旧前端。
 - **[2026-07-30] onLinkDblClick setTimeout**：dhtmlx 内部状态在事件回调中尚未更新完毕，直接调用 `deleteLink()` 会报 `Cannot read properties of undefined (reading 'id')`。修复：`setTimeout(() => deleteLink(linkId), 50)` 推迟到 dhtmlx 内部状态落定后执行。
+- **[2026-08-03] UpdateTask 必须回填 URL 参数**：`UpdateTask` 的 `t` 来自请求体 decode（id/project_id 不在请求体内），调用 `Recalculate(h.db, t.ProjectID, t.ID)` 前必须 `t.ID = taskID; t.ProjectID = projectID`，否则收到 (0,0) → 级联排程静默失效。CreateTask 已有此赋值（174-175 行），UpdateTask 曾遗漏（bug-024）。
+- **[2026-08-03] 动态 SQL 拼接的 filter 需要表别名**：`buildTimeFilter(tableAlias, ...)` 生成 `p.created_at` 引用，凡拼接该 filter 的查询 `FROM` 必须带别名 `p`（如 `FROM projects p`）。无别名查询会报 `no such column` 且错误被 `QueryRow.Scan` 忽略 → 统计静默为 0（bug-023）。
+- **[2026-08-03] 前向传播跳过父任务**：`forwardPass` 中 `parentSet[succ.ID]`（有子任务的任务）被跳过，父任务日期由 `rollupParentDates` 汇总子任务范围维护。验证级联时不能选父任务做触发器/后继——选叶子链路（如 37→38→39）。
+- **[2026-08-03] PUT /tasks 是全量更新**：请求体缺字段会把 DB 值清零（duration_days/progress_pct/status 等）。前端 TaskDetailModal 保存时传完整对象没问题，curl/脚本调用必须带全字段，否则会破坏数据（27 的 duration 被清 0 即此因）。
 
 ## Decision Log
 

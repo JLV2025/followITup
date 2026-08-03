@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T03:24:29.000Z
-> Files: 81 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T06:21:12.621Z
+> Files: 84 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -47,6 +47,8 @@
 - `task-4-report.md` — Task 4 报告：DashboardStats + ProjectList 基线统计 (~1023 tok)
 - `task-5-report.md` — Task 5 实施报告: 前端适配层 + ganttStore (~200 tok)
 - `task-6-report.md` — Task 6 实施报告：甘特图基线绘制层 + 工具栏基线下拉 (~1377 tok)
+- `task-7-report.md` — Task 7 实施报告 (~463 tok)
+- `task-8-report.md` — Task 8 报告 — Dashboard 偏差统计 + 2个既有bug修复记录 (~407 tok)
 
 ## C:/Users/jingl/.claude/plans/
 
@@ -88,9 +90,9 @@
 - `baseline.go` — Struct: BaselineHandler (~1347 tok)
 - `calendar.go` — Struct: CalendarHandler (~660 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~213 tok)
-- `projects.go` — Struct: ProjectHandler (~2728 tok)
-- `tasks.go` — Struct: TaskHandler (~3503 tok)
-- `zz_debug_test.go` — TestDebugProjectList (~240 tok)
+- `projects.go` — Struct: ProjectHandler (~2924 tok)
+- `tasks.go` — Struct: TaskHandler (~3550 tok)
+- `zz_debug_test.go` — TestZZDebugRecalc (~126 tok)
 
 ## backend/internal/auth/
 
@@ -111,6 +113,7 @@
 - `calendar.go` — Struct: CalendarEntry (~739 tok)
 - `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~2315 tok)
 - `scheduler.go` — Struct: Dep (~3148 tok)
+- `zz_debug_test.go` — TestZZDebugLoad (~267 tok)
 
 ## backend/internal/server/
 
@@ -161,7 +164,7 @@
 
 ## frontend/src/pages/
 
-- `Dashboard.tsx` — Dashboard — renders form (~3789 tok)
+- `Dashboard.tsx` — Dashboard — renders form (~3975 tok)
 - `Login.tsx` — Login — renders form (~582 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~282 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~7383 tok)
@@ -171,7 +174,7 @@
 ## frontend/src/stores/
 
 - `authStore.ts` — API routes: POST (1 endpoints) (~388 tok)
-- `dashboardStore.ts` — API routes: GET (2 endpoints) (~533 tok)
+- `dashboardStore.ts` — API routes: GET (2 endpoints) (~563 tok)
 - `ganttStore.ts` — 聚焦信息：某用户正在查看/编辑某任务 (~1583 tok)
 - `settingsStore.ts` — 根据日期和财年起始月计算财年编号 (~799 tok)
 

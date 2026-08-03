@@ -723,3 +723,52 @@ cd backend && followitup.exe config.yaml   # 启动
 | 11:11 | Edited frontend/src/pages/ProjectGantt.tsx | 5→5 lines | ~70 |
 | 11:11 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~34 |
 | 11:17 | Edited .superpowers/sdd/2026-08-03-baseline-comparison/task-6-report.md | expanded (+45 lines) | ~314 |
+| 11:23 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: baseline_start_date, baseline_end_date | ~39 |
+| 11:23 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 import(s) | ~36 |
+| 11:23 | Edited frontend/src/components/TaskDetailModal.tsx | added optional chaining | ~212 |
+| 11:23 | Edited frontend/src/components/TaskDetailModal.tsx | 4→6 lines | ~75 |
+| 11:24 | Edited frontend/src/components/TaskDetailModal.tsx | expanded (+20 lines) | ~291 |
+| 11:24 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: actual_start, actual_end | ~179 |
+| 11:24 | Edited frontend/src/styles/components.css | expanded (+7 lines) | ~136 |
+| 11:26 | Task 7: TaskDetailModal 实际日期输入 + 基线偏差徽标 | TaskDetailModal.tsx, components.css | 提交 21d91c9, tsc 无错误 | ~4500 |
+| 11:27 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-7-report.md | — | ~494 |
+
+## Session: 2026-08-03 14:03
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 14:05 | Edited frontend/src/stores/dashboardStore.ts | 6→7 lines | ~45 |
+| 14:05 | Edited frontend/src/stores/dashboardStore.ts | 4→6 lines | ~36 |
+| 14:05 | Edited frontend/src/pages/Dashboard.tsx | expanded (+6 lines) | ~158 |
+| 14:06 | Edited frontend/src/pages/Dashboard.tsx | 1→6 lines | ~104 |
+| 14:09 | Edited backend/internal/api/projects.go | 3→3 lines | ~44 |
+| 14:09 | Edited backend/internal/api/projects.go | expanded (+6 lines) | ~264 |
+| 14:09 | Edited frontend/src/stores/dashboardStore.ts | 7→8 lines | ~52 |
+| 14:09 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~13 |
+| 14:14 | Edited backend/internal/api/tasks.go | 4→8 lines | ~100 |
+| 14:16 | Created backend/internal/api/zz_debug_test.go | — | ~122 |
+| 14:16 | Edited backend/internal/api/zz_debug_test.go | inline fix | ~30 |
+| 14:17 | Created backend/internal/scheduler/zz_debug_test.go | — | ~240 |
+| 14:18 | Created backend/internal/scheduler/zz_debug_test.go | — | ~267 |
+| 14:21 | Created .superpowers/sdd/2026-08-03-baseline-comparison/task-8-report.md | — | ~434 |
+
+## Session: 2026-08-03 14:03（续）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 14:05 | Task 8 Dashboard 偏差统计：dashboardStore 加 baseline_progress/has_baseline/delay_days/baseline_created_at + Dashboard.tsx Δ%小字与项目卡 Δ 天徽标 + components.css 样式 | 3 前端文件 | tsc 通过 | ~1.5K |
+| 14:08 | 发现 bug-023：DashboardStats 活跃项目数 FROM projects 无别名 + filter 引用 p.created_at → SQL 报错被忽略 → 恒 0；修复加别名 + 加 has_baseline 字段（baseline_progress>0 判断不可靠：基线存在但进度 0% 不显示） | projects.go | 别名修复生效，活跃项目 3 | ~800 |
+| 14:11 | 发现 bug-024：UpdateTask 未回填 t.ID/t.ProjectID → Recalculate(0,0) → 任务更新后级联排程从未生效（核心功能 bug，CreateTask 有赋值 UpdateTask 遗漏）；修复 URL 参数回填 | tasks.go | 修复后级联验证：37→38/39 推后，delay_days=2 | ~700 |
+| 14:13 | 排查"级联未生效"误判：28 是父任务（29/30/47 子任务），前向传播跳过父任务（parentSet 设计行为），非 bug；临时调试测试 zz_debug_test.go 已删除 | scheduler.go(仅读) | 结论：引擎无 bug | ~2K |
+| 14:18 | 浏览器目检：Δ +2 天红徽标 ✓、Δ +0% ✓、无基线不显示 ✓、恢复数据后徽标消失 ✓；恢复测试数据（27 dur/progress、37/38/39 日期） | Dashboard.tsx + DB | Task 8 完成 | ~1.5K |
+| 14:20 | 提交 bca4a07（Task 8 前端）+ b756a19（后端修复）；更新 progress.md/task-8-report.md/buglog(023,024)/cerebrum(4条 Do-Not-Repeat) | 多文件 | 两个提交完成 | ~1K |
+| 14:22 | Task 9 全量回归 + 构建：go test 全过 + tsc + npm build + go build（exe 20MB）| — | 通过 | ~400 |
+| 14:23 | 踩坑：cp -r dist 到已存在 frontend-dist 嵌套成子目录 → 旧产物嵌入 exe → Δ 徽标不显示；修复：rm -rf 后重拷 + 重新构建（build.bat 本身正确：rmdir+xcopy）| frontend-dist | exe 冒烟全过：Δ+3% / 14基线条+1实际条 / 基线菜单 | ~1K |
+| 14:25 | Task 9 冒烟完成，待提交"基线对比功能 v1.0:全量回归通过" | — | — | — |
+
+## 基线对比功能 v1.0 完成（Task 1-9 全部完成）
+
+- Task 1-7（上午）：迁移 v4 / 实际日期填充 / baseline API / 看板统计 / 前端透传 / 甘特基线层 / 弹窗基线信息
+- Task 8（本会话）：Dashboard 偏差统计（Δ% + Δ 天徽标）
+- Task 9（本会话）：全量回归 + 构建 + 冒烟 ✓
+- 本会话额外修复 2 个既有 bug：活跃项目数恒 0（表别名）、UpdateTask 级联排程失效（t.ID 回填）
