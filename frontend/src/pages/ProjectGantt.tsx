@@ -274,7 +274,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     gantt.config.columns = [
       { name: "id_col", label: "#", width: 36, align: "center",
         template: function (task: Record<string, any>) {
-          return `<span style="color:var(--text-muted);font-size:11px;">${task.id}</span>`;
+          // 项目内行号：按当前树展示顺序 1..N 连续编号，与数据库 id 解耦
+          return `<span style="color:var(--text-muted);font-size:11px;">${(task.$index ?? 0) + 1}</span>`;
         } as any,
       },
       { name: "text", label: "任务名称", width: 220, tree: true,
@@ -311,9 +312,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       },
     ];
 
-    (gantt.templates as any).progress_text = function (_s: Date, _e: Date, task: Record<string, any>) {
-      return Math.round((task.progress || 0) * 100) + "%";
-    };
+    // 任务条内不显示百分比（dhtmlx 默认 progress_text 模板即返回空串，删除自定义模板）
+    // 左侧"进度"列（progress_bar 列模板）保留百分比显示
 
     // 任务条样式：父任务深色粗体、超期红色、选中高亮
     (gantt.templates as any).task_class = function (_s: Date, _e: Date, task: Record<string, any>) {
