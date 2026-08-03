@@ -130,3 +130,48 @@ Go exe:  go build -o followitup.exe ./cmd/server/ -- OK (followitup.exe 约 19MB
 ### 提交
 
 （见本次提交 SHA）
+
+---
+
+## Fix Report: 基线菜单外部点击关闭（2026-08-03 11:15）
+
+### 问题描述
+
+基线下拉菜单打开后，点击页面其他区域不会关闭，用户必须再次点击触发按钮才能收起。
+
+### 改动文件
+
+| 文件 | 改动 | 行数 |
+|------|------|------|
+| `frontend/src/pages/ProjectGantt.tsx` | 新增 useEffect 外部点击监听 + 菜单容器/按钮 stopPropagation | 9 行 |
+
+### 改动详情
+
+1. **useEffect 监听**（第 96-107 行）：`baselineMenuOpen` 为 true 时注册 `document` 级 click 监听，点击任意处关闭菜单；`baselineMenuOpen` 变为 false 时清理监听器。使用 `setTimeout(0)` 延迟注册，避免 toggle 按钮的同一 click 事件立即触发关闭。
+
+2. **按钮 stopPropagation**（第 568 行）：toggle 按钮 onClick 添加 `e.stopPropagation()`，防止按钮点击被 document 监听器捕获。
+
+3. **菜单容器 stopPropagation**（第 575 行）：`.baseline-menu` div 添加 `onClick={(e) => e.stopPropagation()}`，确保点击菜单内部（如"重新创建基线"按钮）不会冒泡到 document 导致菜单关闭。
+
+### Playwright 验证结果
+
+| 测试场景 | 预期 | 结果 |
+|---------|------|------|
+| 点击 toggle 按钮打开菜单 | 菜单显示 | 通过 |
+| 在菜单内点击（`.baseline-menu-info`） | 菜单保持打开 | 通过 |
+| 点击页面外部区域（body 10,10） | 菜单关闭 | 通过 |
+| 点击 toggle 按钮关闭菜单 | 菜单关闭 | 通过 |
+| tsc --noEmit | 无错误 | 通过 |
+| 前端 build（tsc + vite） | 成功 | 通过 |
+| Go exe build | 成功 | 通过 |
+
+### 构建结果
+
+```
+frontend: tsc -b && vite build -- OK (dist/assets/index-CfZFH_OO.js)
+Go exe:  go build -o followitup.exe ./cmd/server/ -- OK
+```
+
+### 提交
+
+（见本次提交 SHA）

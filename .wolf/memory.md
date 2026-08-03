@@ -4,6 +4,7 @@
 > Old sessions are consolidated by the daemon weekly.
 
 | 10:50 | 修复基线层 top 定位：bars_area 共享容器内基线条 top = line.offsetTop - 4、实际条 top = line.offsetTop + line.offsetHeight，前端构建+Go exe 构建成功 | frontend/src/pages/ProjectGantt.tsx | Playwright 验证：4 条基线 leftDiff=0、topDiff=-4、各自 top 不同，TS 无错误 | ~3k |
+| 11:15 | 修复基线菜单外部点击不关闭：useEffect + document click 监听 + stopPropagation，4 场景 Playwright 验证通过 | frontend/src/pages/ProjectGantt.tsx | TSC 无错误，前后端构建成功 | ~2k |
 
 ## 待办事项
 
@@ -718,3 +719,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:44 | Edited frontend/src/pages/ProjectGantt.tsx | 1→2 lines | ~83 |
 | 10:44 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: top | ~75 |
 | 10:56 | Edited .superpowers/sdd/2026-08-03-baseline-comparison/task-6-report.md | expanded (+64 lines) | ~538 |
+| 11:11 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~144 |
+| 11:11 | Edited frontend/src/pages/ProjectGantt.tsx | 5→5 lines | ~70 |
+| 11:11 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~34 |
+| 11:17 | Edited .superpowers/sdd/2026-08-03-baseline-comparison/task-6-report.md | expanded (+45 lines) | ~314 |

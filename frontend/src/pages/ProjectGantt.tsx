@@ -94,6 +94,18 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
 
+  // 基线菜单外部点击关闭：菜单打开时注册 document 级 click 监听，关闭时清理
+  useEffect(() => {
+    if (!baselineMenuOpen) return;
+    const handleClick = () => setBaselineMenuOpen(false);
+    // 延迟注册避免同一事件循环中 toggle 按钮的 click 事件立即触发关闭
+    const timer = setTimeout(() => document.addEventListener("click", handleClick), 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("click", handleClick);
+    };
+  }, [baselineMenuOpen]);
+
   const {
     tasks, links, focusMap, loading, baselineMeta,
     fetchData, addLink, deleteLink,
@@ -552,13 +564,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           <div className="baseline-menu-wrap">
             <button
               className={`btn-zoom btn-baseline${baselineMeta ? " has-baseline" : ""}`}
-              onClick={() => setBaselineMenuOpen(!baselineMenuOpen)}
+              onClick={(e) => { e.stopPropagation(); setBaselineMenuOpen(!baselineMenuOpen); }}
               title="基线管理"
             >
               基线{baselineMeta ? ` ${baselineMeta.created_at.slice(5, 10)}` : ""} ▾
             </button>
             {baselineMenuOpen && (
-              <div className="baseline-menu">
+              <div className="baseline-menu" onClick={(e) => e.stopPropagation()}>
                 {baselineMeta ? (
                   <>
                     <div className="baseline-menu-info">
