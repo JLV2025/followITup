@@ -43,3 +43,5 @@
 - **[2026-07-31] 自动缩放算法**：从最细档位遍历，找到第一个"项目总像素宽度 ≤ 可用图表宽度"的级别，确保首次打开无滚动条完整显示全部任务。手动放大后允许滚动条。
 - **[2026-07-31] dhtmlx-gantt 双击与 render 冲突**：`onTaskClick` 内调用 `gantt.render()` 会重置内部"第一次点击"状态导致双击永远无法触发。解决方案：通过 React state 触发 useEffect 延迟 render，避免在 click 事件处理器内同步调用 render。
 - **[2026-07-31] dhtmlx-gantt 行高密度**：`row_height: 28` + `scale_height: 40` + `min_column_width: 40` 可在 1920px 屏幕显示约 36 行任务。
+- **[2026-08-03] 看板进度语义**：整体完成率与项目进度统一为"顶层任务时长加权"(SUM(duration_days×progress_pct)/NULLIF(SUM(duration_days),0),过滤 parent_id IS NULL OR 0),不再用 AVG(progress_pct) 简单平均。子任务进度通过父任务体现:recalcParentProgress 递归维护父任务进度,rollupParentDates 维护父任务 duration_days(子任务区间工作日数),两层配合使加权计算有意义。
+- **[2026-08-03] GitNexus detect_changes 风险解读**：risk=critical 是改动符号数量驱动(本次 36 个符号全部是 diff 内入口符号),不代表破坏性。判断是否安全看 affected_processes 的 changed_steps:全部为 step 1(改动符号即流程入口)则无下游破坏。
