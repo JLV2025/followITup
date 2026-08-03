@@ -108,8 +108,19 @@ func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[stri
 		}
 	}
 
-	changes := forwardPass(tasks, deps, startQueue, parentSet, cal)
-	rollupParentDates(tasks, parentSet, changes, cal)
+	// 迭代收敛：父任务作为前驱时，其汇总值（rollup）参与下一轮传播。
+	// 每轮从起点重新前向传播（内存值已更新），直至无变化（一般 2-3 轮，上限 5 轮）
+	changes := make(map[int64]map[string]string)
+	for round := 0; round < 5; round++ {
+		ch := forwardPass(tasks, deps, startQueue, parentSet, cal)
+		rollupParentDates(tasks, parentSet, ch, cal)
+		for id, fields := range ch {
+			changes[id] = fields
+		}
+		if len(ch) == 0 {
+			break // 收敛：无新变化
+		}
+	}
 	backwardPass(tasks, deps, parentSet, cal)
 
 	for i := range tasks {
@@ -254,10 +265,13 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 				}
 			}
 		}
-		// 隐式前驱约束：同分支前一任务的结束时间（FS，lag=0）
-		if pid, ok := implicitPred[succ.ID]; ok {
-			if p := taskMap[pid]; p != nil && p.EndDate != "" && p.EndDate > candidateStart {
-				candidateStart = p.EndDate
+		// 隐式前驱约束：仅当任务没有显式前置时生效——定义了前置（一个或多个）后，
+		// 开始时间完全由前置完成时间决定，与顺序/前一个任务无关
+		if len(predDeps[succ.ID]) == 0 {
+			if pid, ok := implicitPred[succ.ID]; ok {
+				if p := taskMap[pid]; p != nil && p.EndDate != "" && p.EndDate > candidateStart {
+					candidateStart = p.EndDate
+				}
 			}
 		}
 		candidateEnd := AddWorkDays(cal, candidateStart, succ.DurationDays)
@@ -275,18 +289,15 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 			return
 		}
 
-		duration := CountWorkDays(cal, candidateStart, candidateEnd)
-		if duration < 1 {
-			duration = 1
-		}
 		changes[succ.ID] = map[string]string{
 			"start_date":    candidateStart,
 			"end_date":      candidateEnd,
-			"duration_days": fmt.Sprintf("%d", duration),
+			// duration 是用户定义的固定属性：拖动/排程只调整开始/结束时间，不改变时长
+			"duration_days": fmt.Sprintf("%d", succ.DurationDays),
 		}
 		succ.StartDate = candidateStart
 		succ.EndDate = candidateEnd
-		succ.DurationDays = duration
+		// succ.DurationDays 保持不变
 
 		queue = append(queue, succ.ID)
 	}
