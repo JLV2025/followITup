@@ -455,9 +455,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // === 事件 ===
 
-    // 拖拽排序后同步 sort_order（全局重排：按当前树展示顺序重新编号，跳过未变任务）
-    gantt.attachEvent("onAfterTaskDrag", async function (_id: unknown, mode: string) {
-      if (readonlyRef.current || mode !== "move") return;
+    // 行拖拽排序后同步 sort_order（全局重排：按当前树展示顺序重新编号，跳过未变任务）
+    // 注意：dhtmlx 行排序拖拽触发 onRowDragEnd（此时已本地重排），任务条拖拽已被禁用（drag_move=false）
+    const saveRowOrder = async () => {
+      if (readonlyRef.current) return;
       try {
         // eachTask 深度优先遍历 = 展示顺序
         const order: number[] = [];
@@ -484,7 +485,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         }
         if (changed > 0) fetchData(projectId, readonlyRef.current);
       } catch { /* ignore */ }
-    });
+    };
+    gantt.attachEvent("onRowDragEnd", function () { saveRowOrder(); });
 
     // 拖拽连线创建依赖
     gantt.attachEvent("onAfterLinkAdd", async function (_id: unknown, link: { source: any; target: any; type: any }) {

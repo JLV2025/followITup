@@ -1189,16 +1189,17 @@
 }
 .baseline-layer-bar { background: #6B7280; }
 .actual-layer-bar { background: #86EFAC; }
-/* 两端小三角（订书钉形）：直角边在最外侧（左三角直角边在最左、右三角直角边在最右），
-   斜边指向条内；三角高 6px 向下凸出 2px，标定任务条起止点 */
+/* 两端小三角（订书钉形）：长边=基线条，两端各一个垂直向下的直角三角形短边（脚），
+   三角完全在基线条下方（top:4px），直角边在最外侧（左三角直角边在最左、右三角直角边在最右），
+   标定任务条起止点 */
 .baseline-layer-bar::before, .baseline-layer-bar::after,
 .actual-layer-bar::before, .actual-layer-bar::after {
-  content: ""; position: absolute; top: 0; width: 5px; height: 6px;
+  content: ""; position: absolute; top: 4px; width: 5px; height: 4px;
 }
-.baseline-layer-bar::before { left: -4px; background: #6B7280; clip-path: polygon(0 0, 0 100%, 100% 50%); }
-.baseline-layer-bar::after  { right: -4px; background: #6B7280; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
-.actual-layer-bar::before   { left: -4px; background: #86EFAC; clip-path: polygon(0 0, 0 100%, 100% 50%); }
-.actual-layer-bar::after    { right: -4px; background: #86EFAC; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+.baseline-layer-bar::before { left: -4px; background: #6B7280; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+.baseline-layer-bar::after  { right: -4px; background: #6B7280; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.actual-layer-bar::before   { left: -4px; background: #86EFAC; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+.actual-layer-bar::after    { right: -4px; background: #86EFAC; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
 /* 极小宽度：三角折叠成菱形干扰视线，隐藏只留细条 */
 .baseline-layer-bar.no-arrow::before, .baseline-layer-bar.no-arrow::after,
 .actual-layer-bar.no-arrow::before, .actual-layer-bar.no-arrow::after { display: none; }
