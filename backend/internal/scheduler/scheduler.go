@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sort"
 )
 
 type DepType string
@@ -41,9 +42,48 @@ type TaskInfo struct {
 	LateStart       string
 	LateFinish      string
 	TotalFloat      int
+	SortOrder       int // 项目内排序序号（隐式顺序依赖依据）
 }
 
+// Recalculate 从 triggerTaskID 出发传播后继链（触发任务自身不被改写，保留手动调整）
 func Recalculate(db *sql.DB, projectID int64, triggerTaskID int64) (map[int64]map[string]string, error) {
+	return recalc(db, projectID, []int64{triggerTaskID})
+}
+
+// RecalculateAll 全项目重算：从所有链头（无显式前置且无隐式前驱的任务）出发。
+// 用于排序变化等影响全局隐式顺序依赖的场景。
+func RecalculateAll(db *sql.DB, projectID int64) (map[int64]map[string]string, error) {
+	tasks, err := loadTasks(db, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("加载任务失败: %w", err)
+	}
+	deps, err := loadDeps(db, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("加载依赖失败: %w", err)
+	}
+	implicitPred, _ := buildImplicitPred(tasks)
+	predDeps := make(map[int64]bool)
+	for _, d := range deps {
+		predDeps[d.SuccessorID] = true
+	}
+	var heads []int64
+	for _, t := range tasks {
+		if t.ManualScheduled {
+			continue // 手动任务不入队（其后继仍可通过其它链头到达）
+		}
+		if !predDeps[t.ID] {
+			if _, ok := implicitPred[t.ID]; !ok {
+				heads = append(heads, t.ID)
+			}
+		}
+	}
+	if len(heads) == 0 {
+		return nil, nil
+	}
+	return recalc(db, projectID, heads)
+}
+
+func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[string]string, error) {
 	tasks, err := loadTasks(db, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("加载任务失败: %w", err)
@@ -68,7 +108,7 @@ func Recalculate(db *sql.DB, projectID int64, triggerTaskID int64) (map[int64]ma
 		}
 	}
 
-	changes := forwardPass(tasks, deps, triggerTaskID, parentSet, cal)
+	changes := forwardPass(tasks, deps, startQueue, parentSet, cal)
 	rollupParentDates(tasks, parentSet, changes, cal)
 	backwardPass(tasks, deps, parentSet, cal)
 
@@ -98,7 +138,7 @@ func Recalculate(db *sql.DB, projectID int64, triggerTaskID int64) (map[int64]ma
 func loadTasks(db *sql.DB, projectID int64) ([]TaskInfo, error) {
 	rows, err := db.Query(
 		`SELECT id, start_date, end_date, duration_days, manual_scheduled,
-		        constraint_type, constraint_date, parent_id
+		        constraint_type, constraint_date, parent_id, sort_order
 		 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`, projectID)
 	if err != nil {
 		return nil, err
@@ -109,7 +149,7 @@ func loadTasks(db *sql.DB, projectID int64) ([]TaskInfo, error) {
 		var t TaskInfo
 		var manual int
 		if err := rows.Scan(&t.ID, &t.StartDate, &t.EndDate, &t.DurationDays, &manual,
-			&t.ConstraintType, &t.ConstraintDate, &t.ParentID); err != nil {
+			&t.ConstraintType, &t.ConstraintDate, &t.ParentID, &t.SortOrder); err != nil {
 			continue
 		}
 		t.ManualScheduled = manual != 0
@@ -178,19 +218,78 @@ func detectCycle(tasks []TaskInfo, deps []Dep) []int64 {
 	return nil
 }
 
-func forwardPass(tasks []TaskInfo, deps []Dep, triggerTaskID int64, parentSet map[int64]bool, cal map[string]string) map[int64]map[string]string {
+func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map[int64]bool, cal map[string]string) map[int64]map[string]string {
 	taskMap := make(map[int64]*TaskInfo)
 	for i := range tasks {
 		taskMap[tasks[i].ID] = &tasks[i]
 	}
-	successors := make(map[int64][]Dep)
+	successors := make(map[int64][]Dep)  // 前置 id → 显式依赖（正向传播）
+	predDeps := make(map[int64][]Dep)    // 后继 id → 显式依赖（候选综合取 max）
 	for _, d := range deps {
 		successors[d.PredecessorID] = append(successors[d.PredecessorID], d)
+		predDeps[d.SuccessorID] = append(predDeps[d.SuccessorID], d)
 	}
 
+	// 隐式顺序依赖：同分支（同 parent）内按 sort_order 相邻的任务，前者是后者的隐式 FS 前置
+	// 即"任务的开始时间默认 = 前面任务的结束时间"，除非显式依赖/手动排程覆盖
+	implicitPred, implicitSucc := buildImplicitPred(tasks)
+
 	changes := make(map[int64]map[string]string)
-	queue := []int64{triggerTaskID}
+	queue := startQueue
 	visited := make(map[int64]bool)
+
+	// applyCandidate 计算候选日期并双向更新后继（前置变化 → 后继自动调整，含提前）
+	// 候选 = max(当前边候选, 该后继的全部显式前置候选, 隐式前驱结束时间)——多前置取 max 始终成立
+	applyCandidate := func(pred *TaskInfo, succ *TaskInfo, dep Dep) {
+		if pred == nil || succ == nil || succ.ManualScheduled || parentSet[succ.ID] {
+			return
+		}
+
+		candidateStart, _ := calcDates(pred, succ, dep, cal)
+		for _, pd := range predDeps[succ.ID] {
+			if p := taskMap[pd.PredecessorID]; p != nil {
+				cs, _ := calcDates(p, succ, pd, cal)
+				if cs > candidateStart {
+					candidateStart = cs
+				}
+			}
+		}
+		// 隐式前驱约束：同分支前一任务的结束时间（FS，lag=0）
+		if pid, ok := implicitPred[succ.ID]; ok {
+			if p := taskMap[pid]; p != nil && p.EndDate != "" && p.EndDate > candidateStart {
+				candidateStart = p.EndDate
+			}
+		}
+		candidateEnd := AddWorkDays(cal, candidateStart, succ.DurationDays)
+
+		if succ.ConstraintType == ConstraintStartNoEarlierThan && succ.ConstraintDate != "" {
+			if candidateStart < succ.ConstraintDate {
+				candidateStart = succ.ConstraintDate
+				candidateEnd = AddWorkDays(cal, candidateStart, succ.DurationDays)
+			}
+		}
+
+		// 双向跟随：前置（或前面任务）日期变化时后继自动调整（含提前）。
+		// 被修改的任务自身（triggerTaskID）不会被本函数改写，故手动调整优先保留。
+		if candidateStart == succ.StartDate {
+			return
+		}
+
+		duration := CountWorkDays(cal, candidateStart, candidateEnd)
+		if duration < 1 {
+			duration = 1
+		}
+		changes[succ.ID] = map[string]string{
+			"start_date":    candidateStart,
+			"end_date":      candidateEnd,
+			"duration_days": fmt.Sprintf("%d", duration),
+		}
+		succ.StartDate = candidateStart
+		succ.EndDate = candidateEnd
+		succ.DurationDays = duration
+
+		queue = append(queue, succ.ID)
+	}
 
 	for len(queue) > 0 {
 		currentID := queue[0]
@@ -200,43 +299,46 @@ func forwardPass(tasks []TaskInfo, deps []Dep, triggerTaskID int64, parentSet ma
 		}
 		visited[currentID] = true
 
+		// 显式依赖后继
 		for _, dep := range successors[currentID] {
-			pred := taskMap[dep.PredecessorID]
-			succ := taskMap[dep.SuccessorID]
-			if pred == nil || succ == nil || succ.ManualScheduled || parentSet[succ.ID] {
-				continue
-			}
+			applyCandidate(taskMap[dep.PredecessorID], taskMap[dep.SuccessorID], dep)
+		}
 
-			candidateStart, candidateEnd := calcDates(pred, succ, dep, cal)
-
-			if succ.ConstraintType == ConstraintStartNoEarlierThan && succ.ConstraintDate != "" {
-				if candidateStart < succ.ConstraintDate {
-					candidateStart = succ.ConstraintDate
-					candidateEnd = AddWorkDays(cal, candidateStart, succ.DurationDays)
-				}
-			}
-
-			if candidateStart <= succ.StartDate {
-				continue
-			}
-
-			duration := CountWorkDays(cal, candidateStart, candidateEnd)
-			if duration < 1 {
-				duration = 1
-			}
-			changes[succ.ID] = map[string]string{
-				"start_date":    candidateStart,
-				"end_date":      candidateEnd,
-				"duration_days": fmt.Sprintf("%d", duration),
-			}
-			succ.StartDate = candidateStart
-			succ.EndDate = candidateEnd
-			succ.DurationDays = duration
-
-			queue = append(queue, succ.ID)
+		// 隐式顺序后继（同分支内按 sort_order 的下一个任务，FS lag=0）
+		if nextID, ok := implicitSucc[currentID]; ok {
+			applyCandidate(taskMap[currentID], taskMap[nextID], Dep{Type: FS, LagDays: 0})
 		}
 	}
 	return changes
+}
+
+// buildImplicitPred 构建隐式顺序依赖映射：同分支（同 parent_id）内按 sort_order 排序，
+// 相邻任务前者是后者的隐式前驱。返回 id→前驱 与 id→后继 两个方向
+func buildImplicitPred(tasks []TaskInfo) (map[int64]int64, map[int64]int64) {
+	implicitPred := make(map[int64]int64)
+	implicitSucc := make(map[int64]int64)
+	groups := make(map[int64][]*TaskInfo) // parentID（0=顶级）→ 该分支的任务
+	for i := range tasks {
+		pid := int64(0)
+		if tasks[i].ParentID != nil {
+			pid = *tasks[i].ParentID
+		}
+		groups[pid] = append(groups[pid], &tasks[i])
+	}
+	for _, g := range groups {
+		// (SortOrder, ID) 双键排序保证确定性（SortOrder 相同时按 id，避免不稳定排序）
+		sort.Slice(g, func(a, b int) bool {
+			if g[a].SortOrder != g[b].SortOrder {
+				return g[a].SortOrder < g[b].SortOrder
+			}
+			return g[a].ID < g[b].ID
+		})
+		for i := 1; i < len(g); i++ {
+			implicitPred[g[i].ID] = g[i-1].ID
+			implicitSucc[g[i-1].ID] = g[i].ID
+		}
+	}
+	return implicitPred, implicitSucc
 }
 
 func backwardPass(tasks []TaskInfo, deps []Dep, parentSet map[int64]bool, cal map[string]string) {
@@ -267,9 +369,17 @@ func backwardPass(tasks []TaskInfo, deps []Dep, parentSet map[int64]bool, cal ma
 	for _, d := range deps {
 		predecessors[d.SuccessorID] = append(predecessors[d.SuccessorID], d)
 	}
+	// 隐式顺序依赖参与倒推（关键路径/浮动计算）
+	implicitPred, _ := buildImplicitPred(tasks)
+	for succID, predID := range implicitPred {
+		predecessors[succID] = append(predecessors[succID], Dep{PredecessorID: predID, SuccessorID: succID, Type: FS, LagDays: 0})
+	}
 	hasSuccessor := make(map[int64]bool)
 	for _, d := range deps {
 		hasSuccessor[d.PredecessorID] = true
+	}
+	for predID := range implicitPred {
+		hasSuccessor[predID] = true
 	}
 
 	type qi struct {

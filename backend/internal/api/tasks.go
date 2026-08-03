@@ -54,8 +54,10 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.db.Query(
 		`SELECT id, project_id, COALESCE(parent_id, 0), name, description, task_type, status, priority,
 		        assignee, start_date, end_date, duration_days, progress_pct,
-		        baseline_start_date, baseline_end_date, baseline_duration_days, baseline_progress_pct,
-		        actual_start, actual_end, manual_scheduled, constraint_type, constraint_date,
+		        COALESCE(baseline_start_date, '') AS baseline_start_date, COALESCE(baseline_end_date, '') AS baseline_end_date,
+		        COALESCE(baseline_duration_days, 0) AS baseline_duration_days, COALESCE(baseline_progress_pct, 0) AS baseline_progress_pct,
+		        COALESCE(actual_start, '') AS actual_start, COALESCE(actual_end, '') AS actual_end,
+		        manual_scheduled, constraint_type, constraint_date,
 		        sort_order, version,
 		        COALESCE(deleted_at, ''), created_at, updated_at
 		 FROM tasks WHERE project_id = ? AND deleted_at IS NULL
@@ -108,7 +110,8 @@ func (h *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
 	err := h.db.QueryRow(
 		`SELECT id, project_id, COALESCE(parent_id, 0), name, description, task_type, status, priority,
 		        assignee, start_date, end_date, duration_days, progress_pct,
-		        actual_start, actual_end, manual_scheduled, constraint_type, constraint_date,
+		        COALESCE(actual_start, '') AS actual_start, COALESCE(actual_end, '') AS actual_end,
+		        manual_scheduled, constraint_type, constraint_date,
 		        sort_order, version,
 		        COALESCE(deleted_at, ''), created_at, updated_at
 		 FROM tasks WHERE id = ? AND deleted_at IS NULL`, taskID,
@@ -196,7 +199,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	// 实际日期自动填充（需先读旧值，已有值不覆盖）
 	var oldActualStart, oldActualEnd string
-	h.db.QueryRow(`SELECT actual_start, actual_end FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&oldActualStart, &oldActualEnd)
+	h.db.QueryRow(`SELECT COALESCE(actual_start, ''), COALESCE(actual_end, '') FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&oldActualStart, &oldActualEnd)
 	t.ActualStart, t.ActualEnd = fillActualDates(t.Status, oldActualStart, oldActualEnd)
 
 	// URL 参数回填（请求体不含 id/project_id，排程级联需要）
@@ -284,6 +287,10 @@ func (h *TaskHandler) UpdateTaskSortOrder(w http.ResponseWriter, r *http.Request
 	}
 
 	h.broadcastChange(r, projectID, taskID)
+	// 排序变化 → 隐式顺序依赖变化 → 全项目重算（同分支相邻任务默认顺序衔接）
+	if _, err := scheduler.RecalculateAll(h.db, projectID); err != nil {
+		log.Printf("[Scheduler] 排序后项目 %d 重算失败: %v", projectID, err)
+	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"id":         taskID,
 		"sort_order": body.SortOrder,
