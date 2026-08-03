@@ -92,7 +92,16 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const [modalTask, setModalTask] = useState<Task | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [rowNumbers, setRowNumbers] = useState<Record<number, number>>({});
   const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
+
+  /** 收集甘特图当前展示顺序的 id → 行号映射（树深度优先，1 基） */
+  const buildRowNumbers = () => {
+    const map: Record<number, number> = {};
+    let n = 0;
+    gantt.eachTask(function (t: Record<string, any>) { map[t.id as number] = ++n; });
+    setRowNumbers(map);
+  };
 
   // 基线菜单外部点击关闭：菜单打开时注册 document 级 click 监听，关闭时清理
   useEffect(() => {
@@ -174,6 +183,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   /** 新建任务 */
   const handleAddTask = () => {
     if (readonly) return;
+    buildRowNumbers();
     setModalTask(null);
     setShowModal(true);
   };
@@ -498,6 +508,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const liveTasks = allTasksRef.current;
       const t = liveTasks.find((t) => t.id === tid);
       if (t) {
+        buildRowNumbers();
         setModalTask(t);
         setShowModal(true);
         return false; // 阻止默认 lightbox
@@ -655,6 +666,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           projectId={projectId}
           task={modalTask}
           allTasks={allTasks}
+          rowNumbers={rowNumbers}
           onClose={() => { setShowModal(false); setModalTask(null); }}
           onSaved={handleModalSaved}
         />

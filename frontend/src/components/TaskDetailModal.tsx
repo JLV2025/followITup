@@ -39,6 +39,7 @@ interface Props {
   projectId: number;
   task: Task | null; // null = 新建
   allTasks: Task[];
+  rowNumbers?: Record<number, number>; // id → 项目内行号（甘特图 # 列顺序）
   onClose: () => void;
   onSaved: () => void;
 }
@@ -53,8 +54,16 @@ const PRIORITY_LABELS: Record<string, string> = {
   low: "低", medium: "中", high: "高", critical: "紧急",
 };
 
-export default function TaskDetailModal({ projectId, task, allTasks, onClose, onSaved }: Props) {
+export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers, onClose, onSaved }: Props) {
   const isNew = !task;
+  // 父任务：起止日期/工期由子任务自动汇总，不允许直接编辑；也不支持设置前置任务
+  const isParent = task ? allTasks.some((t) => t.parent_id === task.id) : false;
+  // 行号 → id 反向映射（快速添加输入行号时解析）
+  const rowToId: Record<number, number> = {};
+  if (rowNumbers) {
+    for (const [id, row] of Object.entries(rowNumbers)) rowToId[row] = Number(id);
+  }
+  const displayNo = (id: number) => rowNumbers?.[id] ?? id;
 
   // 表单状态
   const [name, setName] = useState("");
@@ -147,16 +156,18 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
     setDepLoading(false);
   };
 
-  /** 快速添加前置任务：解析逗号/分号分隔的 ID 并逐个创建依赖 */
+  /** 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 */
   const handleQuickAddPreds = async () => {
     if (!task || !quickPredIds.trim()) return;
-    // 解析 "1,2;3 5" 这样的输入
+    // 解析 "1,2;3 5" 这样的输入（行号 → 数据库 id）
     const ids = quickPredIds
       .split(/[,;，；\s]+/)
       .map((s) => parseInt(s.trim(), 10))
-      .filter((n) => !isNaN(n) && n > 0 && n !== task.id);
+      .filter((n) => !isNaN(n) && n > 0 && n !== displayNo(task.id))
+      .map((row) => rowToId[row])
+      .filter((id) => id !== undefined && id !== task.id);
     if (ids.length === 0) {
-      setError("请输入有效的前置任务序号（不能是自己的 ID）");
+      setError("请输入有效的前置任务行号（不能是自己的行号）");
       return;
     }
     setError("");
@@ -372,6 +383,11 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
         <hr className="modal-divider" />
         <h4 className="modal-section-title">日期与进度</h4>
 
+        {isParent && (
+          <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "-6px 0 10px" }}>
+            父任务的起止日期由子任务自动汇总，不支持直接编辑
+          </p>
+        )}
         <div className="form-row">
           <div className="form-group">
             <label>开始日期</label>
@@ -379,6 +395,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              disabled={isParent}
             />
           </div>
           <div className="form-group">
@@ -387,6 +404,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              disabled={isParent}
             />
           </div>
         </div>
@@ -418,6 +436,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
               min={1}
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value) || 1)}
+              disabled={isParent}
             />
           </div>
           <div className="form-group">
@@ -491,17 +510,23 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
             <hr className="modal-divider" />
             <h4 className="modal-section-title">前置任务</h4>
 
-            {/* 快速添加：逗号/分号分隔多个 ID */}
+            {isParent ? (
+              <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
+                父任务由子任务汇总日期，不支持设置前置任务
+              </p>
+            ) : (
+            <>
+            {/* 快速添加：逗号/分号分隔多个行号 */}
             <div className="dep-quick-add">
               <label style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>
-                快速添加（多个序号用逗号/分号分隔，如 "2, 3, 5"）
+                快速添加（多个行号用逗号/分号分隔，如 "2, 3, 5"）
               </label>
               <div className="dep-add-row">
                 <input
                   type="text"
                   value={quickPredIds}
                   onChange={(e) => setQuickPredIds(e.target.value)}
-                  placeholder="输入前置任务序号..."
+                  placeholder="输入前置任务行号..."
                   style={{ flex: 2 }}
                 />
                 <select
@@ -544,7 +569,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
                   <option value="">逐个选择...</option>
                   {availablePreds.map((t) => (
                     <option key={t.id} value={t.id}>
-                      #{t.id} {t.name}
+                      #{displayNo(t.id)} {t.name}
                     </option>
                   ))}
                 </select>
@@ -586,7 +611,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
                   return (
                     <div key={d.id} className="dep-item">
                       <span className="dep-name">
-                        {pred ? `#${pred.id} ${pred.name}` : `#${d.predecessor_id}（已删除）`}
+                        {pred ? `#${displayNo(pred.id)} ${pred.name}` : `#${displayNo(d.predecessor_id)}（已删除）`}
                       </span>
                       <span className="dep-type-badge">{d.dep_type}</span>
                       {d.lag_days > 0 && (
@@ -608,6 +633,8 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
               <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
                 暂无前置任务
               </p>
+            )}
+            </>
             )}
           </>
         )}
