@@ -394,6 +394,103 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-03T06:25:00.000Z"
+    },
+    {
+      "id": "bug-025",
+      "timestamp": "2026-08-03T07:14:31.321Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check) | Also: // 项目内行号：按当前树展示顺序 1..N 连续编号，与数据库 id 解耦; return `<span style=\"color:var(--text-muted);font-size:11px;",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-03T07:15:13.550Z"
+    },
+    {
+      "id": "bug-026",
+      "timestamp": "2026-08-03T07:15:17.876Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 5→4 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T07:15:17.876Z"
+    },
+    {
+      "id": "bug-027",
+      "timestamp": "2026-08-03T07:17:30.069Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Had ` ${baselineMeta.created_at.slice(5, 10)}`",
+      "fix": "Changed to \" ✓\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-03T07:17:35.137Z"
+    },
+    {
+      "id": "bug-028",
+      "timestamp": "2026-08-03T07:18:40.422Z",
+      "error_message": "Wrong reference: clearHeartbeat should be hasConnectedOnce",
+      "file": "frontend/src/api/ws-client.ts",
+      "root_cause": "Used \"clearHeartbeat\" instead of \"hasConnectedOnce\"",
+      "fix": "Changed clearHeartbeat → hasConnectedOnce",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T07:18:40.422Z"
+    },
+    {
+      "id": "bug-029",
+      "timestamp": "2026-08-03T07:20:30.534Z",
+      "error_message": "CSS fix: max-width, max-height, padding",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "max-width: 580px !important → 860px !important; max-height: 90vh → 220px; padding: 28px 32px !important → 24px 28px !important",
+      "fix": "Changed max-width: 580px !important → 860px !important; max-height: 90vh → 220px; padding: 28px 32px !important → 24px 28px !important",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T07:20:30.534Z"
+    },
+    {
+      "id": "bug-025",
+      "timestamp": "2026-08-03T07:30:00.000Z",
+      "error_message": "任务 27/37 名称在甘特图显示乱码（��）",
+      "file": "backend/data/followitup.db",
+      "root_cause": "非产品 bug：此前测试用 curl 在 Windows GBK 终端 PUT 写入中文任务名，GBK 字节入库后按 UTF-8 解析成替换字符。渲染链路（gantt-adapter.ts:74 → ProjectGantt.tsx:288）无编码转换问题",
+      "fix": "SQL 修复：UPDATE tasks SET name='拆除'/'家具进场' WHERE id IN (27,37) AND project_id=6",
+      "tags": [
+        "data-corruption",
+        "encoding",
+        "test-pollution",
+        "gbk"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-03T07:30:00.000Z"
     }
   ]
 }

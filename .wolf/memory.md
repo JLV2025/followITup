@@ -772,3 +772,46 @@ cd backend && followitup.exe config.yaml   # 启动
 - Task 8（本会话）：Dashboard 偏差统计（Δ% + Δ 天徽标）
 - Task 9（本会话）：全量回归 + 构建 + 冒烟 ✓
 - 本会话额外修复 2 个既有 bug：活跃项目数恒 0（表别名）、UpdateTask 级联排程失效（t.ID 回填）
+| 14:26 | Session end: 14 writes across 6 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 9 reads | ~31566 tok |
+| 15:08 | Created C:/Users/jingl/.claude/plans/ui-bug-1-2-rosy-lobster.md | — | ~1663 |
+| 15:12 | Edited backend/internal/api/tasks.go | 3→4 lines | ~68 |
+| 15:12 | Edited backend/internal/api/tasks.go | modified UpdateTaskSortOrder() | ~328 |
+| 15:13 | Edited backend/internal/api/tasks.go | 13→13 lines | ~188 |
+| 15:14 | Edited frontend/src/api/gantt-adapter.ts | 7→8 lines | ~60 |
+| 15:14 | Edited frontend/src/api/gantt-adapter.ts | 5→6 lines | ~46 |
+| 15:14 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~342 |
+| 15:15 | Edited frontend/src/pages/ProjectGantt.tsx | added nullish coalescing | ~87 |
+| 15:15 | Edited frontend/src/pages/ProjectGantt.tsx | 5→4 lines | ~38 |
+| 15:16 | Edited frontend/src/pages/ProjectGantt.tsx | 7→8 lines | ~178 |
+| 15:16 | Edited frontend/src/pages/ProjectGantt.tsx | 7→8 lines | ~170 |
+| 15:16 | Edited frontend/src/pages/ProjectGantt.tsx | 8→8 lines | ~180 |
+| 15:16 | Edited frontend/src/pages/ProjectGantt.tsx | 8→8 lines | ~172 |
+| 15:17 | Edited frontend/src/pages/ProjectGantt.tsx | " ${baselineMeta.created_a" → " ✓" | ~13 |
+| 15:17 | Edited frontend/src/pages/ProjectGantt.tsx | 2→3 lines | ~35 |
+| 15:18 | Edited frontend/src/api/ws-client.ts | 3→4 lines | ~38 |
+| 15:18 | Edited frontend/src/api/ws-client.ts | added 1 condition(s) | ~116 |
+| 15:18 | Edited frontend/src/api/ws-client.ts | modified disconnect() | ~23 |
+| 15:19 | Edited frontend/src/pages/ProjectGantt.tsx | 3→3 lines | ~87 |
+| 15:19 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+7 lines) | ~141 |
+| 15:19 | Edited frontend/src/components/TaskDetailModal.tsx | 5→8 lines | ~78 |
+| 15:19 | Edited frontend/src/components/TaskDetailModal.tsx | 8→11 lines | ~87 |
+| 15:20 | Edited frontend/src/components/TaskDetailModal.tsx | 3→5 lines | ~35 |
+| 15:20 | Edited frontend/src/styles/components.css | expanded (+14 lines) | ~184 |
+
+## Session: 2026-08-03 15:00（8 项 UI 修复，计划 ui-bug-1-2-rosy-lobster）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:00 | 数据修复：27/37 名称 GBK 乱码改回 UTF-8（拆除/家具进场）；根因=此前测试 curl 在 GBK 终端写入 | data/followitup.db | 甘特图显示正常 | ~300 |
+| 15:05 | 后端 PATCH /tasks/{id}/sort_order 端点（只动 sort_order+version，乐观锁，不触发排程）+ CreateTask 序号原子化（单条 INSERT...SELECT） | tasks.go | 提交 1349439/fec4e80，测试全过 | ~1.2K |
+| 15:10 | 前端拖拽排序全局重排：适配层透传 sort_order + onAfterTaskDrag 全树重编号（跳过未变者、真实 version、409 提示） | gantt-adapter.ts, ProjectGantt.tsx | 提交 a48b108 | ~1K |
+| 15:15 | # 列改项目内行号（task.$index+1，与 id 解耦）+ 移除任务条内百分比（删 progress_text 模板） | ProjectGantt.tsx | 提交 5c21070 | ~400 |
+| 15:20 | 基线/实际条两端加三角（CSS clip-path 伪元素，静态样式移入类，窄条 no-arrow）| ProjectGantt.tsx, components.css | 提交 8e57efe，浏览器验证 15 条伪元素 clip 生效 | ~800 |
+| 15:25 | 基线按钮：文案去掉日期（基线 ✓/▾）+ 浅底深字样式 + 缩放组分隔线；刷新按钮 + WS 重连 reconnected 补拉 | ProjectGantt.tsx, ws-client.ts, components.css | 提交 e16b0fd/e9e849c | ~700 |
+| 15:35 | 任务弹窗横版两栏（左属性右关系 860px）：JSX 纯搬运 + .task-detail-grid CSS | TaskDetailModal.tsx, components.css | 提交 556be9b；浏览器验证 860px/两栏/无滚动条 | ~1.5K |
+| 15:40 | 浏览器全量验证：乱码修复✓ #列1-14✓ 基线✓✓ 刷新按钮✓ 任务条无%✓ 三角✓ 弹窗横版无滚动条✓ PATCH排序持久化✓（拆除移到第14行后恢复）| — | 全部通过 | ~1K |
+
+## 8 项 UI 修复完成（9 个提交）
+
+提交：1349439(PATCH端点) fec4e80(原子化) a48b108(拖拽重排) 5c21070(#列+百分比) 8e57efe(三角) e16b0fd(基线按钮) e9e849c(刷新+WS重连) 556be9b(弹窗横版)
+已知代价：# 列行号与弹窗"前置任务快速添加"的 ID 提示不对应（用户已确认，后续可改按行号解析）

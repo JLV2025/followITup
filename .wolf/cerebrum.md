@@ -49,3 +49,6 @@
 - **[2026-07-31] dhtmlx-gantt 行高密度**：`row_height: 28` + `scale_height: 40` + `min_column_width: 40` 可在 1920px 屏幕显示约 36 行任务。
 - **[2026-08-03] 看板进度语义**：整体完成率与项目进度统一为"顶层任务时长加权"(SUM(duration_days×progress_pct)/NULLIF(SUM(duration_days),0),过滤 parent_id IS NULL OR 0),不再用 AVG(progress_pct) 简单平均。子任务进度通过父任务体现:recalcParentProgress 递归维护父任务进度,rollupParentDates 维护父任务 duration_days(子任务区间工作日数),两层配合使加权计算有意义。
 - **[2026-08-03] GitNexus detect_changes 风险解读**：risk=critical 是改动符号数量驱动(本次 36 个符号全部是 diff 内入口符号),不代表破坏性。判断是否安全看 affected_processes 的 changed_steps:全部为 step 1(改动符号即流程入口)则无下游破坏。
+- **[2026-08-03] Windows 终端 curl 写中文会污染数据库**：Git Bash/GBK 终端里 `curl -X PUT -d '{"name":"中文"}'` 发送的字节是 GBK 编码，Go 后端按 UTF-8 解析成替换字符（U+FFFD）入库，导致甘特图中文乱码。测试/脚本写中文必须：用 UTF-8 文件 + `curl --data-binary @file.json`，或 python -c 直接操作。产品代码无 bug（bug-025）。
+- **[2026-08-03] UpdateTask 是全列覆盖 UPDATE**：PUT /tasks 只传部分字段会清空其余列（name/日期/进度等）。排序等单字段更新必须走专用 PATCH 端点（/tasks/{id}/sort_order），不能用 PUT。
+- **[2026-08-03] # 列行号语义**：甘特图 # 列显示 `task.$index + 1`（dhtmlx 全树深度优先 0 基索引，渲染前赋值），与数据库 id 解耦；拖拽全局重排后行号自动连续。弹窗"前置任务快速添加"的 ID 提示已与行号不对应，待后续改按行号解析。
