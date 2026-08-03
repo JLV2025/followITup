@@ -64,7 +64,7 @@ func TestCreateBaselineSnapshot(t *testing.T) {
 	conn.Exec(`INSERT INTO tasks (project_id, name, start_date, end_date, duration_days, progress_pct, status) VALUES (?, 'A', ?, ?, 5, 40, 'in_progress')`, pid, now, now)
 	conn.Exec(`INSERT INTO tasks (project_id, name, start_date, end_date, duration_days, progress_pct, status) VALUES (?, 'B', ?, ?, 3, 100, 'completed')`, pid, now, now)
 
-	if err := createBaselineTx(conn, pid, 1, "admin"); err != nil {
+	if err := createBaselineTx(conn, pid, "admin"); err != nil {
 		t.Fatalf("createBaselineTx: %v", err)
 	}
 
@@ -92,7 +92,7 @@ func TestClearBaseline(t *testing.T) {
 	}
 	conn.Exec(`INSERT INTO tasks (project_id, name, start_date, end_date, duration_days, progress_pct) VALUES (?, 'A', ?, ?, 5, 40)`, pid, now, now)
 
-	if err := createBaselineTx(conn, pid, 1, "admin"); err != nil {
+	if err := createBaselineTx(conn, pid, "admin"); err != nil {
 		t.Fatalf("createBaselineTx: %v", err)
 	}
 	if err := clearBaselineTx(conn, pid); err != nil {

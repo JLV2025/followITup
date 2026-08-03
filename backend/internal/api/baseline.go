@@ -35,7 +35,7 @@ func (h *BaselineHandler) RegisterRoutes(r chi.Router) {
 }
 
 // createBaselineTx 快照当前任务排程字段到基线列（事务内）
-func createBaselineTx(d *sql.DB, projectID, userID int64, userName string) error {
+func createBaselineTx(d *sql.DB, projectID int64, userName string) error {
 	tx, err := d.Begin()
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (h *BaselineHandler) CreateBaseline(w http.ResponseWriter, r *http.Request)
 	userID, _ := auth.GetUserID(r.Context())
 	userName, _ := auth.GetUserEmail(r.Context())
 
-	if err := createBaselineTx(h.db, projectID, userID, userName); err != nil {
+	if err := createBaselineTx(h.db, projectID, userName); err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "创建基线失败")
 		return
 	}
