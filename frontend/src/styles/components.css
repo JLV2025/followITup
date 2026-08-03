@@ -995,13 +995,27 @@
   font-weight: 600 !important;
 }
 
-/* ===== 任务详情弹窗（更宽） ===== */
+/* ===== 任务详情弹窗（横版两栏：左属性右关系） ===== */
 .task-detail-modal {
-  max-width: 580px !important;
+  width: 860px;
+  max-width: 860px !important;
   max-height: 90vh;
-  overflow-y: auto;
-  padding: 28px 32px !important;
+  overflow-y: auto; /* 兜底：极端情况下仍可滚动 */
+  padding: 24px 28px !important;
 }
+.task-detail-modal .task-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 28px;
+  align-items: start;
+}
+.task-detail-modal .task-detail-col + .task-detail-col {
+  border-left: 1px solid var(--card-border);
+  padding-left: 28px;
+}
+.task-detail-modal .form-group { margin-bottom: 12px; }
+.task-detail-modal .modal-divider { margin: 14px 0 12px; }
+.task-detail-modal .dep-list { max-height: 220px; overflow-y: auto; }
 
 .modal-divider {
   border: none;

@@ -303,6 +303,9 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
 
         {error && <div className="form-error">{error}</div>}
 
+        <div className="task-detail-grid">
+        <div className="task-detail-col">
+        {/* 左栏：基本信息 / 日期与进度 / 状态 */}
         {/* 基本信息 */}
         <div className="form-group">
           <label>任务名称</label>
@@ -478,7 +481,10 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
             ))}
           </datalist>
         </div>
+        </div>{/* 左栏结束 */}
 
+        <div className="task-detail-col">
+        {/* 右栏：前置任务 / 约束 */}
         {/* 前置任务（编辑模式下可用） */}
         {!isNew && (
           <>
@@ -641,6 +647,8 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
             </div>
           </div>
         )}
+        </div>{/* 右栏结束 */}
+        </div>{/* task-detail-grid 结束 */}
 
         <div className="modal-actions">
           {!isNew && (
