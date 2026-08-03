@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/client";
+import { formatDateShort } from "../utils/date";
 
 interface Task {
   id: number;
@@ -17,6 +18,8 @@ interface Task {
   progress_pct: number;
   actual_start: string;
   actual_end: string;
+  baseline_start_date: string;
+  baseline_end_date: string;
   manual_scheduled: boolean;
   constraint_type: string;
   constraint_date: string;
@@ -71,6 +74,15 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
   const [constraintType, setConstraintType] = useState("");
   const [constraintDate, setConstraintDate] = useState("");
 
+  // 实际日期 + 基线偏差
+  const [actualStart, setActualStart] = useState(task?.actual_start || "");
+  const [actualEnd, setActualEnd] = useState(task?.actual_end || "");
+  const baselineStartDate = task?.baseline_start_date || "";
+  const baselineEndDate = task?.baseline_end_date || "";
+  const diffDays = baselineStartDate && task?.start_date
+    ? Math.round((new Date(task.start_date).getTime() - new Date(baselineStartDate).getTime()) / 86400000)
+    : 0;
+
   // 前置任务
   const [deps, setDeps] = useState<Dependency[]>([]);
   const [depLoading, setDepLoading] = useState(false);
@@ -112,6 +124,8 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
       setManualScheduled(task.manual_scheduled);
       setConstraintType(task.constraint_type || "");
       setConstraintDate(task.constraint_date || "");
+      setActualStart(task.actual_start || "");
+      setActualEnd(task.actual_end || "");
       loadDeps();
     } else {
       const today = new Date().toISOString().slice(0, 10);
@@ -225,6 +239,8 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
         manual_scheduled: manualScheduled,
         constraint_type: constraintType || "",
         constraint_date: constraintDate || "",
+        actual_start: actualStart || "",
+        actual_end: actualEnd || "",
         sort_order: task?.sort_order ?? 0,
         version: task?.version ?? 0,
       };
@@ -371,6 +387,26 @@ export default function TaskDetailModal({ projectId, task, allTasks, onClose, on
             />
           </div>
         </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label>实际开始</label>
+            <input type="date" value={actualStart} onChange={(e) => setActualStart(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>实际结束</label>
+            <input type="date" value={actualEnd} onChange={(e) => setActualEnd(e.target.value)} />
+          </div>
+        </div>
+        {baselineStartDate && (
+          <div className="form-row baseline-diff-row">
+            <span className="baseline-diff">
+              基线: {formatDateShort(baselineStartDate)} ~ {formatDateShort(baselineEndDate)}
+              <em className={`baseline-diff-badge ${diffDays > 0 ? "neg" : diffDays < 0 ? "pos" : ""}`}>
+                &Delta; {diffDays > 0 ? `+${diffDays}` : diffDays} 天
+              </em>
+            </span>
+          </div>
+        )}
         <div className="form-row">
           <div className="form-group">
             <label>工期（工作日）</label>

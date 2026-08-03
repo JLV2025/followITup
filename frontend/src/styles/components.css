@@ -1152,3 +1152,10 @@
 .baseline-menu-item:hover { background: #f3f4f6; }
 .baseline-menu-item.danger { color: #ef4444; }
 .btn-baseline.has-baseline { background: #2c6e6a; color: #fff; }
+
+/* 基线偏差徽标 */
+.baseline-diff-row { align-items: center; }
+.baseline-diff { font-size: 12px; color: #6b7280; display: flex; align-items: center; gap: 8px; }
+.baseline-diff-badge { font-style: normal; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #f3f4f6; }
+.baseline-diff-badge.neg { color: #ef4444; background: #fef2f2; }
+.baseline-diff-badge.pos { color: #15803d; background: #f0fdf4; }

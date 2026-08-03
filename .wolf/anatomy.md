@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T02:56:31.237Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T03:24:29.000Z
 > Files: 81 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
@@ -46,7 +46,7 @@
 - `task-3-report.md` — Task 3 报告：baseline.go API (~997 tok)
 - `task-4-report.md` — Task 4 报告：DashboardStats + ProjectList 基线统计 (~1023 tok)
 - `task-5-report.md` — Task 5 实施报告: 前端适配层 + ganttStore (~200 tok)
-- `task-6-report.md` — Task 6 实施报告：甘特图基线绘制层 + 工具栏基线下拉 (~1085 tok)
+- `task-6-report.md` — Task 6 实施报告：甘特图基线绘制层 + 工具栏基线下拉 (~1377 tok)
 
 ## C:/Users/jingl/.claude/plans/
 
@@ -157,14 +157,14 @@
 ## frontend/src/components/
 
 - `Navbar.tsx` — Navbar (~343 tok)
-- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的 ID 并逐个创建依赖 (~5602 tok)
+- `TaskDetailModal.tsx` — 任务编辑弹窗：基本信息、日期与进度、实际日期输入、基线偏差徽标、状态/优先级、前置任务管理、约束设置 (~6500 tok)
 
 ## frontend/src/pages/
 
 - `Dashboard.tsx` — Dashboard — renders form (~3789 tok)
 - `Login.tsx` — Login — renders form (~582 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~282 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~7240 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~7383 tok)
 - `TaskListView.tsx` — 🗑️ 已废弃（甘特图统一工作台取代） (~3323 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~1326 tok)
 
@@ -177,7 +177,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 107 rules (~5696 tok)
+- `components.css` — 组件样式：导航、卡片、按钮、弹窗、表单、前置任务、基线菜单、基线偏差徽标等 (~5900 tok)
 
 ## frontend/src/utils/
 
