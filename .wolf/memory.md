@@ -839,3 +839,15 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:50 | 父任务禁用：有子任务时开始/结束/工期 disabled + 提示"由子任务自动汇总"；前置任务区显示提示并隐藏编辑 UI | TaskDetailModal.tsx | 提交 dfe8f75，浏览器验证 #2 弹窗禁用生效 | ~600 |
 | 15:55 | 前置任务行号化：ProjectGantt buildRowNumbers（gantt.eachTask 树序）传 rowNumbers prop；弹窗依赖显示 #行号 名称、快速添加输入行号解析为 id、下拉显示行号 | ProjectGantt.tsx, TaskDetailModal.tsx | 提交 dfe8f75；端到端验证：输入"1"→解析 id27 创建"#1 拆除"依赖→已删除恢复 | ~1K |
 | 15:58 | 解释用户第3问：依赖绑定数据库 id（排序变化不影响前置任务，稳定正确），行号仅是显示/输入层 | — | 用户选择"显示也改行号"已实现 | — |
+| 15:45 | Session end: 52 writes across 12 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 19 reads | ~58234 tok |
+| 15:59 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~415 |
+| 15:59 | Edited frontend/src/pages/ProjectGantt.tsx | modified attachEvent() | ~21 |
+| 16:01 | Edited frontend/src/styles/components.css | 10→11 lines | ~211 |
+
+## Session: 2026-08-03 16:30（订书钉三角修正 + 行拖拽排序 bug 修复）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:30 | 订书钉三角修正：三角完全移到基线条下方（top:4px 从条底开始向下垂），直角边在最外侧竖直（clip-path polygon 直角边在外），灰基线+绿实际条同步 | components.css | 提交（与下行合并），DOM 验证 arrowStartsAtBarBottom=true | ~400 |
+| 16:35 | **发现并修复行拖拽排序 bug**：dhtmlx 行排序拖拽触发 onRowDragEnd 而非 onAfterTaskDrag（drag_move=false 已禁用任务条拖拽），此前行排序从未保存→刷新还原。修复：抽 saveRowOrder() 挂 onRowDragEnd | ProjectGantt.tsx | 提交；Playwright 实测：拖拽后刷新顺序保持（dragPersisted=true）；35 装灯拖拽测试后已还原 | ~1.5K |
+| 16:40 | 澄清用户疑点：弹窗保存链路正常（改开始日期 08-25→08-27 保存后 x 1113→1159 更新）；任务条拖拽已禁用（drag_move=false），改时间只能走双击弹窗 | — | 验证数据已还原 | — |
