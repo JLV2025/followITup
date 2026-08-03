@@ -851,3 +851,18 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:30 | 订书钉三角修正：三角完全移到基线条下方（top:4px 从条底开始向下垂），直角边在最外侧竖直（clip-path polygon 直角边在外），灰基线+绿实际条同步 | components.css | 提交（与下行合并），DOM 验证 arrowStartsAtBarBottom=true | ~400 |
 | 16:35 | **发现并修复行拖拽排序 bug**：dhtmlx 行排序拖拽触发 onRowDragEnd 而非 onAfterTaskDrag（drag_move=false 已禁用任务条拖拽），此前行排序从未保存→刷新还原。修复：抽 saveRowOrder() 挂 onRowDragEnd | ProjectGantt.tsx | 提交；Playwright 实测：拖拽后刷新顺序保持（dragPersisted=true）；35 装灯拖拽测试后已还原 | ~1.5K |
 | 16:40 | 澄清用户疑点：弹窗保存链路正常（改开始日期 08-25→08-27 保存后 x 1113→1159 更新）；任务条拖拽已禁用（drag_move=false），改时间只能走双击弹窗 | — | 验证数据已还原 | — |
+| 16:03 | Session end: 55 writes across 12 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 19 reads | ~58999 tok |
+| 16:20 | Created backend/internal/scheduler/zz_restore_test.go | — | ~336 |
+| 16:21 | Edited frontend/src/styles/components.css | 11→10 lines | ~151 |
+
+## Session: 2026-08-03 16:20（连线缺失排查 + 数据恢复 + 短竖线）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:20 | 排查"连线缺失/基线位置错/刷新无效果"：发现项目6依赖从15条变4条（用户中午12:26前后双击连线删除11条+创建29→31），删依赖→排程重算→任务日期提前→基线偏差变大；gantt对象与后端一致证明视图同步正常 | DB 审计 | 结论：数据操作结果非渲染bug | ~1.5K |
+| 16:25 | 恢复项目6被删11条依赖（30→32/31→33/32→33/28→34/30→33/32→34/35→36/33→36/34→36/36→37/37→38）+ Recalculate 重算，关键路径恢复 09-21 终点 | 临时测试脚本（已删） | 15条依赖✓ 排程合理✓ | ~800 |
+| 16:30 | 基线两端按用户建议改为短竖线（2px宽6px高，从条底向下垂，真实订书钉脚），替代难控制的三角 | components.css | 提交 27d6b3b；DOM验证 top:4px/2x6px 生效 | ~400 |
+
+## 教训
+- **双击连线删除是用户可见功能**：误操作会删除依赖导致排程变化、基线偏差——产品行为正确，用户需知悉"基线对比"正是显示这种偏差
+- **刷新按钮有效性的判断**：视图与后端一致 = 刷新有效；数据被删改时刷新不会"恢复"——需要区分"渲染问题"与"数据问题"
