@@ -183,6 +183,13 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	t.ID = id
 	t.ProjectID = projectID
 
+	// 触发自动排程（正推：新任务无后继，Recalculate 传播链为空，无副作用；倒推：全量倒推对齐完成日期）
+	if changed := triggersReschedule(t); changed {
+		if _, err := scheduler.Recalculate(h.db, projectID, id); err != nil {
+			log.Printf("[Scheduler] 项目 %d 重算失败: %v", projectID, err)
+		}
+	}
+
 	h.broadcastChange(r, projectID, id)
 	if t.ParentID != nil && *t.ParentID > 0 {
 		h.recalcParentProgress(id)
