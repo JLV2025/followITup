@@ -318,18 +318,8 @@ export default function TaskListView() {
                     t.assignee || "—"
                   )}
                 </td>
-                <td
-                  onClick={() => startEdit(t, "start_date")}
-                  className="cell-editable"
-                >
-                  {formatDate(t.start_date)}
-                </td>
-                <td
-                  onClick={() => startEdit(t, "end_date")}
-                  className="cell-editable"
-                >
-                  {formatDate(t.end_date)}
-                </td>
+                <td>{formatDate(t.start_date)}</td>
+                <td>{formatDate(t.end_date)}</td>
                 <td>
                   <div className="cell-progress">
                     <div className="progress-bar" style={{ width: 60 }}>

@@ -383,29 +383,14 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         <hr className="modal-divider" />
         <h4 className="modal-section-title">日期与进度</h4>
 
-        {isParent && (
-          <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "-6px 0 10px" }}>
-            父任务的起止日期由子任务自动汇总，不支持直接编辑
-          </p>
-        )}
         <div className="form-row">
           <div className="form-group">
-            <label>开始日期</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              disabled={isParent}
-            />
+            <label>开始日期（由排程自动计算）</label>
+            <input type="date" value={startDate} disabled />
           </div>
           <div className="form-group">
-            <label>结束日期</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              disabled={isParent}
-            />
+            <label>结束日期（由排程自动计算）</label>
+            <input type="date" value={endDate} disabled />
           </div>
         </div>
         <div className="form-row">
