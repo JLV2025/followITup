@@ -377,6 +377,18 @@ func TestBackwardScheduleDepTypes(t *testing.T) {
 		t.Errorf("FF lag=1：A.end 应为 7/30，实际 %v", ch)
 	}
 
+	// SF lag=0：succ.end = pred.start → 倒推 pred.start = succ.end，candEnd = AddWorkDays(succ.end, pred.dur)
+	tasks4 := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7},
+	}
+	deps4 := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: SF, LagDays: 0}}
+	ch4 := backwardScheduleWrite(tasks4, deps4, "2026-07-31", map[string]string{}, map[int64]bool{})
+	// B(链尾,end=7/31,dur=7)→B.start=7/23; A.start约束=succ.EndDate=7/31→A.end=AddWorkDays(7/31,5)=8/6→A=7/31~8/6
+	if ch, ok := ch4[1]; !ok || ch["end_date"] != "2026-08-06" || ch["start_date"] != "2026-07-31" {
+		t.Errorf("SF：A 应为 7/31~8/6，实际 %v", ch)
+	}
+
 	// SS lag=0：succ.start = pred.start → pred.start 约束 = succ.start，pred.end = start+duration
 	tasks3 := []TaskInfo{
 		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
