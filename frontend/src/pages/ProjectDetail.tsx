@@ -15,9 +15,15 @@ interface Project {
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [hasProgress, setHasProgress] = useState(false);
 
   useEffect(() => {
     api.get(`/api/projects/${id}`).then((res) => setProject(res.data.data));
+    // 并行请求任务列表，检查是否有进度 > 0 的任务
+    api.get(`/api/projects/${id}/tasks`).then((res) => {
+      const tasks: any[] = res.data?.data?.tasks || [];
+      setHasProgress(tasks.some((t: any) => (t.progress_pct || 0) > 0));
+    });
   }, [id]);
 
   if (!project) return <p className="text-secondary">加载中...</p>;
@@ -43,6 +49,7 @@ export default function ProjectDetail() {
         <select
           className="direction-select"
           value={project.schedule_direction}
+          disabled={hasProgress}
           onChange={async (e) => {
             const dir = e.target.value;
             try {
@@ -57,6 +64,9 @@ export default function ProjectDetail() {
           <option value="forward">正排</option>
           <option value="backward">倒排</option>
         </select>
+        {hasProgress && (
+          <span className="direction-hint">项目已有任务进度，排程方向不可修改</span>
+        )}
       </div>
 
       {/* 子路由内容 */}

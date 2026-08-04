@@ -617,6 +617,16 @@
   cursor: pointer;
 }
 
+.direction-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.direction-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .project-tabs {
   display: flex;
   gap: 4px;
