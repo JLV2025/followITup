@@ -299,3 +299,39 @@ func TestImplicitOrderSkippedForManual(t *testing.T) {
 		t.Error("手动排程任务不应被隐式顺序依赖修改")
 	}
 }
+
+// SubWorkDays 与 AddWorkDays 互为逆运算（含周末与自定义节假日）
+func TestSubWorkDays(t *testing.T) {
+	// 无节假日（默认周末规则）：周一 8/3 起 5 个工作日 → 8/7 周五
+	if got := AddWorkDays(nil, "2026-08-03", 5); got != "2026-08-07" {
+		t.Errorf("AddWorkDays(8/3, 5) = %s, want 2026-08-07", got)
+	}
+	if got := SubWorkDays(nil, "2026-08-07", 5); got != "2026-08-03" {
+		t.Errorf("SubWorkDays(8/7, 5) = %s, want 2026-08-03", got)
+	}
+
+	// 跨周末：周五 8/7 起 3 个工作日 → 8/11 周二；对偶
+	if got := AddWorkDays(nil, "2026-08-07", 3); got != "2026-08-11" {
+		t.Errorf("AddWorkDays(8/7, 3) = %s, want 2026-08-11", got)
+	}
+	if got := SubWorkDays(nil, "2026-08-11", 3); got != "2026-08-07" {
+		t.Errorf("SubWorkDays(8/11, 3) = %s, want 2026-08-07", got)
+	}
+
+	// 含节假日：8/6（周四）为节假日 → 周一 8/3 起 5 个工作日 → 8/10 周一；对偶
+	cal := map[string]string{"2026-08-06": "holiday"}
+	if got := AddWorkDays(cal, "2026-08-03", 5); got != "2026-08-10" {
+		t.Errorf("AddWorkDays(8/3, 5, 节假日) = %s, want 2026-08-10", got)
+	}
+	if got := SubWorkDays(cal, "2026-08-10", 5); got != "2026-08-03" {
+		t.Errorf("SubWorkDays(8/10, 5, 节假日) = %s, want 2026-08-03", got)
+	}
+
+	// 边界：1 个工作日 = 当天；<=0 原样返回
+	if got := SubWorkDays(nil, "2026-08-07", 1); got != "2026-08-07" {
+		t.Errorf("SubWorkDays(8/7, 1) = %s, want 2026-08-07", got)
+	}
+	if got := SubWorkDays(nil, "2026-08-07", 0); got != "2026-08-07" {
+		t.Errorf("SubWorkDays(8/7, 0) = %s, want 原样 2026-08-07", got)
+	}
+}

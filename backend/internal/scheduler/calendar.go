@@ -99,6 +99,37 @@ func AddWorkDays(cal map[string]string, date string, workDays int) string {
 	return fmt.Sprintf("%04d-%02d-%02d", y, m, d)
 }
 
+// SubWorkDays 从 date 起往前数 N 个工作日，返回第 N 个工作日的日期（含 date 当天）
+// 与 AddWorkDays 互为逆运算：AddWorkDays(cal, S, N) == E ⟺ SubWorkDays(cal, E, N) == S
+func SubWorkDays(cal map[string]string, date string, workDays int) string {
+	if date == "" || workDays <= 0 {
+		return date
+	}
+	if workDays == 1 {
+		return date // 1 个工作日 = 当天
+	}
+	var y, m, d int
+	fmt.Sscanf(date, "%d-%d-%d", &y, &m, &d)
+
+	// 需要再往前找 workDays-1 个工作日
+	for remaining := workDays - 1; remaining > 0; {
+		d--
+		if d < 1 {
+			m--
+			if m < 1 {
+				m = 12
+				y--
+			}
+			d = daysInMonth(y, m)
+		}
+		cur := fmt.Sprintf("%04d-%02d-%02d", y, m, d)
+		if IsWorkDay(cal, cur) {
+			remaining--
+		}
+	}
+	return fmt.Sprintf("%04d-%02d-%02d", y, m, d)
+}
+
 // CountWorkDays 统计日期范围内的工作日数（含 start，含 end）
 func CountWorkDays(cal map[string]string, start, end string) int {
 	if start == "" || end == "" || start > end {
