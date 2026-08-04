@@ -711,7 +711,9 @@ func backwardScheduleWrite(tasks []TaskInfo, deps []Dep, finishDate string, cal 
 	queued := make(map[int64]bool)
 
 	// 队列：所有链尾（无后继、非父任务、非 manual），end = 项目完成日期
-	for _, t := range tasks {
+	// 注意：必须用索引取指针（for i := range），range 副本更新不会影响 taskMap 指向的原始元素
+	for i := range tasks {
+		t := &tasks[i]
 		if hasSucc[t.ID] || parentSet[t.ID] || t.ManualScheduled {
 			continue
 		}

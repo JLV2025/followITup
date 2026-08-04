@@ -419,6 +419,25 @@ func TestBackwardScheduleParentNotWritten(t *testing.T) {
 	}
 }
 
+// 回归测试 bug-027：链尾初始 EndDate 与 finishDate 不同时，range 副本陷阱导致级联错误。
+// 链尾 A(5d) → B(3d)，B 初始 7/5 而 finishDate=7/31，修复前 B 用旧 7/5 算 succStart。
+func TestBackwardScheduleTailInitialDate(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 3}, // 链尾初始远早于完成日期
+	}
+	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
+	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
+	// B.end=7/31, B.start=SubWorkDays(7/31, 3)=7/29（Wed,含7/31+7/30+7/29）
+	if ch, ok := changes[2]; !ok || ch["end_date"] != "2026-07-31" || ch["start_date"] != "2026-07-29" {
+		t.Errorf("B 应为 7/29~7/31，实际 %v", ch)
+	}
+	// A.end = B.start = 7/29, A.start=SubWorkDays(7/29, 5)=7/23（Thu, 7/23+24+27+28+29）
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-29" || ch["start_date"] != "2026-07-23" {
+		t.Errorf("A 应为 7/23~7/29，实际 %v", ch)
+	}
+}
+
 // SubWorkDays 与 AddWorkDays 互为逆运算（含周末与自定义节假日）
 func TestSubWorkDays(t *testing.T) {
 	// 无节假日（默认周末规则）：周一 8/3 起 5 个工作日 → 8/7 周五
