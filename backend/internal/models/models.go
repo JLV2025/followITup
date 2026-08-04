@@ -20,6 +20,7 @@ type Project struct {
 	Description string    `json:"description"`
 	StartDate   string    `json:"start_date"`
 	EndDate     string    `json:"end_date"`
+	ScheduleDirection string `json:"schedule_direction"` // forward=正推 backward=倒推
 	Status      string    `json:"status"` // active | completed | archived
 	BaselineCreatedAt string `json:"baseline_created_at"`
 	BaselineCreatedBy string `json:"baseline_created_by"`

@@ -41,3 +41,31 @@ func TestMigrationV4BaselineColumns(t *testing.T) {
 		t.Errorf("projects 缺少基线元数据列, 找到 %d/2", projCols)
 	}
 }
+
+// 迁移 v5 后 projects 表应包含排程方向列
+func TestMigrationV5ScheduleDirection(t *testing.T) {
+	d, err := Open(t.TempDir())
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer d.Close()
+
+	cols := map[string]bool{}
+	rows, err := d.Conn.Query(`PRAGMA table_info(projects)`)
+	if err != nil {
+		t.Fatalf("PRAGMA projects: %v", err)
+	}
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dflt *string
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err == nil {
+			cols[name] = true
+		}
+	}
+	rows.Close()
+	if !cols["schedule_direction"] {
+		t.Error("projects 表缺少 schedule_direction 列")
+	}
+}

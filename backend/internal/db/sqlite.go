@@ -182,6 +182,10 @@ var migrations = []migration{
 	ALTER TABLE projects ADD COLUMN baseline_created_at TEXT;
 	ALTER TABLE projects ADD COLUMN baseline_created_by TEXT;
 	`},
+	{5, `
+	-- 项目排程方向（v5）：forward=正推(基于开始日期) backward=倒推(基于完成日期)
+	ALTER TABLE projects ADD COLUMN schedule_direction TEXT NOT NULL DEFAULT 'forward';
+	`},
 }
 
 // migrate 执行所有未应用的迁移
