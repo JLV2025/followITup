@@ -959,3 +959,42 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:50 | 实施计划7任务:迁移v5/SubWorkDays对偶/backwardSchedule引擎+方向路由/API方向+duration校验/创建表单+项目页/日期只读/回归 | docs/superpowers/plans/2026-08-04-schedule-direction.md | 提交 86a57b2；自检修正4处（SS测试期望7/29、MultiTail分支隔离、newEnd候选表与旧值无关、SubWorkDays测试日历分段）| ~7.3K |
 | 15:50 | 关键实现细节：倒推候选比较用函数内newEnd表（与任务旧日期无关）；manual/父任务不重算但当前日期参与链条传播；甘特图禁拖已实现无需改动 | 计划文件 | 逻辑已验证与全部测试用例一致 | ~600 |
 | 16:29 | Session end: 11 writes across 2 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md) | 3 reads | ~18135 tok |
+| 16:34 | Edited backend/internal/db/sqlite_test.go | modified TestMigrationV5ScheduleDirection() | ~233 |
+| 16:35 | Edited backend/internal/db/sqlite.go | 10→14 lines | ~140 |
+| 16:35 | Edited backend/internal/models/models.go | 8→9 lines | ~104 |
+| 16:36 | Created .superpowers/sdd/2026-08-04-schedule-direction/task-1-report.md | — | ~532 |
+| 16:36 | 迁移v5:projects加schedule_direction列(正推/倒推)+Project模型字段, TDD红绿, 全量测试通过 | sqlite.go, sqlite_test.go, models.go | e2f09eb | ~800 |
+| 16:39 | Edited backend/internal/scheduler/scheduler_test.go | modified TestSubWorkDays() | ~415 |
+| 16:39 | Edited backend/internal/scheduler/calendar.go | modified SubWorkDays() | ~224 |
+| 16:40 | Task2: SubWorkDays 工作日倒推对偶实现并测试通过 | calendar.go, scheduler_test.go | PASS (TestSubWorkDays + 全量 go test ./...) | ~500 |
+| 16:41 | Created .superpowers/sdd/2026-08-04-schedule-direction/task-2-report.md | — | ~453 |
+| 16:45 | Edited backend/internal/scheduler/scheduler_test.go | modified TestBackwardScheduleSingleChain() | ~1477 |
+| 16:46 | Edited backend/internal/scheduler/scheduler.go | modified Recalculate() | ~102 |
+| 16:46 | Edited backend/internal/scheduler/scheduler.go | modified RecalculateAll() | ~292 |
+| 16:46 | Edited backend/internal/scheduler/scheduler.go | modified julianDay() | ~1320 |
+| 16:48 | Edited backend/internal/scheduler/scheduler.go | 5→7 lines | ~70 |
+| 16:49 | Task 3 完成：倒推引擎+方向路由。详情见 .superpowers/sdd/2026-08-04-schedule-direction/task-3-report.md | scheduler.go, scheduler_test.go | 全部20测试通过 | ~800 |
+| 16:49 | Created .superpowers/sdd/2026-08-04-schedule-direction/task-3-report.md | — | ~962 |
+| 16:59 | Edited backend/internal/api/projects.go | 9→13 lines | ~115 |
+| 16:59 | Edited backend/internal/api/projects.go | expanded (+16 lines) | ~335 |
+| 17:01 | Edited backend/internal/api/tasks.go | 5→10 lines | ~51 |
+| 17:01 | Edited backend/internal/api/tasks.go | 5→10 lines | ~59 |
+| 17:03 | Created .superpowers/sdd/2026-08-04-schedule-direction/task-4-report.md | — | ~614 |
+| 17:03 | Task 4: 后端项目API支持排程方向+方向锁定校验+duration下限校验 | projects.go tasks.go | 编译+测试全过, 提交 2128be7 | ~500 |
+| 17:07 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~40 |
+| 17:07 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~32 |
+| 17:07 | Edited frontend/src/pages/Dashboard.tsx | CSS: schedule_direction | ~85 |
+| 17:08 | Edited frontend/src/pages/Dashboard.tsx | CSS: schedule_direction | ~444 |
+| 17:08 | Edited frontend/src/pages/ProjectDetail.tsx | CSS: schedule_direction | ~47 |
+| 17:08 | Edited frontend/src/pages/ProjectDetail.tsx | added error handling | ~300 |
+| 17:08 | Edited frontend/src/styles/components.css | expanded (+31 lines) | ~189 |
+| 17:10 | Task 5: Dashboard 创建表单加排程方向 select + 条件日期渲染 + ProjectDetail 方向徽标与修改下拉 | Dashboard.tsx, ProjectDetail.tsx, components.css | tsc 通过 | ~200 |
+| 17:11 | Created .superpowers/sdd/2026-08-04-schedule-direction/task-5-report.md | — | ~402 |
+| 17:14 | Edited frontend/src/components/TaskDetailModal.tsx | reduced (-15 lines) | ~104 |
+| 17:14 | Edited frontend/src/pages/TaskListView.tsx | reduced (-10 lines) | ~29 |
+| 17:15 | Created .superpowers/sdd/2026-08-04-schedule-direction/task-6-report.md | — | ~250 |
+| 16:15 | Task 6 完成：TaskDetailModal 日期恒 disabled + label 改排程说明，TaskListView 日期改纯文本 | TaskDetailModal.tsx, TaskListView.tsx | tsc 零错误，提交 df995cc | ~400 |
+| 17:32 | Edited backend/internal/scheduler/scheduler_test.go | modified TestBackwardScheduleTailInitialDate() | ~293 |
+| 17:33 | Edited backend/internal/scheduler/scheduler.go | 16→18 lines | ~152 |
+| 17:33 | Edited backend/internal/api/tasks.go | expanded (+7 lines) | ~94 |
+| 17:35 | Edited .superpowers/sdd/2026-08-04-schedule-direction/task-3-report.md | expanded (+41 lines) | ~433 |

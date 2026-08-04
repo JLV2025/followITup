@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-04T08:28:52.788Z
-> Files: 88 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-04T09:35:35.996Z
+> Files: 96 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -50,6 +50,17 @@
 - `task-7-report.md` — Task 7 实施报告 (~463 tok)
 - `task-8-report.md` — Task 8 报告 — Dashboard 偏差统计 + 2个既有bug修复记录 (~407 tok)
 
+## .superpowers/sdd/2026-08-04-schedule-direction/
+
+- `task-1-brief.md` — Task 1 brief: 迁移 v5 + Project 模型 schedule_direction 字段 (~450 tok)
+- `task-1-report.md` — Task 1 报告：迁移 v5 + Project 模型字段 (~800 tok)
+- `task-1-report.md` — Task 1 报告：迁移 v5 + Project 模型加 schedule_direction 字段 (~499 tok)
+- `task-2-report.md` — Task 2 报告：SubWorkDays 工作日倒推对偶 (~425 tok)
+- `task-3-report.md` — Task 3 报告：倒推排程引擎与方向路由 (~1264 tok)
+- `task-4-report.md` — Task 4 报告：后端项目 API 支持排程方向 + duration 下限校验 (~575 tok)
+- `task-5-report.md` — Task 5 报告：前端创建表单选排程方向 + 项目页方向显示与修改 (~377 tok)
+- `task-6-report.md` — Task 6 实施报告：前端任务日期只读（duration 驱动） (~235 tok)
+
 ## C:/Users/jingl/.claude/plans/
 
 - `review-groovy-octopus.md` — 日期格式 + 工作日历方案 (~1191 tok)
@@ -91,8 +102,8 @@
 - `baseline.go` — Struct: BaselineHandler (~1347 tok)
 - `calendar.go` — Struct: CalendarHandler (~660 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~213 tok)
-- `projects.go` — Struct: ProjectHandler (~2924 tok)
-- `tasks.go` — Struct: TaskHandler (~4020 tok)
+- `projects.go` — Struct: ProjectHandler (~3132 tok)
+- `tasks.go` — Struct: TaskHandler (~4160 tok)
 - `zz_debug_test.go` — TestZZDebugRecalc (~126 tok)
 
 ## backend/internal/auth/
@@ -102,18 +113,18 @@
 
 ## backend/internal/db/
 
-- `sqlite_test.go` — TestMigrationV4BaselineColumns (~268 tok)
-- `sqlite.go` — Struct: DB (~1778 tok)
+- `sqlite_test.go` — TestMigrationV4BaselineColumns, TestMigrationV5ScheduleDirection (~436 tok)
+- `sqlite.go` — Struct: DB (~1818 tok)
 
 ## backend/internal/models/
 
-- `models.go` — Struct: User (~1122 tok)
+- `models.go` — Struct: User (~1143 tok)
 
 ## backend/internal/scheduler/
 
-- `calendar.go` — Struct: CalendarEntry (~739 tok)
-- `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~2324 tok)
-- `scheduler.go` — Struct: Dep (~4159 tok)
+- `calendar.go` — CalendarEntry, AddWorkDays, SubWorkDays, CountWorkDays, IsWorkDay (~1220 tok)
+- `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~4794 tok)
+- `scheduler.go` — Struct: Dep (~5582 tok)
 - `zz_debug_test.go` — TestZZDebugLoad (~267 tok)
 - `zz_restore_test.go` — TestZZRestoreDeps (~336 tok)
 
@@ -164,15 +175,15 @@
 ## frontend/src/components/
 
 - `Navbar.tsx` — Navbar (~343 tok)
-- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~6463 tok)
+- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~6347 tok)
 
 ## frontend/src/pages/
 
-- `Dashboard.tsx` — Dashboard — renders form (~3975 tok)
+- `Dashboard.tsx` — Dashboard — renders form, create modal with schedule direction select (~4212 tok)
 - `Login.tsx` — Login — renders form (~582 tok)
-- `ProjectDetail.tsx` — ProjectDetail (~282 tok)
+- `ProjectDetail.tsx` — ProjectDetail, header with schedule direction badge and modify dropdown (~554 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~7738 tok)
-- `TaskListView.tsx` — 🗑️ 已废弃（甘特图统一工作台取代） (~3323 tok)
+- `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3249 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~1326 tok)
 
 ## frontend/src/stores/
@@ -184,7 +195,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 107 rules (~6317 tok)
+- `components.css` — Styles: 114 rules, includes schedule direction badge/dropdown styles (~6488 tok)
 
 ## frontend/src/utils/
 
