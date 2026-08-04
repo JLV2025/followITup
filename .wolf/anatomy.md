@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-03T09:58:18.480Z
-> Files: 86 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-04T08:28:52.788Z
+> Files: 88 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -138,10 +138,12 @@
 ## docs/superpowers/plans/
 
 - `2026-08-03-baseline-comparison.md` — 基线对比功能 Implementation Plan (~8214 tok)
+- `2026-08-04-schedule-direction.md` — 项目排程方向（正推/倒推）+ duration 驱动 实施计划 (~7271 tok)
 
 ## docs/superpowers/specs/
 
 - `2026-08-03-baseline-comparison-design.md` — 基线对比功能 — 设计文档 (~1062 tok)
+- `2026-08-04-schedule-direction-design.md` — 项目排程方向（正推/倒推）+ duration 驱动 设计 (~1176 tok)
 
 ## frontend/
 

@@ -685,6 +685,22 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-03T09:12:21.237Z"
+    },
+    {
+      "id": "bug-043",
+      "timestamp": "2026-08-04T08:27:20.981Z",
+      "error_message": "Significant refactor of ",
+      "file": "docs/superpowers/plans/2026-08-04-schedule-direction.md",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 6→31 lines (2 removed) | Also: `projects.go` 的 CreateProject：解析方向（默认 forward），INS; // 排程方向：正推(forward，默认) / 倒推(backward)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "md"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-04T08:27:36.234Z"
     }
   ]
 }

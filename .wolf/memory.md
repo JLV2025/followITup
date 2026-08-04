@@ -926,3 +926,36 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:50 | 交互确认：工具栏按钮→点击起点任务/终点任务→红色竖线→弹窗；父任务不参与（子任务展开）；无部分包裹（边界由任务锚定）| 讨论 | 用户确认 | ~500 |
 | 17:55 | 计划已保存 C:\Users\jingl\.claude\plans\ui-bug-1-2-rosy-lobster.md（含多包裹共存设计：任务级锚点天然支持多包裹+互斥校验+重叠检测+共享边界+多deadline取更早）| 计划文件 | 明日实施 | ~300 |
 | 18:00 | 收工。git 工作区干净，exe 运行中（8080）| — | 待办：倒推pass + 锚点v5迁移 + 工期分配弹窗 + 批量API | — |
+| 17:58 | Session end: 82 writes across 15 files (dashboardStore.ts, Dashboard.tsx, projects.go, tasks.go, zz_debug_test.go) | 25 reads | ~72579 tok |
+
+## Session: 2026-08-04 13:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:11 | Created docs/superpowers/specs/2026-08-04-schedule-direction-design.md | — | ~1227 |
+| 15:12 | Edited docs/superpowers/specs/2026-08-04-schedule-direction-design.md | 4→4 lines | ~44 |
+| 15:12 | Edited docs/superpowers/specs/2026-08-04-schedule-direction-design.md | inline fix | ~36 |
+
+## Session: 2026-08-04 15:30（排程方向设计重启）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:30 | 用户否定"只锚end"简化（开始时间半强制+弹窗编辑必须保留），追问嵌套处理 | 讨论 | 绕回原方案后用户拍板：从头重新设计 | ~1K |
+| 15:35 | 用户新方案：项目级排程方向（正推/倒推）+ 有进度后锁定 + 只允许改duration + 排节假日 + 甘特禁拖拽 + 删工期弹窗 + 倒推只有完成日期 + 多链尾全对齐完成日期 | 讨论 | 8条决策确认，消灭锚点/嵌套/工期弹窗全部复杂度 | ~2K |
+| 15:40 | 设计定稿写入 docs/superpowers/specs/2026-08-04-schedule-direction-design.md（迁移v5+backwardSchedule算法+前端+锁定+测试）| 设计文档 | 提交 f826450；自检修正2处（duration下限校验需新增、方向可无进度时随时改）| ~1.8K |
+| 15:40 | 现状盘点：manual_scheduled(任务级锁定)+constraint(2种约束)+backwardPass(仅关键路径不写回)均保留；Recalculate(trigger)编辑即保留语义在新模型下消失 | scheduler.go, tasks.go | 引擎改动聚焦：新增方向列+backwardSchedule+禁拖 | ~1K |
+| 15:13 | Session end: 3 writes across 1 files (2026-08-04-schedule-direction-design.md) | 2 reads | ~7023 tok |
+| 16:26 | Created docs/superpowers/plans/2026-08-04-schedule-direction.md | — | ~7363 |
+| 16:27 | Edited docs/superpowers/plans/2026-08-04-schedule-direction.md | modified TestSubWorkDays() | ~366 |
+| 16:27 | Edited docs/superpowers/plans/2026-08-04-schedule-direction.md | 6→6 lines | ~115 |
+| 16:27 | Edited docs/superpowers/plans/2026-08-04-schedule-direction.md | modified recalcAllForward() | ~215 |
+| 16:27 | Edited docs/superpowers/plans/2026-08-04-schedule-direction.md | expanded (+8 lines) | ~545 |
+| 16:27 | Edited docs/superpowers/plans/2026-08-04-schedule-direction.md | 9→8 lines | ~103 |
+| 16:28 | Edited docs/superpowers/plans/2026-08-04-schedule-direction.md | modified backwardScheduleWrite() | ~793 |
+| 16:28 | Edited docs/superpowers/plans/2026-08-04-schedule-direction.md | modified TestBackwardScheduleMultiTail() | ~183 |
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:50 | 实施计划7任务:迁移v5/SubWorkDays对偶/backwardSchedule引擎+方向路由/API方向+duration校验/创建表单+项目页/日期只读/回归 | docs/superpowers/plans/2026-08-04-schedule-direction.md | 提交 86a57b2；自检修正4处（SS测试期望7/29、MultiTail分支隔离、newEnd候选表与旧值无关、SubWorkDays测试日历分段）| ~7.3K |
+| 15:50 | 关键实现细节：倒推候选比较用函数内newEnd表（与任务旧日期无关）；manual/父任务不重算但当前日期参与链条传播；甘特图禁拖已实现无需改动 | 计划文件 | 逻辑已验证与全部测试用例一致 | ~600 |
+| 16:29 | Session end: 11 writes across 2 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md) | 3 reads | ~18135 tok |
