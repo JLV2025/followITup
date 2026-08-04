@@ -17,7 +17,7 @@ export default function Dashboard() {
 
   // 创建项目模态框状态
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: "", start_date: "", end_date: "", description: "" });
+  const [createForm, setCreateForm] = useState({ name: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createError, setCreateError] = useState("");
 
@@ -51,7 +51,7 @@ export default function Dashboard() {
   };
 
   const handleOpenCreate = () => {
-    setCreateForm({ name: "", start_date: "", end_date: "", description: "" });
+    setCreateForm({ name: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
     setCreateError("");
     setShowCreateModal(true);
   };
@@ -70,6 +70,7 @@ export default function Dashboard() {
         description: createForm.description.trim(),
         start_date: createForm.start_date || null,
         end_date: createForm.end_date || null,
+        schedule_direction: createForm.schedule_direction,
       });
       setShowCreateModal(false);
       fetchProjects();
@@ -323,25 +324,41 @@ export default function Dashboard() {
                   autoFocus
                 />
               </div>
+              <div className="form-group">
+                <label htmlFor="project-direction">排程方向</label>
+                <select
+                  id="project-direction"
+                  value={createForm.schedule_direction}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, schedule_direction: e.target.value })
+                  }
+                >
+                  <option value="forward">正排（从开始日期向后排）</option>
+                  <option value="backward">倒排（从完成日期向前排）</option>
+                </select>
+              </div>
               <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="project-start">开始日期</label>
-                  <input
-                    id="project-start"
-                    type="date"
-                    value={createForm.start_date}
-                    onChange={(e) => setCreateForm({ ...createForm, start_date: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="project-end">结束日期</label>
-                  <input
-                    id="project-end"
-                    type="date"
-                    value={createForm.end_date}
-                    onChange={(e) => setCreateForm({ ...createForm, end_date: e.target.value })}
-                  />
-                </div>
+                {createForm.schedule_direction === "forward" ? (
+                  <div className="form-group">
+                    <label htmlFor="project-start">开始日期</label>
+                    <input
+                      id="project-start"
+                      type="date"
+                      value={createForm.start_date}
+                      onChange={(e) => setCreateForm({ ...createForm, start_date: e.target.value })}
+                    />
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label htmlFor="project-end">完成日期</label>
+                    <input
+                      id="project-end"
+                      type="date"
+                      value={createForm.end_date}
+                      onChange={(e) => setCreateForm({ ...createForm, end_date: e.target.value })}
+                    />
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label htmlFor="project-desc">描述</label>

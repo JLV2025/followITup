@@ -9,6 +9,7 @@ interface Project {
   start_date: string;
   end_date: string;
   status: string;
+  schedule_direction: string;
 }
 
 export default function ProjectDetail() {
@@ -30,6 +31,32 @@ export default function ProjectDetail() {
           <h1>{project.name}</h1>
           <p className="text-secondary">{project.description}</p>
         </div>
+      </div>
+
+      {/* 排程方向 */}
+      <div className="project-direction-row">
+        {project.schedule_direction === "backward" ? (
+          <span className="badge badge-blue">倒排（基于完成日期）</span>
+        ) : (
+          <span className="badge">正排（基于开始日期）</span>
+        )}
+        <select
+          className="direction-select"
+          value={project.schedule_direction}
+          onChange={async (e) => {
+            const dir = e.target.value;
+            try {
+              await api.put(`/api/projects/${id}`, { ...project, schedule_direction: dir });
+              setProject({ ...project, schedule_direction: dir });
+            } catch (err: any) {
+              alert(err?.response?.data?.message || "排程方向修改失败");
+              setProject({ ...project }); // 回弹原值
+            }
+          }}
+        >
+          <option value="forward">正排</option>
+          <option value="backward">倒排</option>
+        </select>
       </div>
 
       {/* 子路由内容 */}

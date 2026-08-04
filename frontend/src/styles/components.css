@@ -586,6 +586,37 @@
   font-weight: 600;
 }
 
+/* 排程方向徽标与修改 */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.badge-blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.project-direction-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.direction-select {
+  font-size: 13px;
+  padding: 2px 6px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
 .project-tabs {
   display: flex;
   gap: 4px;
