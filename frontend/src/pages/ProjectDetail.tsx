@@ -49,7 +49,7 @@ export default function ProjectDetail() {
               await api.put(`/api/projects/${id}`, { ...project, schedule_direction: dir });
               setProject({ ...project, schedule_direction: dir });
             } catch (err: any) {
-              alert(err?.response?.data?.message || "排程方向修改失败");
+              alert(err?.response?.data?.error?.message || "排程方向修改失败");
               setProject({ ...project }); // 回弹原值
             }
           }}
