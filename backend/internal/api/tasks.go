@@ -143,6 +143,11 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if t.DurationDays < 1 && t.TaskType != "milestone" {
+		writeError(w, http.StatusBadRequest, "INVALID_DURATION", "工期至少 1 天")
+		return
+	}
+
 	// 校验 parent_id
 	if t.ParentID != nil {
 		if err := h.validateParent(*t.ParentID, projectID, 0); err != nil {
@@ -194,6 +199,11 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var t models.Task
 	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+
+	if t.DurationDays < 1 && t.TaskType != "milestone" {
+		writeError(w, http.StatusBadRequest, "INVALID_DURATION", "工期至少 1 天")
 		return
 	}
 

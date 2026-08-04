@@ -111,7 +111,8 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 
 	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public,
 		COALESCE(p.baseline_created_at, '') as baseline_created_at,
-		COALESCE(p.baseline_created_by, '') as baseline_created_by
+		COALESCE(p.baseline_created_by, '') as baseline_created_by,
+			p.schedule_direction
 		FROM projects p ` + baseFilter + ` ORDER BY
 		CASE p.status WHEN 'active' THEN 0 ELSE 1 END, p.created_at DESC`
 
@@ -139,7 +140,7 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		var p ProjectSummary
 		var isPublic int
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate,
-			&p.Status, &isPublic, &p.BaselineCreatedAt, &p.BaselineCreatedBy); err != nil {
+			&p.Status, &isPublic, &p.BaselineCreatedAt, &p.BaselineCreatedBy, &p.ScheduleDirection); err != nil {
 			continue
 		}
 		p.IsPublic = isPublic != 0
@@ -202,9 +203,13 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if p.ScheduleDirection == "" {
+		p.ScheduleDirection = "forward" // 默认正推
+	}
 	result, err := h.db.Exec(
-		`INSERT INTO projects (name, description, start_date, end_date, status) VALUES (?, ?, ?, ?, 'active')`,
-		p.Name, p.Description, p.StartDate, p.EndDate,
+		`INSERT INTO projects (name, description, start_date, end_date, status, schedule_direction)
+		 VALUES (?, ?, ?, ?, 'active', ?)`,
+		p.Name, p.Description, p.StartDate, p.EndDate, p.ScheduleDirection,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "创建项目失败")
@@ -234,10 +239,26 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 排程方向锁定：项目内任一任务有进度后不可修改方向
+	var curDirection string
+	h.db.QueryRow(`SELECT COALESCE(schedule_direction, 'forward') FROM projects WHERE id=? AND deleted_at IS NULL`, id).Scan(&curDirection)
+	if p.ScheduleDirection != "" && p.ScheduleDirection != curDirection {
+		var cnt int
+		h.db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE project_id=? AND deleted_at IS NULL AND progress_pct > 0`, id).Scan(&cnt)
+		if cnt > 0 {
+			writeError(w, http.StatusBadRequest, "DIRECTION_LOCKED", "项目已有任务进度，排程方向不可修改")
+			return
+		}
+	}
+	if p.ScheduleDirection == "" {
+		p.ScheduleDirection = curDirection // 请求体未携带时保留旧值
+	}
 	_, err := h.db.Exec(
-		`UPDATE projects SET name=?, description=?, start_date=?, end_date=?, status=?, is_public=?, updated_at=datetime('now')
+		`UPDATE projects SET name=?, description=?, start_date=?, end_date=?, status=?, is_public=?,
+		       schedule_direction=?, updated_at=datetime('now')
 		 WHERE id=? AND deleted_at IS NULL`,
-		p.Name, p.Description, p.StartDate, p.EndDate, p.Status, boolToInt(p.IsPublic), id,
+		p.Name, p.Description, p.StartDate, p.EndDate, p.Status, boolToInt(p.IsPublic),
+		p.ScheduleDirection, id,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "更新项目失败")
@@ -265,9 +286,9 @@ func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	var p models.Project
 	var isPublic int
 	err := h.db.QueryRow(
-		"SELECT id, name, description, start_date, end_date, status, is_public FROM projects WHERE id = ? AND deleted_at IS NULL",
+		"SELECT id, name, description, start_date, end_date, status, is_public, schedule_direction FROM projects WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate, &p.Status, &isPublic)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate, &p.Status, &isPublic, &p.ScheduleDirection)
 	p.IsPublic = isPublic != 0
 	if err != nil {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "项目不存在")
