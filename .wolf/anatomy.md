@@ -60,6 +60,7 @@
 - `task-4-report.md` — Task 4 报告：后端项目 API 支持排程方向 + duration 下限校验 (~575 tok)
 - `task-5-report.md` — Task 5 报告：前端创建表单选排程方向 + 项目页方向显示与修改 (~377 tok)
 - `task-6-report.md` — Task 6 实施报告：前端任务日期只读（duration 驱动） (~235 tok)
+- `task-7-report.md` — Task 7 实施报告：最终审查 3 项修复 (~1080 tok)
 
 ## C:/Users/jingl/.claude/plans/
 

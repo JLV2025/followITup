@@ -845,6 +845,54 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-04T17:40:00"
+    },
+    {
+      "id": "bug-053",
+      "timestamp": "2026-08-04T10:06:51.711Z",
+      "error_message": "Wrong reference: message should be error",
+      "file": "frontend/src/pages/ProjectDetail.tsx",
+      "root_cause": "Used \"message\" instead of \"error\"",
+      "fix": "Changed message → error",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-04T10:06:51.711Z"
+    },
+    {
+      "id": "bug-054",
+      "timestamp": "2026-08-04T10:11:43.307Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/pages/ProjectDetail.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-04T10:11:43.307Z"
+    },
+    {
+      "id": "bug-055",
+      "timestamp": "2026-08-04T10:12:02.221Z",
+      "error_message": "CSS fix: font-size, color, cursor",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "font-size: 13px → 12px; color: var(--text-secondary) → var(--text-muted); cursor: pointer → not-allowed",
+      "fix": "Changed font-size: 13px → 12px; color: var(--text-secondary) → var(--text-muted); cursor: pointer → not-allowed",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-04T10:12:02.221Z"
     }
   ]
 }

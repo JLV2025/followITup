@@ -998,3 +998,19 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:33 | Edited backend/internal/scheduler/scheduler.go | 16→18 lines | ~152 |
 | 17:33 | Edited backend/internal/api/tasks.go | expanded (+7 lines) | ~94 |
 | 17:35 | Edited .superpowers/sdd/2026-08-04-schedule-direction/task-3-report.md | expanded (+41 lines) | ~433 |
+| 18:06 | Edited frontend/src/pages/ProjectDetail.tsx | inline fix | ~21 |
+| 18:11 | Edited frontend/src/pages/ProjectDetail.tsx | added optional chaining | ~156 |
+| 18:11 | Edited frontend/src/pages/ProjectDetail.tsx | modified catch() | ~227 |
+| 18:12 | Edited frontend/src/styles/components.css | CSS: direction-select, opacity | ~102 |
+| 18:13 | Created .superpowers/sdd/2026-08-04-schedule-direction/task-7-report.md | — | ~485 |
+| 18:13 | 最终审查3项修复：Fix1错误路径/Fix2 SF测试/Fix3进度禁用 | ProjectDetail.tsx, scheduler_test.go, components.css | 3 commits, 全测试通过 | ~1200 |
+
+## Session: 2026-08-04 18:20（排程方向功能 完成）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:35~17:14 | SDD 执行 7 任务（迁移v5/SubWorkDays/倒推引擎/API/前端表单/日期只读/验证）| 见 git log e2f09eb..a3506e8 | 任务级审查全过；倒推引擎实测定正确 | ~15K |
+| 17:40 | 浏览器验证发现 bug-027：backwardScheduleWrite 链尾初始化 range 副本陷阱（`for _, t := range` 改副本，单测链尾初始日期恰好==finishDate 全绿）| scheduler.go | 修复 9f43e8d + 回归测试 TestBackwardScheduleTailInitialDate | ~2K |
+| 17:40 | 发现 bug-028：CreateTask 不触发排程，倒推项目新任务不纳入 | tasks.go | 修复 77667d8（triggersReschedule + Recalculate）| ~300 |
+| 17:55 | 最终整体审查：3 项修复（错误路径 data.error.message / SF 单测 / 方向锁定前端禁用+提示）| ProjectDetail.tsx, scheduler_test.go | 5694286+5ff221b+a3506e8；re-review all addressed；浏览器双向验证通过 | ~2K |
+| 18:20 | 收尾：测试项目删除、workspace 清理、12 提交全在 master | — | 功能完成；服务器 8080 运行中 | — |
