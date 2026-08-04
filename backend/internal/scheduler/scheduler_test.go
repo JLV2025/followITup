@@ -300,6 +300,125 @@ func TestImplicitOrderSkippedForManual(t *testing.T) {
 	}
 }
 
+// ============================================================================
+// 倒推排程测试（backwardScheduleWrite）
+// ============================================================================
+
+// 倒推：单链 A(5天) → B(7天)，完成日期 7/31 → B.end=7/31，A.end=B.start，逐段往前
+func TestBackwardScheduleSingleChain(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7},
+	}
+	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
+	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
+	// B.end=7/31，B.start=7/31 往前 7 个工作日：7/23(四) 7/24(五) 7/27 7/28 7/29 7/30 7/31 → 7/23
+	if ch, ok := changes[2]; !ok || ch["end_date"] != "2026-07-31" || ch["start_date"] != "2026-07-23" {
+		t.Errorf("B 应为 7/23~7/31，实际 %v", ch)
+	}
+	// A.end = B.start = 7/23；A.start = 7/23 往前 5 个工作日：7/17(五) 7/20 7/21 7/22 7/23 → 7/17
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-23" || ch["start_date"] != "2026-07-17" {
+		t.Errorf("A 应为 7/17~7/23，实际 %v", ch)
+	}
+}
+
+// 倒推：两条独立分支（不同父任务分组，无隐式连接）链尾都对齐完成日期
+func TestBackwardScheduleMultiTail(t *testing.T) {
+	pid1 := int64(100)
+	pid2 := int64(200)
+	tasks := []TaskInfo{
+		{ID: 1, ParentID: &pid1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5, SortOrder: 0},
+		{ID: 2, ParentID: &pid2, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 2, SortOrder: 0},
+	}
+	changes := backwardScheduleWrite(tasks, nil, "2026-07-31", map[string]string{}, map[int64]bool{})
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-31" {
+		t.Errorf("分支 1 链尾应 = 7/31，实际 %v", ch)
+	}
+	if ch, ok := changes[2]; !ok || ch["end_date"] != "2026-07-31" {
+		t.Errorf("分支 2 链尾应 = 7/31，实际 %v", ch)
+	}
+}
+
+// 倒推：同分支隐式顺序依赖参与（相邻任务 FS 衔接），链尾对齐完成日期
+func TestBackwardScheduleImplicitPred(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5, SortOrder: 0},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7, SortOrder: 1},
+	}
+	changes := backwardScheduleWrite(tasks, nil, "2026-07-31", map[string]string{}, map[int64]bool{})
+	// 隐式 FS：A.end = B.start - 0
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-23" || ch["start_date"] != "2026-07-17" {
+		t.Errorf("隐式前驱 A 应为 7/17~7/23，实际 %v", ch)
+	}
+}
+
+// 倒推：四种依赖类型 + lag
+func TestBackwardScheduleDepTypes(t *testing.T) {
+	// FS lag=2：succ.start = pred.end + 2 → 倒推 pred.end = succ.start - 2
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7},
+	}
+	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 2}}
+	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
+	// B.start=7/23 → A.end = 7/23 - 2 = 7/21
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-21" {
+		t.Errorf("FS lag=2：A.end 应为 7/21，实际 %v", ch)
+	}
+
+	// FF lag=1：succ.end = pred.end + 1 → pred.end = succ.end - 1
+	tasks2 := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7},
+	}
+	deps2 := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FF, LagDays: 1}}
+	ch2 := backwardScheduleWrite(tasks2, deps2, "2026-07-31", map[string]string{}, map[int64]bool{})
+	if ch, ok := ch2[1]; !ok || ch["end_date"] != "2026-07-30" {
+		t.Errorf("FF lag=1：A.end 应为 7/30，实际 %v", ch)
+	}
+
+	// SS lag=0：succ.start = pred.start → pred.start 约束 = succ.start，pred.end = start+duration
+	tasks3 := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7},
+	}
+	deps3 := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: SS, LagDays: 0}}
+	ch3 := backwardScheduleWrite(tasks3, deps3, "2026-07-31", map[string]string{}, map[int64]bool{})
+	// B.start=7/23 → A.start 约束 = 7/23 → A.end = 7/23 往后 5 工作日：7/23(四) 7/24(五) 7/27(一) 7/28(二) 7/29(三) → 7/29
+	if ch, ok := ch3[1]; !ok || ch["end_date"] != "2026-07-29" || ch["start_date"] != "2026-07-23" {
+		t.Errorf("SS：A 应为 7/23~7/29，实际 %v", ch)
+	}
+}
+
+// 倒推：manual 任务不被改写，但链条沿其当前日期继续往前推
+func TestBackwardScheduleManualScheduled(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5, ManualScheduled: true},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7},
+	}
+	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
+	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
+	if _, ok := changes[1]; ok {
+		t.Error("manual 任务不应被倒推改写")
+	}
+}
+
+// 倒推：父任务不直接参与，其日期由子任务 rollup（迭代收敛在 backwardSchedule 内验证）
+func TestBackwardScheduleParentNotWritten(t *testing.T) {
+	pid := int64(10)
+	tasks := []TaskInfo{
+		{ID: 1, ParentID: &pid, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 10, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+	}
+	changes := backwardScheduleWrite(tasks, nil, "2026-07-31", map[string]string{}, map[int64]bool{10: true})
+	if _, ok := changes[10]; ok {
+		t.Error("父任务日期应由 rollup 汇总，倒推 pass 不应直接写")
+	}
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-31" {
+		t.Errorf("子任务链尾应 = 7/31，实际 %v", ch)
+	}
+}
+
 // SubWorkDays 与 AddWorkDays 互为逆运算（含周末与自定义节假日）
 func TestSubWorkDays(t *testing.T) {
 	// 无节假日（默认周末规则）：周一 8/3 起 5 个工作日 → 8/7 周五

@@ -45,14 +45,25 @@ type TaskInfo struct {
 	SortOrder       int // 项目内排序序号（隐式顺序依赖依据）
 }
 
-// Recalculate 从 triggerTaskID 出发传播后继链（触发任务自身不被改写，保留手动调整）
+// Recalculate 从 triggerTaskID 出发传播后继链（触发任务自身不被改写，保留手动调整）。
+// 倒推项目改为全量倒推（duration 变更 → start 重算 → 沿前驱链传播）
 func Recalculate(db *sql.DB, projectID int64, triggerTaskID int64) (map[int64]map[string]string, error) {
+	if dir, _ := getProjectDirection(db, projectID); dir == "backward" {
+		return backwardSchedule(db, projectID)
+	}
 	return recalc(db, projectID, []int64{triggerTaskID})
 }
 
-// RecalculateAll 全项目重算：从所有链头（无显式前置且无隐式前驱的任务）出发。
-// 用于排序变化等影响全局隐式顺序依赖的场景。
+// RecalculateAll 全项目重算；倒推项目从链尾倒推，正推项目保持现有逻辑
 func RecalculateAll(db *sql.DB, projectID int64) (map[int64]map[string]string, error) {
+	if dir, _ := getProjectDirection(db, projectID); dir == "backward" {
+		return backwardSchedule(db, projectID)
+	}
+	return recalcAllForward(db, projectID)
+}
+
+// recalcAllForward 原 RecalculateAll 逻辑（重命名，函数体不变：链头队列 + recalc）
+func recalcAllForward(db *sql.DB, projectID int64) (map[int64]map[string]string, error) {
 	tasks, err := loadTasks(db, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("加载任务失败: %w", err)
@@ -609,4 +620,163 @@ func julianDay(y, m, d int) int {
 	a := y / 100
 	b := 2 - a + a/4
 	return (36525*(y+4716))/100 + (306001*(m+1))/10000 + d + b - 1524
+}
+
+// getProjectDirection 读取项目排程方向与完成日期（缺省 forward / 空串）
+func getProjectDirection(db *sql.DB, projectID int64) (string, string) {
+	var dir, endDate string
+	err := db.QueryRow(
+		`SELECT COALESCE(schedule_direction,'forward'), COALESCE(end_date,'') FROM projects WHERE id=?`,
+		projectID).Scan(&dir, &endDate)
+	if err != nil {
+		return "forward", ""
+	}
+	return dir, endDate
+}
+
+// backwardSchedule 倒推全量重算：迭代 5 轮（rollup 参与下一轮）后落库
+func backwardSchedule(db *sql.DB, projectID int64) (map[int64]map[string]string, error) {
+	dir, finishDate := getProjectDirection(db, projectID)
+	if dir != "backward" || finishDate == "" {
+		return nil, nil // 倒推项目必须有完成日期，否则不重排
+	}
+	tasks, err := loadTasks(db, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("加载任务失败: %w", err)
+	}
+	deps, err := loadDeps(db, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("加载依赖失败: %w", err)
+	}
+	if cycle := detectCycle(tasks, deps); len(cycle) > 0 {
+		return nil, fmt.Errorf("CIRCULAR_DEPENDENCY: 存在循环依赖 %v", cycle)
+	}
+	cal, err := LoadCalendar(db, "", "")
+	if err != nil {
+		cal = make(map[string]string)
+	}
+	parentSet := make(map[int64]bool)
+	for i := range tasks {
+		if tasks[i].ParentID != nil {
+			parentSet[*tasks[i].ParentID] = true
+		}
+	}
+	changes := make(map[int64]map[string]string)
+	for round := 0; round < 5; round++ {
+		ch := backwardScheduleWrite(tasks, deps, finishDate, cal, parentSet)
+		rollupParentDates(tasks, parentSet, ch, cal)
+		for id, fields := range ch {
+			changes[id] = fields
+		}
+		if len(ch) == 0 {
+			break // 收敛
+		}
+	}
+	if len(changes) == 0 {
+		return nil, nil
+	}
+	for id, fields := range changes {
+		if _, err := db.Exec(
+			"UPDATE tasks SET start_date=?, end_date=?, duration_days=?, updated_at=datetime('now') WHERE id=?",
+			fields["start_date"], fields["end_date"], fields["duration_days"], id,
+		); err != nil {
+			log.Printf("[Scheduler] 更新任务 %d 失败: %v", id, err)
+		}
+	}
+	return changes, nil
+}
+
+// backwardScheduleWrite 单轮倒推：所有链尾 end=finishDate，沿前驱链（显式+隐式）往前推。
+// 每个非锚定任务以「本次计算的候选表 newEnd」取最严格（min），与旧日期无关（全量重排）；
+// 父任务与 manual 任务不写回、不重算，但其当前日期参与链条传播
+func backwardScheduleWrite(tasks []TaskInfo, deps []Dep, finishDate string, cal map[string]string, parentSet map[int64]bool) map[int64]map[string]string {
+	taskMap := make(map[int64]*TaskInfo)
+	for i := range tasks {
+		taskMap[tasks[i].ID] = &tasks[i]
+	}
+	predDeps := make(map[int64][]Dep) // 后继 id → 显式前驱依赖
+	hasSucc := make(map[int64]bool)   // 有显式或隐式后继者
+	for _, d := range deps {
+		predDeps[d.SuccessorID] = append(predDeps[d.SuccessorID], d)
+		hasSucc[d.PredecessorID] = true
+	}
+	implicitPred, implicitSucc := buildImplicitPred(tasks)
+	for predID := range implicitSucc {
+		hasSucc[predID] = true
+	}
+
+	changes := make(map[int64]map[string]string)
+	newEnd := make(map[int64]string) // 本次倒推计算的 end 候选（多后继取 min，与旧值无关）
+	queue := []int64{}
+	queued := make(map[int64]bool)
+
+	// 队列：所有链尾（无后继、非父任务、非 manual），end = 项目完成日期
+	for _, t := range tasks {
+		if hasSucc[t.ID] || parentSet[t.ID] || t.ManualScheduled {
+			continue
+		}
+		newEnd[t.ID] = finishDate
+		changes[t.ID] = map[string]string{
+			"start_date":    SubWorkDays(cal, finishDate, t.DurationDays),
+			"end_date":      finishDate,
+			"duration_days": fmt.Sprintf("%d", t.DurationDays),
+		}
+		t.EndDate = finishDate
+		t.StartDate = changes[t.ID]["start_date"]
+		queue = append(queue, t.ID)
+		queued[t.ID] = true
+	}
+
+	for len(queue) > 0 {
+		succID := queue[0]
+		queue = queue[1:]
+		succ := taskMap[succID]
+		if succ == nil {
+			continue
+		}
+		succStart := SubWorkDays(cal, succ.EndDate, succ.DurationDays)
+		preds := predDeps[succID]
+		if len(preds) == 0 {
+			if pid, ok := implicitPred[succID]; ok {
+				preds = append(preds, Dep{PredecessorID: pid, SuccessorID: succID, Type: FS, LagDays: 0})
+			}
+		}
+		for _, dep := range preds {
+			pred := taskMap[dep.PredecessorID]
+			if pred == nil {
+				continue
+			}
+			var candEnd string
+			switch dep.Type {
+			case FS:
+				candEnd = shiftDate(succStart, -dep.LagDays)
+			case FF:
+				candEnd = shiftDate(succ.EndDate, -dep.LagDays)
+			case SS:
+				candEnd = AddWorkDays(cal, shiftDate(succStart, -dep.LagDays), pred.DurationDays)
+			case SF:
+				candEnd = AddWorkDays(cal, shiftDate(succ.EndDate, -dep.LagDays), pred.DurationDays)
+			default:
+				continue
+			}
+			// 多后继取最严格（更早）；父任务/manual 不重算，用当前日期继续传播
+			if _, set := newEnd[pred.ID]; !set || candEnd < newEnd[pred.ID] {
+				newEnd[pred.ID] = candEnd
+				if !parentSet[pred.ID] && !pred.ManualScheduled {
+					pred.EndDate = candEnd
+					pred.StartDate = SubWorkDays(cal, candEnd, pred.DurationDays)
+					changes[pred.ID] = map[string]string{
+						"start_date":    pred.StartDate,
+						"end_date":      candEnd,
+						"duration_days": fmt.Sprintf("%d", pred.DurationDays),
+					}
+				}
+			}
+			if !queued[pred.ID] {
+				queue = append(queue, pred.ID)
+				queued[pred.ID] = true
+			}
+		}
+	}
+	return changes
 }
