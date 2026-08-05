@@ -1188,3 +1188,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:56 | Session end: 102 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~90135 tok |
 | 15:04 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 condition(s) | ~508 |
 | 2026-08-05 | 修bug-031:弹窗保存409自冲突(排序保存递增version后弹窗旧version保存必409)——自动重取最新version重放,实测409→GET→200链路 | frontend/src/components/TaskDetailModal.tsx | 已修复部署 | ~15k |
+| 15:08 | Session end: 103 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~97163 tok |
+| 15:11 | Session end: 103 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~97163 tok |
+| 15:17 | Session end: 103 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~97163 tok |
+| 15:20 | Edited backend/internal/api/tasks.go | modified RestoreTask() | ~251 |
+| 15:24 | Edited backend/internal/api/tasks.go | Recalculate() → RecalculateAll() | ~60 |
+| 2026-08-05 | 恢复任务改全量实时重算:Recalculate对triggerTaskID自身豁免→恢复任务保持旧日期;改用RecalculateAll(同排序保存),实测恢复B由旧8/5重算为新8/7衔接;清理项目9测试任务 | backend/internal/api/tasks.go | 已交付 | ~20k |
