@@ -1179,3 +1179,8 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:20 | Edited frontend/src/pages/UserManagement.tsx | expanded (+29 lines) | ~412 |
 | 14:29 | Edited frontend/src/App.tsx | modified App() | ~231 |
 | 2026-08-05 | 节假日范围+密码重置交付:H5任务(范围API+补班单测/重置端点+邮件/配置页紧凑+范围UI/重置弹窗/回归);验证暴露bug-029(非首页整页加载丢登录态,修复App全局loadFromStorage);范围365天在限内,367天400;误重置Jing.Lv密码(vS^*O3NY,须首登改密)已告知 | backend/internal/api/calendar.go + auth.go + mail.go + scheduler_test.go, frontend/{SystemSettings,UserManagement,App}.tsx | 交付,新exe部署 | ~150k |
+| 14:32 | Session end: 100 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~89890 tok |
+| 14:37 | Session end: 100 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~89890 tok |
+| 14:39 | Edited backend/internal/auth/auth.go | 7→7 lines | ~106 |
+| 14:39 | Edited backend/internal/auth/auth.go | expanded (+6 lines) | ~122 |
+| 2026-08-05 | 修bug-030:邮箱登录大小写敏感(用户 jing.lv 全小写登录失败)——Login加COLLATE NOCASE + CreateUser NOCASE去重,实测全小写/混合变体均200 | backend/internal/auth/auth.go | 已修复部署 | ~10k |

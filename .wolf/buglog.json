@@ -1197,6 +1197,24 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-05T06:20:31.150Z"
+    },
+    {
+      "id": "bug-030",
+      "timestamp": "2026-08-05",
+      "error_message": "用户登录失败：邮箱大小写与注册时不一致（SQLite 默认大小写敏感，jing.lv@ 与 Jing.Lv@ 不匹配）",
+      "file": "backend/internal/auth/auth.go",
+      "root_cause": "Login 查询 WHERE email = ? 未指定 COLLATE，SQLite BINARY 比较大小写敏感；创建时也无大小写不敏感去重，可能产生变体账号",
+      "fix": "Login 查询加 COLLATE NOCASE；CreateUser 增加 NOCASE 去重检查（返回 DUPLICATE）",
+      "tags": [
+        "auth",
+        "login",
+        "email",
+        "sqlite",
+        "collation"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05"
     }
   ]
 }
