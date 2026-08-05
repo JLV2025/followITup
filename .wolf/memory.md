@@ -1215,3 +1215,27 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:10 | Edited frontend/src/api/gantt-adapter.ts | added 1 condition(s) | ~326 |
 | 16:10 | Edited frontend/src/api/gantt-adapter.ts | added 1 condition(s) | ~135 |
 | 2026-08-05 | 修bug-034/035:甘特条不可见(dhtmlx按end-start画条,同日差0→end+1 exclusive转换+parse强制duration)+改duration不重算end(排程applyCandidate start不变时也修end)——项目10实测6条全可见(132/1056/924px) | frontend/src/api/gantt-adapter.ts + ProjectGantt.tsx + backend/internal/scheduler/scheduler.go | 已修复部署 | ~25k |
+| 16:12 | Session end: 117 writes across 39 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 43 reads | ~100461 tok |
+| 16:18 | Session end: 117 writes across 39 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 43 reads | ~100542 tok |
+| 16:21 | Edited backend/internal/api/tasks.go | triggerReschedule() → Recalculate() | ~204 |
+| 16:22 | Edited backend/internal/scheduler/scheduler.go | 5→7 lines | ~75 |
+| 16:25 | Edited backend/internal/scheduler/calendar.go | modified AddWorkDays() | ~371 |
+| 16:25 | Edited backend/internal/scheduler/scheduler.go | shiftDate() → SubWorkDays() | ~223 |
+| 16:26 | Edited backend/internal/scheduler/scheduler.go | 9→10 lines | ~89 |
+| 16:26 | Edited frontend/src/api/gantt-adapter.ts | reduced (-6 lines) | ~33 |
+| 16:26 | Edited frontend/src/api/gantt-adapter.ts | modified fromGanttTask() | ~63 |
+| 16:26 | Edited backend/internal/db/sqlite.go | 9→14 lines | ~114 |
+| 16:28 | Edited backend/internal/scheduler/scheduler_test.go | modified TestCalcDatesFS() | ~238 |
+| 16:29 | Edited backend/internal/scheduler/scheduler_test.go | modified TestSubWorkDays() | ~378 |
+| 16:29 | Edited backend/internal/scheduler/scheduler_test.go | 8→8 lines | ~53 |
+| 16:29 | Edited backend/internal/scheduler/scheduler_test.go | 4→4 lines | ~40 |
+| 16:31 | Edited backend/internal/scheduler/scheduler_test.go | 4→4 lines | ~74 |
+| 16:33 | Edited backend/internal/db/sqlite.go | 5→6 lines | ~73 |
+| 16:34 | Edited backend/internal/server/server.go | modified func() | ~146 |
+| 16:34 | Edited backend/internal/server/server.go | 4→5 lines | ~38 |
+| 16:36 | Edited backend/internal/server/server.go | modified func() | ~183 |
+| 16:37 | Edited backend/internal/server/server.go | 9→10 lines | ~28 |
+| 16:38 | Edited backend/internal/server/server.go | modified func() | ~215 |
+| 16:38 | Edited backend/internal/scheduler/scheduler.go | expanded (+9 lines) | ~132 |
+| 16:39 | Edited backend/internal/scheduler/scheduler.go | 6→7 lines | ~15 |
+| 2026-08-05 | 排程语义大改:end独占式(结束=开始+工期,1天8/5~8/6;FS后继=前置结束后次日开始)——AddWorkDays/SubWorkDays改不含当天+calcDates公式+v7迁移(end+1,里程碑排除)+启动延迟重排(SQLITE_BUSY→延迟3s+写重试)+前端撤销end+1;实测项目10链65→70逐日衔接跳过周末,项目6拆除8/4→水电8/4开始 | backend/internal/scheduler/* + db/sqlite.go + server/server.go + frontend/api/gantt-adapter.ts | 已交付 | ~60k |

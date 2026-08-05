@@ -1279,6 +1279,70 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-05T07:27:39.410Z"
+    },
+    {
+      "id": "bug-080",
+      "timestamp": "2026-08-05T08:26:17.840Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/api/gantt-adapter.ts",
+      "root_cause": "8 lines replaced/restructured",
+      "fix": "Rewrote 10→4 lines (8 removed) | Also: // end_date 还原：toGanttTask 已 +1 天（dhtmlx exclusive; let endDate = gt.end_date;",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-05T08:26:26.782Z"
+    },
+    {
+      "id": "bug-081",
+      "timestamp": "2026-08-05T08:28:07.036Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/scheduler/scheduler_test.go",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 13→24 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T08:28:07.036Z"
+    },
+    {
+      "id": "bug-082",
+      "timestamp": "2026-08-05T08:36:33.039Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/server/server.go",
+      "root_cause": "5 lines replaced/restructured",
+      "fix": "Rewrote 15→25 lines (5 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T08:36:33.039Z"
+    },
+    {
+      "id": "bug-083",
+      "timestamp": "2026-08-05T08:38:42.198Z",
+      "error_message": "Wrong operator: != should be ==",
+      "file": "backend/internal/scheduler/scheduler.go",
+      "root_cause": "Used \"!=\" instead of \"==\"",
+      "fix": "Changed operator != → ==",
+      "tags": [
+        "auto-detected",
+        "operator-fix",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T08:38:42.199Z"
     }
   ]
 }
