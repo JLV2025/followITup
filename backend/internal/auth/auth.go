@@ -47,6 +47,12 @@ func (s *Service) InitAdmin(email, password, displayName string) error {
 
 // CreateUser 创建用户
 func (s *Service) CreateUser(email, password, displayName, authSource string, isAdmin, mustChange bool) error {
+	// 邮箱大小写不敏感去重（避免 Jing.Lv 与 jing.lv 并存）
+	var dup int
+	s.db.QueryRow(`SELECT COUNT(*) FROM users WHERE email = ? COLLATE NOCASE`, email).Scan(&dup)
+	if dup > 0 {
+		return errors.New("该邮箱已存在")
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), s.bcryptCost)
 	if err != nil {
 		return fmt.Errorf("密码哈希失败: %w", err)
@@ -124,7 +130,7 @@ func (s *Service) Login(email, password string) (*models.LoginResponse, error) {
 	err := s.db.QueryRow(
 		`SELECT id, login, email, display_name, auth_source, is_admin, is_active,
 		        password_hash, failed_attempts, locked_until, must_change_password
-		 FROM users WHERE email = ? AND is_active = 1`,
+		 FROM users WHERE email = ? COLLATE NOCASE AND is_active = 1`,
 		email,
 	).Scan(&u.ID, &u.Login, &u.Email, &u.DisplayName, &u.AuthSource,
 		&isAdmin, &isActive, &passwordHash, &failedAttempts, &lockedUntil, &mustChange)
