@@ -1089,6 +1089,15 @@
   grid-template-columns: 1fr 1fr;
   column-gap: 20px;
   align-items: start;
+  min-width: 0;
+}
+.task-detail-modal .task-detail-col {
+  min-width: 0;
+}
+/* 长任务名下拉：限制最大宽度，避免 select 按最长 option 撑宽弹窗（出现底部横向滚动条） */
+.task-detail-modal select {
+  max-width: 220px;
+  min-width: 0;
 }
 .task-detail-modal .task-detail-col + .task-detail-col {
   border-left: 1px solid var(--card-border);
