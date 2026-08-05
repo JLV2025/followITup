@@ -27,6 +27,7 @@ export interface GanttTask {
   actual_end?: string;
   version?: number;
   sort_order?: number;   // 项目内排序序号（拖拽持久化用）
+  duration_days?: number; // 后端工期（parse 后强制覆盖 dhtmlx 按 end-start 算出的 duration）
   $readonly?: boolean;   // 只读模式
 }
 
@@ -53,6 +54,7 @@ const GANTT_TO_DEP_TYPE: Record<string, string> = {
  */
 export function toGanttTask(t: any, readonly: boolean): GanttTask {
   const startDate = t.start_date || "";
+  const isMilestone = t.task_type === "milestone";
   // 若无 end_date 或格式异常（Date 对象被序列化），从 start_date + duration_days 推算
   let endDate = t.end_date || "";
   let duration = t.duration_days || 1;
@@ -69,6 +71,15 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     duration = Math.max(1, Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000));
   }
 
+  // dhtmlx 按 end-start 像素差绘制任务条：同日任务（1 天）差 0 会不可见。
+  // 非里程碑任务 end 统一 +1 天（exclusive 语义），宽度与 duration 正确；
+  // fromGanttTask 保存时再 -1 还原（里程碑保持点，不做转换）
+  if (!isMilestone && endDate && isValidDate(endDate)) {
+    const e = new Date(endDate);
+    e.setDate(e.getDate() + 1);
+    endDate = e.toISOString().slice(0, 10);
+  }
+
   return {
     id: t.id,
     parent: t.parent_id || 0,
@@ -76,6 +87,7 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     start_date: startDate,
     end_date: endDate,
     duration: duration,
+    duration_days: t.duration_days || 1,
     progress: (t.progress_pct || 0) / 100,
     type: t.task_type === "milestone" ? "milestone" : undefined,
     $open: true,  // 数据加载时默认展开所有分支
@@ -99,12 +111,19 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
  * 将 dhtmlx-gantt Task → 后端 Task（保存用）
  */
 export function fromGanttTask(gt: GanttTask): any {
+  // end_date 还原：toGanttTask 已 +1 天（dhtmlx exclusive 语义），非里程碑保存时 -1
+  let endDate = gt.end_date;
+  if (gt.type !== "milestone" && endDate) {
+    const e = new Date(endDate);
+    e.setDate(e.getDate() - 1);
+    endDate = e.toISOString().slice(0, 10);
+  }
   return {
     id: gt.id,
     name: gt.text,
     parent_id: gt.parent || null,
     start_date: gt.start_date,
-    end_date: gt.end_date,
+    end_date: endDate,
     duration_days: gt.duration,
     progress_pct: Math.round((gt.progress || 0) * 100),
     task_type: gt.type === "milestone" ? "milestone" : "task",

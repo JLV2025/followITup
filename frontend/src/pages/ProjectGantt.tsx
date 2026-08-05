@@ -569,6 +569,14 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     gantt.config.drag_links = !readonly;
     if (tasks.length > 0) {
       (gantt as any).parse({ data: tasks, links: links });
+      // dhtmlx 按 end-start 计算 duration（结束日不计入），1 天任务会算出 0 而甘特条不可见——
+      // 用后端工期强制覆盖，保证所有任务的甘特条宽度正确
+      gantt.eachTask((t: any) => {
+        if (typeof t.duration_days === "number") {
+          t.duration = Math.max(1, t.duration_days);
+        }
+      });
+      gantt.render();
       if (!autoZoomDoneRef.current) {
         autoZoomDoneRef.current = true;
         setTimeout(() => {

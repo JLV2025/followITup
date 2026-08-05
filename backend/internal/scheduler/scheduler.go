@@ -295,8 +295,19 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 		}
 
 		// 双向跟随：前置（或前面任务）日期变化时后继自动调整（含提前）。
-		// 被修改的任务自身（triggerTaskID）不会被本函数改写，故手动调整优先保留。
+		// start 未变化时：仅当 duration 变更导致 end 过时（end ≠ start+duration）才重算 end，
+		// 否则保持不动（避免无谓更新；日期为排程唯一来源，无手动编辑场景）
 		if candidateStart == succ.StartDate {
+			expectedEnd := AddWorkDays(cal, candidateStart, succ.DurationDays)
+			if succ.EndDate == expectedEnd {
+				return
+			}
+			changes[succ.ID] = map[string]string{
+				"start_date":    candidateStart,
+				"end_date":      expectedEnd,
+				"duration_days": fmt.Sprintf("%d", succ.DurationDays),
+			}
+			succ.EndDate = expectedEnd
 			return
 		}
 
