@@ -40,6 +40,21 @@ func Send(db *sql.DB, to, subject, body string) error {
 	return smtp.SendMail(addr, auth, sender, []string{to}, msg)
 }
 
+// SendPasswordReset 发送密码重置通知（含新密码）
+func SendPasswordReset(db *sql.DB, to, displayName, password string) error {
+	subject := "FollowITup 密码已重置"
+	body := fmt.Sprintf(`你好，%s：
+
+你的 FollowITup 密码已被管理员重置，请使用以下信息登录：
+  邮箱：%s
+  新密码：%s
+
+如果管理员勾选了"下次登录时须更改密码"，首次登录后系统会要求你修改。
+
+—— FollowITup 系统通知`, displayName, to, password)
+	return Send(db, to, subject, body)
+}
+
 // SendTemporaryPassword 发送账号创建通知（含初始密码）
 func SendTemporaryPassword(db *sql.DB, to, displayName, password string) error {
 	subject := "FollowITup 账号已创建"

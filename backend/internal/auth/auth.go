@@ -227,6 +227,21 @@ func (s *Service) ChangePassword(userID int64, oldPassword, newPassword string) 
 	return err
 }
 
+// ChangePasswordDirect 管理员直接设置用户密码（跳过旧密码校验）
+func (s *Service) ChangePasswordDirect(userID int64, newPassword string, mustChange bool) error {
+	if len(newPassword) < 8 {
+		return errors.New("新密码长度不能少于 8 位")
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.bcryptCost)
+	if err != nil {
+		return fmt.Errorf("密码哈希失败: %w", err)
+	}
+	_, err = s.db.Exec(
+		"UPDATE users SET password_hash = ?, must_change_password = ?, updated_at = datetime('now') WHERE id = ?",
+		string(hash), boolToInt(mustChange), userID)
+	return err
+}
+
 // ChangePasswordAndRetoken 修改密码并返回新 token（清首登标记后重签）
 func (s *Service) ChangePasswordAndRetoken(userID int64, oldPassword, newPassword string) (string, error) {
 	if err := s.ChangePassword(userID, oldPassword, newPassword); err != nil {

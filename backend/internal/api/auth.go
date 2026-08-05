@@ -34,9 +34,10 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/api/admin/users", withAuth(h.mid, h.ListUsers))
 	// 创建用户：全部登录用户可创建（仅管理员可设置管理员角色）
 	r.Post("/api/admin/users", withAuth(h.mid, h.CreateUser))
-	// 删除用户 / 提升降级管理员（仅管理员）
+	// 删除用户 / 提升降级管理员 / 重置密码（仅管理员）
 	r.Delete("/api/admin/users/{id}", withAuth(h.mid, h.AdminOnly(h.DeleteUser)))
 	r.Put("/api/admin/users/{id}/role", withAuth(h.mid, h.AdminOnly(h.SetUserRole)))
+	r.Post("/api/admin/users/{id}/reset-password", withAuth(h.mid, h.AdminOnly(h.ResetUserPassword)))
 	// 用户精简列表（assignee 下拉数据源）
 	r.Get("/api/users", withAuth(h.mid, h.PublicUsers))
 }
@@ -65,6 +66,52 @@ func (h *AuthHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "用户已删除"})
+}
+
+// ResetUserPassword 管理员重置用户密码（可选要求首登改密，默认要求）
+func (h *AuthHandler) ResetUserPassword(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	var req struct {
+		MustChange *bool `json:"must_change"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+	// 缺省 = 要求下次登录修改（与 Windows 账号管理一致）
+	mustChange := true
+	if req.MustChange != nil {
+		mustChange = *req.MustChange
+	}
+
+	var displayName, email string
+	err := h.svc.DB().QueryRow(
+		`SELECT display_name, email FROM users WHERE id = ? AND is_active = 1`, id).Scan(&displayName, &email)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "用户不存在")
+		return
+	}
+
+	minLen := settings.GetInt(h.svc.DB(), settings.KeyPasswordMinLen, 8)
+	password := auth.GenerateRandomPassword(minLen)
+	if err := h.svc.ChangePasswordDirect(id, password, mustChange); err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "重置密码失败")
+		return
+	}
+	// 发送重置通知；失败不阻塞，明文回退给管理员
+	mailErr := mail.SendPasswordReset(h.svc.DB(), email, displayName, password)
+	if mailErr != nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"message":          "密码已重置（邮件发送失败，请手动告知新密码）",
+			"initial_password": password,
+			"mail_sent":        false,
+		})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"message":   "密码已重置，新密码已发送至邮箱",
+		"mail_sent": true,
+	})
 }
 
 // SetUserRole 提升/降级管理员（仅管理员）
