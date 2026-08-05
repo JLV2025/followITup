@@ -1200,3 +1200,6 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:27 | Edited README.md | 7.28 → 9.0 | ~25 |
 | 15:27 | Edited README.md | 8→11 lines | ~446 |
 | 2026-08-05 | v0.9.0 发布:版本号+README更新(排程方向/用户管理升级/系统配置页/节假日补班/大小写不敏感),服务器已重启验证 | backend/internal/server/server.go, README.md | 已交付 | ~5k |
+| 15:28 | Session end: 109 writes across 37 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 42 reads | ~98061 tok |
+| 15:47 | Edited frontend/src/styles/components.css | 20→20 lines | ~176 |
+| 2026-08-05 | 任务弹窗压缩:用户反馈弹窗有滑动条(内容817>矮视口90vh)→padding/字段间距/分隔线/列距收紧,实测内容796<813无溢出;节假日删除按钮本就有(用户确认) | frontend/src/styles/components.css | 已交付,需刷新页面生效 | ~10k |
