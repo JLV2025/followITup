@@ -1207,3 +1207,11 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:51 | Session end: 110 writes across 37 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 42 reads | ~98375 tok |
 | 15:56 | Edited frontend/src/styles/components.css | expanded (+9 lines) | ~94 |
 | 2026-08-05 | 修bug-033:弹窗底部横向滑动条(父任务/前置任务下拉按最长option撑宽,百分比max-width对grid min-content无效→固定220px,grid 957→818零溢出) | frontend/src/styles/components.css | 已修复部署 | ~15k |
+| 15:57 | Session end: 111 writes across 37 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 43 reads | ~98469 tok |
+| 16:04 | Edited frontend/src/api/gantt-adapter.ts | 3→4 lines | ~33 |
+| 16:04 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: t | ~106 |
+| 16:05 | Edited frontend/src/api/gantt-adapter.ts | 4→5 lines | ~51 |
+| 16:08 | Edited backend/internal/scheduler/scheduler.go | expanded (+11 lines) | ~141 |
+| 16:10 | Edited frontend/src/api/gantt-adapter.ts | added 1 condition(s) | ~326 |
+| 16:10 | Edited frontend/src/api/gantt-adapter.ts | added 1 condition(s) | ~135 |
+| 2026-08-05 | 修bug-034/035:甘特条不可见(dhtmlx按end-start画条,同日差0→end+1 exclusive转换+parse强制duration)+改duration不重算end(排程applyCandidate start不变时也修end)——项目10实测6条全可见(132/1056/924px) | frontend/src/api/gantt-adapter.ts + ProjectGantt.tsx + backend/internal/scheduler/scheduler.go | 已修复部署 | ~25k |
