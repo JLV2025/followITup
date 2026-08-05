@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"followitup/internal/auth"
+	"followitup/internal/mail"
 	"followitup/internal/settings"
 
 	"github.com/go-chi/chi/v5"
@@ -31,7 +32,7 @@ func (h *SettingsHandler) RegisterRoutes(r chi.Router) {
 		r.Use(h.adminOnly)
 		r.Get("/api/settings/admin", h.GetAll)
 		r.Put("/api/settings", h.Put)
-		// r.Post("/api/settings/test-email", h.TestEmail) // T2 邮件服务接入后启用
+		r.Post("/api/settings/test-email", h.TestEmail)
 	})
 }
 
@@ -104,4 +105,21 @@ func (h *SettingsHandler) Put(w http.ResponseWriter, r *http.Request) {
 	}
 	m, _ := settings.GetAll(h.db)
 	writeJSON(w, http.StatusOK, m)
+}
+
+// TestEmail 测试 SMTP 配置（仅管理员）
+func (h *SettingsHandler) TestEmail(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		To string `json:"to"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.To == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "缺少收件人地址")
+		return
+	}
+	body := "这是一封来自 FollowITup 的测试邮件。如果你收到这封邮件，说明 SMTP 配置正确。"
+	if err := mail.Send(h.db, req.To, "FollowITup SMTP 测试", body); err != nil {
+		writeError(w, http.StatusBadRequest, "MAIL_FAILED", "邮件发送失败: "+err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "测试邮件已发送"})
 }
