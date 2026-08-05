@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"followitup/internal/auth"
@@ -33,8 +34,63 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/api/admin/users", withAuth(h.mid, h.AdminOnly(h.ListUsers)))
 	// 创建用户：全部登录用户可创建（仅管理员可设置管理员角色）
 	r.Post("/api/admin/users", withAuth(h.mid, h.CreateUser))
+	// 删除用户 / 提升降级管理员（仅管理员）
+	r.Delete("/api/admin/users/{id}", withAuth(h.mid, h.AdminOnly(h.DeleteUser)))
+	r.Put("/api/admin/users/{id}/role", withAuth(h.mid, h.AdminOnly(h.SetUserRole)))
 	// 用户精简列表（assignee 下拉数据源）
 	r.Get("/api/users", withAuth(h.mid, h.PublicUsers))
+}
+
+// DeleteUser 删除用户（软删，仅管理员；管理员需先降级）
+func (h *AuthHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	currentID, _ := auth.GetUserID(r.Context())
+	if id == currentID {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "不能删除自己")
+		return
+	}
+	var isAdmin int
+	err := h.svc.DB().QueryRow(
+		`SELECT is_admin FROM users WHERE id = ? AND is_active = 1`, id).Scan(&isAdmin)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "用户不存在")
+		return
+	}
+	if isAdmin == 1 {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请先取消其管理员身份")
+		return
+	}
+	if err := h.svc.DeleteUser(id); err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "删除用户失败")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "用户已删除"})
+}
+
+// SetUserRole 提升/降级管理员（仅管理员）
+func (h *AuthHandler) SetUserRole(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	var req struct {
+		IsAdmin bool `json:"is_admin"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+	if err := h.svc.SetUserRole(id, req.IsAdmin); err != nil {
+		if strings.Contains(err.Error(), "至少保留") {
+			writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+			return
+		}
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "用户不存在")
+		return
+	}
+	user, err := h.svc.GetUserByID(id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "用户不存在")
+		return
+	}
+	writeJSON(w, http.StatusOK, user)
 }
 
 // withAuth 包装需要认证的 handler

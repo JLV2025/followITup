@@ -67,6 +67,50 @@ func (s *Service) CreateUser(email, password, displayName, authSource string, is
 // DB 返回数据库句柄（供 api 层读取配置等）
 func (s *Service) DB() *sql.DB { return s.db }
 
+// DeleteUser 软删用户并清理项目成员关系。调用前需校验目标非管理员且非本人。
+func (s *Service) DeleteUser(userID int64) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(
+		`UPDATE users SET is_active = 0, updated_at = datetime('now') WHERE id = ? AND is_active = 1`,
+		userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM project_members WHERE user_id = ?`, userID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// SetUserRole 提升/降级管理员。降级时校验系统至少保留一名管理员。
+func (s *Service) SetUserRole(userID int64, isAdmin bool) error {
+	if !isAdmin {
+		var adminCount int
+		if err := s.db.QueryRow(
+			`SELECT COUNT(*) FROM users WHERE is_active = 1 AND is_admin = 1`).Scan(&adminCount); err != nil {
+			return err
+		}
+		var targetAdmin int
+		s.db.QueryRow(`SELECT is_admin FROM users WHERE id = ? AND is_active = 1`, userID).Scan(&targetAdmin)
+		if targetAdmin == 1 && adminCount <= 1 {
+			return errors.New("系统至少保留一名管理员")
+		}
+	}
+	res, err := s.db.Exec(
+		`UPDATE users SET is_admin = ?, updated_at = datetime('now') WHERE id = ? AND is_active = 1`,
+		boolToInt(isAdmin), userID)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return errors.New("用户不存在")
+	}
+	return nil
+}
+
 // Login 验证用户凭据并返回 JWT
 func (s *Service) Login(email, password string) (*models.LoginResponse, error) {
 	// 查找用户
