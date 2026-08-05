@@ -1261,3 +1261,8 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:22 | Edited frontend/src/pages/ProjectGantt.tsx | added 10 condition(s) | ~1382 |
 | 17:22 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: x, y | ~158 |
 | 17:23 | Edited frontend/src/pages/ProjectGantt.tsx | modified if() | ~100 |
+| 17:31 | Session end: 4 writes across 1 files (ProjectGantt.tsx) | 3 reads | ~10995 tok |
+| 17:43 | Edited frontend/src/pages/ProjectGantt.tsx | modified for() | ~914 |
+| 17:43 | Edited frontend/src/pages/ProjectGantt.tsx | 4→4 lines | ~72 |
+| 17:44 | Edited frontend/src/pages/ProjectGantt.tsx | 5→4 lines | ~27 |
+| 17:50 | 连线重写为标准5段折线(右20/下到空隙中央/左到目标外20/下到中线/连入),空隙中央自动避让中间条,多前置自然重合 | frontend/src/pages/ProjectGantt.tsx | 实测7条连线0侵入 | ~9k |
