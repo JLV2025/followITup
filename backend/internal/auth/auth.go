@@ -120,13 +120,14 @@ func (s *Service) Login(email, password string) (*models.LoginResponse, error) {
 	var failedAttempts int
 	var isAdmin int
 	var isActive int
+	var mustChange int
 	err := s.db.QueryRow(
 		`SELECT id, login, email, display_name, auth_source, is_admin, is_active,
-		        password_hash, failed_attempts, locked_until
+		        password_hash, failed_attempts, locked_until, must_change_password
 		 FROM users WHERE email = ? AND is_active = 1`,
 		email,
 	).Scan(&u.ID, &u.Login, &u.Email, &u.DisplayName, &u.AuthSource,
-		&isAdmin, &isActive, &passwordHash, &failedAttempts, &lockedUntil)
+		&isAdmin, &isActive, &passwordHash, &failedAttempts, &lockedUntil, &mustChange)
 	u.IsAdmin = isAdmin != 0
 	u.IsActive = isActive != 0
 
@@ -160,22 +161,23 @@ func (s *Service) Login(email, password string) (*models.LoginResponse, error) {
 	s.db.Exec("UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?", u.ID)
 
 	// 签发 JWT
-	token, err := s.GenerateToken(&u)
+	token, err := s.GenerateToken(&u, mustChange != 0)
 	if err != nil {
 		return nil, fmt.Errorf("生成 token 失败: %w", err)
 	}
 
-	return &models.LoginResponse{Token: token, User: u}, nil
+	return &models.LoginResponse{Token: token, User: u, MustChangePassword: mustChange != 0}, nil
 }
 
 // GenerateToken 为用户生成 JWT
-func (s *Service) GenerateToken(user *models.User) (string, error) {
+func (s *Service) GenerateToken(user *models.User, mustChangePassword bool) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"is_admin": user.IsAdmin,
-		"exp":     time.Now().Add(time.Duration(s.sessionHours) * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
+		"user_id":              user.ID,
+		"email":                user.Email,
+		"is_admin":             user.IsAdmin,
+		"must_change_password": mustChangePassword,
+		"exp":                  time.Now().Add(time.Duration(s.sessionHours) * time.Hour).Unix(),
+		"iat":                  time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -223,6 +225,18 @@ func (s *Service) ChangePassword(userID int64, oldPassword, newPassword string) 
 	_, err = s.db.Exec("UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?",
 		string(newHash), userID)
 	return err
+}
+
+// ChangePasswordAndRetoken 修改密码并返回新 token（清首登标记后重签）
+func (s *Service) ChangePasswordAndRetoken(userID int64, oldPassword, newPassword string) (string, error) {
+	if err := s.ChangePassword(userID, oldPassword, newPassword); err != nil {
+		return "", err
+	}
+	u, err := s.GetUserByID(userID)
+	if err != nil {
+		return "", err
+	}
+	return s.GenerateToken(u, false)
 }
 
 // incrementFailedAttempts 增加失败计数，超过阈值则锁定

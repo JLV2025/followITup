@@ -99,8 +99,9 @@ type LoginRequest struct {
 
 // LoginResponse 登录响应
 type LoginResponse struct {
-	Token string `json:"token"`
-	User  User   `json:"user"`
+	Token              string `json:"token"`
+	User               User   `json:"user"`
+	MustChangePassword bool   `json:"must_change_password"`
 }
 
 // APIResponse 统一响应信封

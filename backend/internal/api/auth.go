@@ -243,7 +243,7 @@ func (h *AuthHandler) AdminOnly(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// ChangePassword 修改密码
+// ChangePassword 修改密码（首登改密成功后返回新 token）
 func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.GetUserID(r.Context())
 	if !ok {
@@ -257,10 +257,11 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.svc.ChangePassword(userID, req.OldPassword, req.NewPassword); err != nil {
+	token, err := h.svc.ChangePasswordAndRetoken(userID, req.OldPassword, req.NewPassword)
+	if err != nil {
 		writeError(w, http.StatusBadRequest, "PASSWORD_CHANGE_FAILED", err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"message": "密码修改成功"})
+	writeJSON(w, http.StatusOK, map[string]string{"token": token})
 }

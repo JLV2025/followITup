@@ -49,6 +49,12 @@ func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, IsAdminKey, isAdmin)
 		}
 
+		// 首登强制改密：未改密用户只能访问改密接口
+		if mcp, _ := claims["must_change_password"].(bool); mcp && r.URL.Path != "/api/auth/change-password" {
+			http.Error(w, `{"error":{"code":"FORCE_PASSWORD_CHANGE","message":"首次登录需先修改密码"}}`, http.StatusForbidden)
+			return
+		}
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -67,6 +73,11 @@ func (m *Middleware) OptionalAuth(next http.Handler) http.Handler {
 			}
 			if isAdmin, ok := claims["is_admin"].(bool); ok {
 				ctx = context.WithValue(ctx, IsAdminKey, isAdmin)
+			}
+			// 首登强制改密：未改密用户只能访问改密接口
+			if mcp, _ := claims["must_change_password"].(bool); mcp && r.URL.Path != "/api/auth/change-password" {
+				http.Error(w, `{"error":{"code":"FORCE_PASSWORD_CHANGE","message":"首次登录需先修改密码"}}`, http.StatusForbidden)
+				return
 			}
 			r = r.WithContext(ctx)
 		}
