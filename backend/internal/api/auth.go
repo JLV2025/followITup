@@ -30,8 +30,8 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/api/auth/login", h.Login)
 	r.Post("/api/auth/change-password", withAuth(h.mid, h.ChangePassword))
 	r.Get("/api/auth/me", withAuth(h.mid, h.Me))
-	// 管理员接口
-	r.Get("/api/admin/users", withAuth(h.mid, h.AdminOnly(h.ListUsers)))
+	// 用户列表：全部登录用户可见（普通用户也可查看团队成员）
+	r.Get("/api/admin/users", withAuth(h.mid, h.ListUsers))
 	// 创建用户：全部登录用户可创建（仅管理员可设置管理员角色）
 	r.Post("/api/admin/users", withAuth(h.mid, h.CreateUser))
 	// 删除用户 / 提升降级管理员（仅管理员）
