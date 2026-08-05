@@ -3,9 +3,12 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"followitup/internal/auth"
+	"followitup/internal/mail"
 	"followitup/internal/models"
+	"followitup/internal/settings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -28,7 +31,10 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/api/auth/me", withAuth(h.mid, h.Me))
 	// 管理员接口
 	r.Get("/api/admin/users", withAuth(h.mid, h.AdminOnly(h.ListUsers)))
-	r.Post("/api/admin/users", withAuth(h.mid, h.AdminOnly(h.CreateUser)))
+	// 创建用户：全部登录用户可创建（仅管理员可设置管理员角色）
+	r.Post("/api/admin/users", withAuth(h.mid, h.CreateUser))
+	// 用户精简列表（assignee 下拉数据源）
+	r.Get("/api/users", withAuth(h.mid, h.PublicUsers))
 }
 
 // withAuth 包装需要认证的 handler
@@ -85,33 +91,89 @@ func (h *AuthHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, users)
 }
 
-// CreateUser 创建本地用户（仅管理员）
+// CreateUser 创建本地用户（全部登录用户可创建；仅管理员可设置管理员角色）
 func (h *AuthHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email       string `json:"email"`
-		Password    string `json:"password"`
 		DisplayName string `json:"display_name"`
+		IsAdmin     bool   `json:"is_admin"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
 		return
 	}
-	if req.Email == "" || req.Password == "" {
-		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "邮箱和密码不能为空")
+	if req.Email == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "邮箱不能为空")
 		return
 	}
-	if len(req.Password) < 6 {
-		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "密码长度不少于6位")
+	if !validEmailFormat(req.Email) {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "邮箱格式不正确")
 		return
 	}
+	// 显示名：未提供时从邮箱推导
 	if req.DisplayName == "" {
-		req.DisplayName = req.Email
+		req.DisplayName = auth.DeriveDisplayName(req.Email)
 	}
-	if err := h.svc.CreateUser(req.Email, req.Password, req.DisplayName, "local", false); err != nil {
+	// 仅管理员可创建管理员；普通用户传 true 强制忽略
+	if req.IsAdmin && !auth.GetIsAdmin(r.Context()) {
+		req.IsAdmin = false
+	}
+	minLen := settings.GetInt(h.svc.DB(), settings.KeyPasswordMinLen, 8)
+	password := auth.GenerateRandomPassword(minLen)
+	if err := h.svc.CreateUser(req.Email, password, req.DisplayName, "local", req.IsAdmin, true); err != nil {
 		writeError(w, http.StatusConflict, "DUPLICATE", err.Error())
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]string{"message": "用户创建成功"})
+	// 发送通知邮件；失败不阻塞创建，明文密码退回给创建者手动传达
+	mailErr := mail.SendTemporaryPassword(h.svc.DB(), req.Email, req.DisplayName, password)
+	if mailErr != nil {
+		writeJSON(w, http.StatusCreated, map[string]interface{}{
+			"message":          "用户创建成功（邮件发送失败，请手动告知初始密码）",
+			"initial_password": password,
+			"mail_sent":        false,
+		})
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]interface{}{
+		"message":   "用户创建成功，初始密码已发送至邮箱",
+		"mail_sent": true,
+	})
+}
+
+// validEmailFormat 简单邮箱格式校验
+func validEmailFormat(email string) bool {
+	at := strings.Index(email, "@")
+	if at <= 0 || at == len(email)-1 {
+		return false
+	}
+	return strings.Index(email[at+1:], ".") > 0
+}
+
+// PublicUsers 返回活跃用户精简列表（assignee 下拉数据源）
+func (h *AuthHandler) PublicUsers(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.svc.DB().Query(
+		`SELECT id, display_name, email FROM users WHERE is_active = 1 ORDER BY display_name`)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "查询用户失败")
+		return
+	}
+	defer rows.Close()
+	type Item struct {
+		ID          int64  `json:"id"`
+		DisplayName string `json:"display_name"`
+		Email       string `json:"email"`
+	}
+	var items []Item
+	for rows.Next() {
+		var it Item
+		if err := rows.Scan(&it.ID, &it.DisplayName, &it.Email); err == nil {
+			items = append(items, it)
+		}
+	}
+	if items == nil {
+		items = []Item{}
+	}
+	writeJSON(w, http.StatusOK, items)
 }
 
 // AdminOnly 包装需要管理员权限的 handler

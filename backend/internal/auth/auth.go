@@ -42,11 +42,11 @@ func (s *Service) InitAdmin(email, password, displayName string) error {
 		return nil // 已有用户，跳过初始化
 	}
 
-	return s.CreateUser(email, password, displayName, "local", true)
+	return s.CreateUser(email, password, displayName, "local", true, false)
 }
 
 // CreateUser 创建用户
-func (s *Service) CreateUser(email, password, displayName, authSource string, isAdmin bool) error {
+func (s *Service) CreateUser(email, password, displayName, authSource string, isAdmin, mustChange bool) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), s.bcryptCost)
 	if err != nil {
 		return fmt.Errorf("密码哈希失败: %w", err)
@@ -56,13 +56,16 @@ func (s *Service) CreateUser(email, password, displayName, authSource string, is
 	_, err = s.db.Exec(
 		`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_admin, must_change_password)
 		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		login, email, displayName, string(hash), authSource, boolToInt(isAdmin), 0,
+		login, email, displayName, string(hash), authSource, boolToInt(isAdmin), boolToInt(mustChange),
 	)
 	if err != nil {
 		return fmt.Errorf("创建用户失败: %w", err)
 	}
 	return nil
 }
+
+// DB 返回数据库句柄（供 api 层读取配置等）
+func (s *Service) DB() *sql.DB { return s.db }
 
 // Login 验证用户凭据并返回 JWT
 func (s *Service) Login(email, password string) (*models.LoginResponse, error) {
