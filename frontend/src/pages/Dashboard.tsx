@@ -21,6 +21,10 @@ export default function Dashboard() {
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createError, setCreateError] = useState("");
 
+  // 回收站模态框状态
+  const [showRecycleBin, setShowRecycleBin] = useState(false);
+  const [deletedProjects, setDeletedProjects] = useState<any[]>([]);
+
   useEffect(() => {
     loadFromStorage();
     if (displayMode === "fiscal") {
@@ -110,9 +114,25 @@ export default function Dashboard() {
             )}
           </div>
           {isLoggedIn && (
-            <button className="btn btn-primary" onClick={handleOpenCreate}>
-              + 创建项目
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-primary" onClick={handleOpenCreate}>
+                + 创建项目
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={async () => {
+                  try {
+                    const res = await api.get("/api/projects?deleted=1");
+                    setDeletedProjects(res.data.data || []);
+                    setShowRecycleBin(true);
+                  } catch (err: any) {
+                    alert(err?.response?.data?.error?.message || "加载回收站失败");
+                  }
+                }}
+              >
+                回收站
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -384,6 +404,55 @@ export default function Dashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 回收站模态框 */}
+      {showRecycleBin && (
+        <div className="modal-overlay" onClick={() => setShowRecycleBin(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-title">
+              <h2>回收站</h2>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowRecycleBin(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {deletedProjects.length === 0 ? (
+                <p className="text-secondary">没有已删除的项目</p>
+              ) : (
+                <div className="dep-list">
+                  {deletedProjects.map((p) => (
+                    <div className="dep-item" key={p.id}>
+                      <div className="dep-item-main">
+                        <span className="dep-item-name">{p.name}</span>
+                        <span className="dep-item-detail">
+                          {p.description || "—"} · {p.schedule_direction === "backward" ? "倒排" : "正排"}
+                        </span>
+                        <span className="dep-item-detail">删除于 {p.deleted_at?.slice(0, 10)}</span>
+                      </div>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={async () => {
+                          try {
+                            await api.post(`/api/projects/${p.id}/restore`);
+                            alert(`项目「${p.name}」已恢复，项目内任务已全部恢复`);
+                            setDeletedProjects((prev) => prev.filter((x) => x.id !== p.id));
+                            fetchProjects(); // 刷新看板项目列表
+                          } catch (err: any) {
+                            alert(err?.response?.data?.error?.message || "恢复失败");
+                          }
+                        }}
+                      >
+                        恢复
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setShowRecycleBin(false)}>关闭</button>
+            </div>
           </div>
         </div>
       )}
