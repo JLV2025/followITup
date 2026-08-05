@@ -1343,6 +1343,22 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-05T08:38:42.199Z"
+    },
+    {
+      "id": "bug-084",
+      "timestamp": "2026-08-05T08:46:09.981Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/scheduler/scheduler.go",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 8→39 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T08:46:09.981Z"
     }
   ]
 }

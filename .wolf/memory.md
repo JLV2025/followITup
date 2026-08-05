@@ -1239,3 +1239,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:38 | Edited backend/internal/scheduler/scheduler.go | expanded (+9 lines) | ~132 |
 | 16:39 | Edited backend/internal/scheduler/scheduler.go | 6→7 lines | ~15 |
 | 2026-08-05 | 排程语义大改:end独占式(结束=开始+工期,1天8/5~8/6;FS后继=前置结束后次日开始)——AddWorkDays/SubWorkDays改不含当天+calcDates公式+v7迁移(end+1,里程碑排除)+启动延迟重排(SQLITE_BUSY→延迟3s+写重试)+前端撤销end+1;实测项目10链65→70逐日衔接跳过周末,项目6拆除8/4→水电8/4开始 | backend/internal/scheduler/* + db/sqlite.go + server/server.go + frontend/api/gantt-adapter.ts | 已交付 | ~60k |
+| 16:41 | Session end: 138 writes across 40 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 44 reads | ~110031 tok |
+| 16:45 | Edited backend/internal/api/tasks.go | modified DeleteDependency() | ~147 |
+| 16:46 | Edited backend/internal/scheduler/scheduler.go | modified Recalculate() | ~352 |
+| 16:48 | Edited backend/internal/scheduler/scheduler.go | 8→11 lines | ~114 |
+| 16:50 | Edited backend/internal/scheduler/scheduler.go | 4→7 lines | ~72 |
+| 2026-08-05 | 修bug-037:删依赖排程空转(trigger=0)+隐式传播覆盖显式前置——DeleteDependency改RecalculateAll、无变化入队保传播、隐式仅无显式前置时生效、trigger自身duration重算end;实测65→66/65→67并行8/7、删→8/10隐式、恢复→8/7 ✓ | backend/internal/api/tasks.go + scheduler/scheduler.go | 已交付 | ~25k |
