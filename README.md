@@ -1,6 +1,6 @@
 # FollowITup
 
-> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v0.7.28
+> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v0.9.0
 
 ## What is FollowITup?
 
@@ -9,13 +9,16 @@ FollowITup is a self-hosted, Gantt-chart-driven project management tool designed
 **Core features:**
 
 - **Gantt chart** — drag-and-drop editing, dependency links (FS/SS/FF/SF), WBS hierarchy, critical path highlighting, today marker
-- **Auto-scheduling** — when a task date changes or slips, dependent tasks cascade automatically; manually-locked tasks stay put with conflict warnings
+- **Auto-scheduling** — forward (start-date) or backward (finish-date) scheduling; when a task date, duration, dependency, or sort order changes, the dependency chain re-computes in real time; manually-locked tasks stay put with conflict warnings; multi-predecessor tasks wait for the slowest one
+- **Schedule direction** — projects schedule forward (from start date) or backward (from finish date); direction locks once any task has progress
 - **Dashboard** — cross-project overview with stat cards, project health (red/yellow/green), mini Gantt timeline, upcoming milestones, personal to-do list
 - **Task list view** — spreadsheet-style inline editing with status badges, progress bars, priority labels
 - **Real-time collaboration** — WebSocket-powered, edits broadcast to all online users in the same project
-- **Public read-only mode** — anyone with the URL can view the dashboard and Gantt charts; login to edit
-- **Soft delete with recycle bin** — deleted projects and tasks can be recovered
-- **Fiscal year support** — projects grouped and statistics calculated by fiscal year (FY)
+- **Soft delete with recycle bin** — deleted projects and tasks can be recovered; restored tasks re-join the schedule immediately
+- **User management** — any logged-in user can create accounts (email-based, auto-derived display name, random password emailed out, forced password change on first login); admins can reset passwords, promote/demote admins, and delete users
+- **System settings** — admin page for SMTP (with test send), fiscal-year start month, holidays and makeup workdays (weekend-to-workday), password policy
+- **Fiscal year support** — projects grouped and statistics calculated by fiscal year (FY); configurable by admin
+- **Case-insensitive login** — email matching ignores case, no duplicate-variant accounts
 
 ## Quick Start
 
