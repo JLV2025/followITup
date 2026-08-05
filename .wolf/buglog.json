@@ -1149,6 +1149,54 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-05T05:47:09.405Z"
+    },
+    {
+      "id": "bug-072",
+      "timestamp": "2026-08-05T06:14:00.492Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/calendar.go",
+      "root_cause": "9 lines replaced/restructured",
+      "fix": "Rewrote 21→100 lines (9 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T06:14:00.492Z"
+    },
+    {
+      "id": "bug-073",
+      "timestamp": "2026-08-05T06:18:58.612Z",
+      "error_message": "CSS fix: background, fontSize",
+      "file": "frontend/src/pages/SystemSettings.tsx",
+      "root_cause": "background: \"var(--card-bg)\", border: \"1px solid var(--card-border)\", borderRadius: 8, padding: 20 → \"var(--card-bg)\", border: \"1px solid var(--card-border)\", borderRadius: 8, padding: 14; fontSize: 16, fontWeight: 600, marginBottom: 16 → 13",
+      "fix": "Changed background: \"var(--card-bg)\", border: \"1px solid var(--card-border)\", borderRadius: 8, padding: 20 → \"var(--card-bg)\", border: \"1px solid var(--card-border)\", borderRadius: 8, padding: 14; fontSize: 16, fontWeight: 600, marginBottom: 16 → 13",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-05T06:19:33.861Z"
+    },
+    {
+      "id": "bug-074",
+      "timestamp": "2026-08-05T06:20:31.150Z",
+      "error_message": "Missing guard clause",
+      "file": "frontend/src/pages/UserManagement.tsx",
+      "root_cause": "No early return/throw for edge case: !confirm(`确认删除用户「${u.display_name || u.email}」？\\n\\n历史项目和任务上的",
+      "fix": "Added guard clause: if (!confirm(`确认删除用户「${u.display_name || u.e)",
+      "tags": [
+        "auto-detected",
+        "guard-clause",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T06:20:31.150Z"
     }
   ]
 }

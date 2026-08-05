@@ -1154,3 +1154,28 @@ cd backend && followitup.exe config.yaml   # 启动
 | 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | 15→12 lines | ~112 |
 | 13:48 | Edited frontend/src/stores/settingsStore.ts | 7→6 lines | ~42 |
 | 2026-08-05 | 用户管理升级完成:11任务内联执行(settings表+邮件服务+建号改造+删号角色+首登改密+财年迁移+配置页+用户管理页+改密页+assignee下拉),浏览器/API验证10项全过;邮件SMTP开发机不可达,明文密码回退创建者;验证中修复settingsStore未使用变量 | backend/internal/{settings,mail}/ + {api,auth,db,server} + frontend/{SystemSettings,ChangePassword,UserManagement,Login,Dashboard}.tsx等 | 交付,新exe已部署 | ~220k |
+| 13:54 | Session end: 81 writes across 32 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 40 reads | ~77102 tok |
+| 13:57 | Session end: 81 writes across 32 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 40 reads | ~77102 tok |
+| 13:59 | Session end: 81 writes across 32 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 40 reads | ~77102 tok |
+| 14:08 | Session end: 81 writes across 32 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~77102 tok |
+| 14:11 | Created docs/superpowers/specs/2026-08-05-holiday-range-password-reset-design.md | — | ~1193 |
+| 14:11 | Session end: 82 writes across 33 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~78380 tok |
+| 14:13 | Created docs/superpowers/plans/2026-08-05-holiday-range-password-reset.md | — | ~4836 |
+| 14:14 | Edited backend/internal/api/calendar.go | added 1 condition(s) | ~621 |
+| 14:14 | Edited backend/internal/api/calendar.go | 5→6 lines | ~19 |
+| 14:16 | Edited docs/superpowers/plans/2026-08-05-holiday-range-password-reset.md | modified IsWorkDay() | ~17 |
+| 14:17 | Edited backend/internal/mail/mail.go | modified SendPasswordReset() | ~105 |
+| 14:17 | Edited backend/internal/auth/auth.go | expanded (+15 lines) | ~158 |
+| 14:17 | Edited backend/internal/api/auth.go | 3→4 lines | ~78 |
+| 14:17 | Edited backend/internal/api/auth.go | modified ResetUserPassword() | ~398 |
+| 14:18 | Edited frontend/src/pages/SystemSettings.tsx | 5→7 lines | ~97 |
+| 14:18 | Edited frontend/src/pages/SystemSettings.tsx | added 1 condition(s) | ~244 |
+| 14:18 | Edited frontend/src/pages/SystemSettings.tsx | 10→10 lines | ~126 |
+| 14:18 | Edited frontend/src/pages/SystemSettings.tsx | expanded (+6 lines) | ~1038 |
+| 14:19 | Edited frontend/src/pages/SystemSettings.tsx | modified catch() | ~934 |
+| 14:20 | Edited frontend/src/pages/UserManagement.tsx | 3→7 lines | ~96 |
+| 14:20 | Edited frontend/src/pages/UserManagement.tsx | CSS: must_change | ~258 |
+| 14:20 | Edited frontend/src/pages/UserManagement.tsx | 6→10 lines | ~165 |
+| 14:20 | Edited frontend/src/pages/UserManagement.tsx | expanded (+29 lines) | ~412 |
+| 14:29 | Edited frontend/src/App.tsx | modified App() | ~231 |
+| 2026-08-05 | 节假日范围+密码重置交付:H5任务(范围API+补班单测/重置端点+邮件/配置页紧凑+范围UI/重置弹窗/回归);验证暴露bug-029(非首页整页加载丢登录态,修复App全局loadFromStorage);范围365天在限内,367天400;误重置Jing.Lv密码(vS^*O3NY,须首登改密)已告知 | backend/internal/api/calendar.go + auth.go + mail.go + scheduler_test.go, frontend/{SystemSettings,UserManagement,App}.tsx | 交付,新exe部署 | ~150k |
