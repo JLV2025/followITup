@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-05T01:23:54.495Z
-> Files: 2 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-05T01:34:02.287Z
+> Files: 6 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -30,6 +30,11 @@
 ## .superpowers/sdd/2026-08-04-schedule-direction/
 
 
+## .superpowers/sdd/2026-08-05-recycle-bin/
+
+- `task-1-report.md` — Task 1 报告：后端任务回收站端点（列表 + 恢复） (~583 tok)
+- `task-2-report.md` — Task 2 报告：后端项目回收站端点（列表 + 恢复） (~518 tok)
+
 ## C:/Users/jingl/.claude/plans/
 
 
@@ -50,6 +55,8 @@
 
 ## backend/internal/api/
 
+- `projects.go` — Struct: ProjectHandler (~3767 tok)
+- `tasks.go` — Struct: TaskHandler (~4843 tok)
 
 ## backend/internal/auth/
 

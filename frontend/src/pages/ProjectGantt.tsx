@@ -7,6 +7,7 @@ import { useAuthStore } from "../stores/authStore";
 import { wsClient } from "../api/ws-client";
 import api from "../api/client";
 import TaskDetailModal from "../components/TaskDetailModal";
+import RecycleBinModal from "../components/RecycleBinModal";
 
 interface Task {
   id: number;
@@ -91,6 +92,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
   const [modalTask, setModalTask] = useState<Task | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showRecycleBin, setShowRecycleBin] = useState(false);
+  const [projectName, setProjectName] = useState("");
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [rowNumbers, setRowNumbers] = useState<Record<number, number>>({});
   const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
@@ -167,6 +170,17 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       } catch { /* ignore */ }
     };
     loadAllTasks();
+  }, [projectId]);
+
+  // 加载项目名称（用于回收站弹窗标题）
+  useEffect(() => {
+    const loadProjectName = async () => {
+      try {
+        const res = await api.get(`/api/projects/${projectId}`);
+        setProjectName(res.data.data?.name || "");
+      } catch { /* ignore */ }
+    };
+    loadProjectName();
   }, [projectId]);
 
   const handleTaskClick = (id: number) => {
@@ -593,6 +607,15 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           >
             ↻ 刷新
           </button>
+          {!readonly && (
+            <button
+              className="btn btn-ghost btn-sm"
+              title="恢复已删除的任务"
+              onClick={() => setShowRecycleBin(true)}
+            >
+              回收站
+            </button>
+          )}
           <span className="gantt-toolbar-hint">双击任务编辑详情 · 双击连线删除</span>
         </div>
         <div className="gantt-toolbar-right">
@@ -671,6 +694,15 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           rowNumbers={rowNumbers}
           onClose={() => { setShowModal(false); setModalTask(null); }}
           onSaved={handleModalSaved}
+        />
+      )}
+
+      {showRecycleBin && (
+        <RecycleBinModal
+          projectId={projectId}
+          projectName={projectName || "项目"}
+          onClose={() => setShowRecycleBin(false)}
+          onRestored={() => fetchData(projectId, readonly)}
         />
       )}
     </div>
