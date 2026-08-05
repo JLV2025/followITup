@@ -74,16 +74,27 @@ func TestDetectCycle(t *testing.T) {
 }
 
 func TestCalcDatesFS(t *testing.T) {
+	// end 为独占式：pred 结束 07-05（最后工作日 07-04，次日 07-05）
 	pred := &TaskInfo{StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4}
 	succ := &TaskInfo{StartDate: "2026-07-10", EndDate: "2026-07-15", DurationDays: 5}
-	dep := Dep{Type: FS, LagDays: 1}
+	dep := Dep{Type: FS, LagDays: 0}
 
 	newStart, newEnd := calcDates(pred, succ, dep, map[string]string{})
-	if newStart != "2026-07-06" {
-		t.Errorf("FS: 后继开始应为 07-06（前驱结束 07-05 + lag 1 → 07-06），得到 %s", newStart)
+	if newStart != "2026-07-05" {
+		t.Errorf("FS lag=0: 后继开始应直接衔接前驱结束 07-05，得到 %s", newStart)
 	}
 	if newEnd != "2026-07-10" {
-		t.Errorf("FS: 后继结束应为 07-11（开始 07-06 + 5天），得到 %s", newEnd)
+		t.Errorf("FS: 后继结束应为 07-10（开始 07-05 工作 5 天 → 结束 07-10 独占式），得到 %s", newEnd)
+	}
+
+	// lag=1：再隔 1 个工作日（07-06），开始 07-06 → 结束 07-13（跳过周末）
+	dep.LagDays = 1
+	newStart, newEnd = calcDates(pred, succ, dep, map[string]string{})
+	if newStart != "2026-07-06" {
+		t.Errorf("FS lag=1: 后继开始应为 07-06，得到 %s", newStart)
+	}
+	if newEnd != "2026-07-13" {
+		t.Errorf("FS lag=1: 后继结束应为 07-13（07-06 起 5 个工作日，跳过周末），得到 %s", newEnd)
 	}
 }
 
@@ -125,8 +136,8 @@ func TestForwardPass(t *testing.T) {
 	}
 
 	if ch, ok := changes[3]; ok {
-		if ch["start_date"] != "2026-07-30" {
-			t.Errorf("任务 3 开始应为 07-27，得到 %s", ch["start_date"])
+		if ch["start_date"] != "2026-07-31" {
+			t.Errorf("任务 3 开始应为 07-31（任务2 结束 07-29 + lag 2 工作日），得到 %s", ch["start_date"])
 		}
 	} else {
 		t.Error("任务 3 应在变化列表中")
@@ -238,8 +249,8 @@ func TestBackwardPassDeadline(t *testing.T) {
 
 	// 关键路径：TF = LS - ES
 	// C: LS=7/28, ES=7/13, TF=15天
-	if taskMap[3].TotalFloat != 15 {
-		t.Errorf("C.TotalFloat = %d, 期望 15（LS=7/28 ES=7/13 → 15天）", taskMap[3].TotalFloat)
+	if taskMap[3].TotalFloat != 14 {
+		t.Errorf("C.TotalFloat = %d, 期望 14（exclusive 语义 ES 前移 1 天）", taskMap[3].TotalFloat)
 	}
 }
 
@@ -282,8 +293,8 @@ func TestImplicitOrderDependency(t *testing.T) {
 	if ch, ok := changes[2]; !ok || ch["start_date"] != "2026-07-06" {
 		t.Errorf("任务2 应跟随前置 1 提前到 7/6，实际 changes=%v", changes[2])
 	}
-	if ch, ok := changes[3]; !ok || ch["start_date"] != "2026-07-08" {
-		t.Errorf("任务3 应跟随任务2 到 7/8（7/6+2工作日），实际 changes=%v", changes[3])
+	if ch, ok := changes[3]; !ok || ch["start_date"] != "2026-07-09" {
+		t.Errorf("任务3 应跟随任务2 到 7/9（任务2 结束 7/9 独占式直接衔接），实际 changes=%v", changes[3])
 	}
 }
 
@@ -313,12 +324,12 @@ func TestBackwardScheduleSingleChain(t *testing.T) {
 	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
 	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
 	// B.end=7/31，B.start=7/31 往前 7 个工作日：7/23(四) 7/24(五) 7/27 7/28 7/29 7/30 7/31 → 7/23
-	if ch, ok := changes[2]; !ok || ch["end_date"] != "2026-07-31" || ch["start_date"] != "2026-07-23" {
-		t.Errorf("B 应为 7/23~7/31，实际 %v", ch)
+	if ch, ok := changes[2]; !ok || ch["end_date"] != "2026-07-31" || ch["start_date"] != "2026-07-22" {
+		t.Errorf("B 应为 7/22~7/31（end=7/31 倒推 7 个工作日不含 7/31 → start 7/22），实际 %v", ch)
 	}
 	// A.end = B.start = 7/23；A.start = 7/23 往前 5 个工作日：7/17(五) 7/20 7/21 7/22 7/23 → 7/17
-	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-23" || ch["start_date"] != "2026-07-17" {
-		t.Errorf("A 应为 7/17~7/23，实际 %v", ch)
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-22" || ch["start_date"] != "2026-07-15" {
+		t.Errorf("A 应为 7/15~7/22（A.end=B.start=7/22 倒推 5 个工作日 → 7/15），实际 %v", ch)
 	}
 }
 
@@ -347,8 +358,8 @@ func TestBackwardScheduleImplicitPred(t *testing.T) {
 	}
 	changes := backwardScheduleWrite(tasks, nil, "2026-07-31", map[string]string{}, map[int64]bool{})
 	// 隐式 FS：A.end = B.start - 0
-	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-23" || ch["start_date"] != "2026-07-17" {
-		t.Errorf("隐式前驱 A 应为 7/17~7/23，实际 %v", ch)
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-22" || ch["start_date"] != "2026-07-15" {
+		t.Errorf("隐式前驱 A 应为 7/15~7/22（A.end=B.start=7/22 倒推 5 个工作日 → 7/15），实际 %v", ch)
 	}
 }
 
@@ -362,8 +373,8 @@ func TestBackwardScheduleDepTypes(t *testing.T) {
 	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 2}}
 	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
 	// B.start=7/23 → A.end = 7/23 - 2 = 7/21
-	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-21" {
-		t.Errorf("FS lag=2：A.end 应为 7/21，实际 %v", ch)
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-20" {
+		t.Errorf("FS lag=2：A.end 应为 7/20（B.start=7/22 前 2 个工作日），实际 %v", ch)
 	}
 
 	// FF lag=1：succ.end = pred.end + 1 → pred.end = succ.end - 1
@@ -385,8 +396,8 @@ func TestBackwardScheduleDepTypes(t *testing.T) {
 	deps4 := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: SF, LagDays: 0}}
 	ch4 := backwardScheduleWrite(tasks4, deps4, "2026-07-31", map[string]string{}, map[int64]bool{})
 	// B(链尾,end=7/31,dur=7)→B.start=7/23; A.start约束=succ.EndDate=7/31→A.end=AddWorkDays(7/31,5)=8/6→A=7/31~8/6
-	if ch, ok := ch4[1]; !ok || ch["end_date"] != "2026-08-06" || ch["start_date"] != "2026-07-31" {
-		t.Errorf("SF：A 应为 7/31~8/6，实际 %v", ch)
+	if ch, ok := ch4[1]; !ok || ch["end_date"] != "2026-08-07" || ch["start_date"] != "2026-07-31" {
+		t.Errorf("SF：A 应为 7/31~8/7（A.end=AddWorkDays(7/31,5)=8/7），实际 %v", ch)
 	}
 
 	// SS lag=0：succ.start = pred.start → pred.start 约束 = succ.start，pred.end = start+duration
@@ -397,8 +408,8 @@ func TestBackwardScheduleDepTypes(t *testing.T) {
 	deps3 := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: SS, LagDays: 0}}
 	ch3 := backwardScheduleWrite(tasks3, deps3, "2026-07-31", map[string]string{}, map[int64]bool{})
 	// B.start=7/23 → A.start 约束 = 7/23 → A.end = 7/23 往后 5 工作日：7/23(四) 7/24(五) 7/27(一) 7/28(二) 7/29(三) → 7/29
-	if ch, ok := ch3[1]; !ok || ch["end_date"] != "2026-07-29" || ch["start_date"] != "2026-07-23" {
-		t.Errorf("SS：A 应为 7/23~7/29，实际 %v", ch)
+	if ch, ok := ch3[1]; !ok || ch["end_date"] != "2026-07-29" || ch["start_date"] != "2026-07-22" {
+		t.Errorf("SS：A 应为 7/22~7/29（A.start=B.start=7/22），实际 %v", ch)
 	}
 }
 
@@ -441,45 +452,45 @@ func TestBackwardScheduleTailInitialDate(t *testing.T) {
 	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
 	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
 	// B.end=7/31, B.start=SubWorkDays(7/31, 3)=7/29（Wed,含7/31+7/30+7/29）
-	if ch, ok := changes[2]; !ok || ch["end_date"] != "2026-07-31" || ch["start_date"] != "2026-07-29" {
-		t.Errorf("B 应为 7/29~7/31，实际 %v", ch)
+	if ch, ok := changes[2]; !ok || ch["end_date"] != "2026-07-31" || ch["start_date"] != "2026-07-28" {
+		t.Errorf("B 应为 7/28~7/31（end=7/31 倒推 3 个工作日 → 7/28），实际 %v", ch)
 	}
-	// A.end = B.start = 7/29, A.start=SubWorkDays(7/29, 5)=7/23（Thu, 7/23+24+27+28+29）
-	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-29" || ch["start_date"] != "2026-07-23" {
-		t.Errorf("A 应为 7/23~7/29，实际 %v", ch)
+	// A.end = B.start = 7/28, A.start=SubWorkDays(7/28, 5)=7/21（不含 7/28：7/27 7/24 7/23 7/22 7/21）
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-28" || ch["start_date"] != "2026-07-21" {
+		t.Errorf("A 应为 7/21~7/28（A.end=B.start=7/28 倒推 5 个工作日 → 7/21），实际 %v", ch)
 	}
 }
 
-// SubWorkDays 与 AddWorkDays 互为逆运算（含周末与自定义节假日）
+// SubWorkDays 与 AddWorkDays 互为逆运算（exclusive：不含 date 当天，含周末与自定义节假日）
 func TestSubWorkDays(t *testing.T) {
-	// 无节假日（默认周末规则）：周一 8/3 起 5 个工作日 → 8/7 周五
-	if got := AddWorkDays(nil, "2026-08-03", 5); got != "2026-08-07" {
-		t.Errorf("AddWorkDays(8/3, 5) = %s, want 2026-08-07", got)
+	// 无节假日（默认周末规则）：周一 8/3 起 5 个工作日（不含 8/3）→ 8/10 周一
+	if got := AddWorkDays(nil, "2026-08-03", 5); got != "2026-08-10" {
+		t.Errorf("AddWorkDays(8/3, 5) = %s, want 2026-08-10", got)
 	}
-	if got := SubWorkDays(nil, "2026-08-07", 5); got != "2026-08-03" {
-		t.Errorf("SubWorkDays(8/7, 5) = %s, want 2026-08-03", got)
-	}
-
-	// 跨周末：周五 8/7 起 3 个工作日 → 8/11 周二；对偶
-	if got := AddWorkDays(nil, "2026-08-07", 3); got != "2026-08-11" {
-		t.Errorf("AddWorkDays(8/7, 3) = %s, want 2026-08-11", got)
-	}
-	if got := SubWorkDays(nil, "2026-08-11", 3); got != "2026-08-07" {
-		t.Errorf("SubWorkDays(8/11, 3) = %s, want 2026-08-07", got)
+	if got := SubWorkDays(nil, "2026-08-10", 5); got != "2026-08-03" {
+		t.Errorf("SubWorkDays(8/10, 5) = %s, want 2026-08-03", got)
 	}
 
-	// 含节假日：8/6（周四）为节假日 → 周一 8/3 起 5 个工作日 → 8/10 周一；对偶
+	// 跨周末：周五 8/7 起 3 个工作日 → 8/12 周三；对偶
+	if got := AddWorkDays(nil, "2026-08-07", 3); got != "2026-08-12" {
+		t.Errorf("AddWorkDays(8/7, 3) = %s, want 2026-08-12", got)
+	}
+	if got := SubWorkDays(nil, "2026-08-12", 3); got != "2026-08-07" {
+		t.Errorf("SubWorkDays(8/12, 3) = %s, want 2026-08-07", got)
+	}
+
+	// 含节假日：8/6（周四）为节假日 → 周一 8/3 起 5 个工作日（不含 8/3）→ 8/11 周二；对偶
 	cal := map[string]string{"2026-08-06": "holiday"}
-	if got := AddWorkDays(cal, "2026-08-03", 5); got != "2026-08-10" {
-		t.Errorf("AddWorkDays(8/3, 5, 节假日) = %s, want 2026-08-10", got)
+	if got := AddWorkDays(cal, "2026-08-03", 5); got != "2026-08-11" {
+		t.Errorf("AddWorkDays(8/3, 5, 节假日) = %s, want 2026-08-11", got)
 	}
-	if got := SubWorkDays(cal, "2026-08-10", 5); got != "2026-08-03" {
-		t.Errorf("SubWorkDays(8/10, 5, 节假日) = %s, want 2026-08-03", got)
+	if got := SubWorkDays(cal, "2026-08-11", 5); got != "2026-08-03" {
+		t.Errorf("SubWorkDays(8/11, 5, 节假日) = %s, want 2026-08-03", got)
 	}
 
-	// 边界：1 个工作日 = 当天；<=0 原样返回
-	if got := SubWorkDays(nil, "2026-08-07", 1); got != "2026-08-07" {
-		t.Errorf("SubWorkDays(8/7, 1) = %s, want 2026-08-07", got)
+	// 边界：1 个工作日 = 前一天/后一天（不含当天）；<=0 原样返回
+	if got := SubWorkDays(nil, "2026-08-07", 1); got != "2026-08-06" {
+		t.Errorf("SubWorkDays(8/7, 1) = %s, want 2026-08-06", got)
 	}
 	if got := SubWorkDays(nil, "2026-08-07", 0); got != "2026-08-07" {
 		t.Errorf("SubWorkDays(8/7, 0) = %s, want 原样 2026-08-07", got)

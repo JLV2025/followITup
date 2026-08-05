@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"time"
 )
 
 type DepType string
@@ -147,11 +148,20 @@ func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[stri
 		return nil, nil
 	}
 	for id, fields := range changes {
-		if _, err := db.Exec(
-			"UPDATE tasks SET start_date=?, end_date=?, duration_days=?, updated_at=datetime('now') WHERE id=?",
-			fields["start_date"], fields["end_date"], fields["duration_days"], id,
-		); err != nil {
-			log.Printf("[Scheduler] 更新任务 %d 失败: %v", id, err)
+		// 写冲突（SQLITE_BUSY，启动期/并发）时重试一次
+		for attempt := 0; attempt < 2; attempt++ {
+			_, err := db.Exec(
+				"UPDATE tasks SET start_date=?, end_date=?, duration_days=?, updated_at=datetime('now') WHERE id=?",
+				fields["start_date"], fields["end_date"], fields["duration_days"], id,
+			)
+			if err == nil {
+				break
+			}
+			if attempt == 1 {
+				log.Printf("[Scheduler] 更新任务 %d 失败: %v", id, err)
+			} else {
+				time.Sleep(200 * time.Millisecond)
+			}
 		}
 	}
 	return changes, nil
@@ -278,6 +288,7 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 		}
 		// 隐式前驱约束：仅当任务没有显式前置时生效——定义了前置（一个或多个）后，
 		// 开始时间完全由前置完成时间决定，与顺序/前一个任务无关
+		// 隐式 FS 与显式 FS 同语义：end 为独占式，后继直接从前置 end 衔接
 		if len(predDeps[succ.ID]) == 0 {
 			if pid, ok := implicitPred[succ.ID]; ok {
 				if p := taskMap[pid]; p != nil && p.EndDate != "" && p.EndDate > candidateStart {
@@ -551,20 +562,25 @@ func calcDates(pred, succ *TaskInfo, dep Dep, cal map[string]string) (string, st
 	lag := dep.LagDays
 	switch dep.Type {
 	case FS:
-		succStart := shiftDate(pred.EndDate, lag)
+		// FS：前置"结束后"后继开始。end 为独占式（结束日 = 开始 + 工期），
+		// 直接衔接：lag=0 → succStart = pred.EndDate；lag=N → 再隔 N 个工作日
+		succStart := AddWorkDays(cal, pred.EndDate, lag)
 		succEnd := AddWorkDays(cal, succStart, succ.DurationDays)
 		return succStart, succEnd
 	case SS:
-		succStart := shiftDate(pred.StartDate, lag)
+		// SS：开始对齐（同日开始）——lag 个工作日
+		succStart := AddWorkDays(cal, pred.StartDate, lag)
 		succEnd := AddWorkDays(cal, succStart, succ.DurationDays)
 		return succStart, succEnd
 	case FF:
-		succEnd := shiftDate(pred.EndDate, lag)
-		succStart := shiftDate(succEnd, -succ.DurationDays)
+		// FF：结束对齐——后继 end = 前置 end + lag；start 从 end 倒推 duration 个工作日
+		succEnd := AddWorkDays(cal, pred.EndDate, lag)
+		succStart := SubWorkDays(cal, succEnd, succ.DurationDays)
 		return succStart, succEnd
 	case SF:
-		succEnd := shiftDate(pred.StartDate, lag)
-		succStart := shiftDate(succEnd, -succ.DurationDays)
+		// SF：前置开始 → 后继结束
+		succEnd := AddWorkDays(cal, pred.StartDate, lag)
+		succStart := SubWorkDays(cal, succEnd, succ.DurationDays)
 		return succStart, succEnd
 	default:
 		return succ.StartDate, succ.EndDate
@@ -687,11 +703,20 @@ func backwardSchedule(db *sql.DB, projectID int64) (map[int64]map[string]string,
 		return nil, nil
 	}
 	for id, fields := range changes {
-		if _, err := db.Exec(
-			"UPDATE tasks SET start_date=?, end_date=?, duration_days=?, updated_at=datetime('now') WHERE id=?",
-			fields["start_date"], fields["end_date"], fields["duration_days"], id,
-		); err != nil {
-			log.Printf("[Scheduler] 更新任务 %d 失败: %v", id, err)
+		// 写冲突（SQLITE_BUSY，启动期/并发）时重试一次
+		for attempt := 0; attempt < 2; attempt++ {
+			_, err := db.Exec(
+				"UPDATE tasks SET start_date=?, end_date=?, duration_days=?, updated_at=datetime('now') WHERE id=?",
+				fields["start_date"], fields["end_date"], fields["duration_days"], id,
+			)
+			if err == nil {
+				break
+			}
+			if attempt == 1 {
+				log.Printf("[Scheduler] 更新任务 %d 失败: %v", id, err)
+			} else {
+				time.Sleep(200 * time.Millisecond)
+			}
 		}
 	}
 	return changes, nil

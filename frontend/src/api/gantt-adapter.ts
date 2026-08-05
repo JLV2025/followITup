@@ -71,14 +71,8 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     duration = Math.max(1, Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000));
   }
 
-  // dhtmlx 按 end-start 像素差绘制任务条：同日任务（1 天）差 0 会不可见。
-  // 非里程碑任务 end 统一 +1 天（exclusive 语义），宽度与 duration 正确；
-  // fromGanttTask 保存时再 -1 还原（里程碑保持点，不做转换）
-  if (!isMilestone && endDate && isValidDate(endDate)) {
-    const e = new Date(endDate);
-    e.setDate(e.getDate() + 1);
-    endDate = e.toISOString().slice(0, 10);
-  }
+  // 后端 end_date 已是独占式（结束日 = 开始 + 工期，如 1 天任务 8/5~8/6），
+  // 与 dhtmlx 的 end-start 像素差语义一致，直接使用（里程碑保持点）
 
   return {
     id: t.id,
@@ -111,19 +105,12 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
  * 将 dhtmlx-gantt Task → 后端 Task（保存用）
  */
 export function fromGanttTask(gt: GanttTask): any {
-  // end_date 还原：toGanttTask 已 +1 天（dhtmlx exclusive 语义），非里程碑保存时 -1
-  let endDate = gt.end_date;
-  if (gt.type !== "milestone" && endDate) {
-    const e = new Date(endDate);
-    e.setDate(e.getDate() - 1);
-    endDate = e.toISOString().slice(0, 10);
-  }
   return {
     id: gt.id,
     name: gt.text,
     parent_id: gt.parent || null,
     start_date: gt.start_date,
-    end_date: endDate,
+    end_date: gt.end_date,
     duration_days: gt.duration,
     progress_pct: Math.round((gt.progress || 0) * 100),
     task_type: gt.type === "milestone" ? "milestone" : "task",

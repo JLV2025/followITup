@@ -194,6 +194,12 @@ var migrations = []migration{
 		updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 	);
 	`},
+	{7, `
+	-- end_date 改为独占式（v7）：结束日 = 开始 + 工期（1 天任务 8/5~8/6）
+	-- 既有 inclusive 数据 +1 天迁移；里程碑（点）保持 end = start；格式非法（date() 为 NULL）跳过
+	UPDATE tasks SET end_date = date(end_date, '+1 day')
+	 WHERE end_date != '' AND task_type != 'milestone' AND date(end_date) IS NOT NULL;
+	`},
 }
 
 // migrate 执行所有未应用的迁移

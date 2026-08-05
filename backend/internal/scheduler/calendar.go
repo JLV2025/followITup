@@ -67,20 +67,18 @@ func julianDayStr(date string) int {
 	return julianDay(y, m, d)
 }
 
-// AddWorkDays 从 date 起加 N 个工作日，返回第 N 个工作日的日期
-// 例：date=周一, workDays=5 → 返回周五（5 个工作日含周一）
+// AddWorkDays 从 date 起加 N 个工作日（不含 date 当天），返回第 N 个工作日的日期。
+// 语义：任务 duration=N 天 → 结束日 = AddWorkDays(start, N)。
+// 例：date=周一, workDays=1 → 周二；workDays=5 → 下周一（跳过周末/节假日）
 func AddWorkDays(cal map[string]string, date string, workDays int) string {
 	if date == "" || workDays <= 0 {
 		return date
 	}
-	if workDays == 1 {
-		return date // 1 个工作日 = 当天
-	}
 	var y, m, d int
 	fmt.Sscanf(date, "%d-%d-%d", &y, &m, &d)
 
-	// 需要再找 workDays-1 个工作日
-	for remaining := workDays - 1; remaining > 0; {
+	// 从 date 的次日开始数 workDays 个工作日
+	for remaining := workDays; remaining > 0; {
 		d++
 		dim := daysInMonth(y, m)
 		if d > dim {
@@ -99,20 +97,18 @@ func AddWorkDays(cal map[string]string, date string, workDays int) string {
 	return fmt.Sprintf("%04d-%02d-%02d", y, m, d)
 }
 
-// SubWorkDays 从 date 起往前数 N 个工作日，返回第 N 个工作日的日期（含 date 当天）
+// SubWorkDays 从 date 起往前数 N 个工作日（不含 date 当天），返回第 N 个工作日的日期。
+// 语义：任务 duration=N 天、结束日=E → 开始日 = SubWorkDays(E, N)。
 // 与 AddWorkDays 互为逆运算：AddWorkDays(cal, S, N) == E ⟺ SubWorkDays(cal, E, N) == S
 func SubWorkDays(cal map[string]string, date string, workDays int) string {
 	if date == "" || workDays <= 0 {
 		return date
 	}
-	if workDays == 1 {
-		return date // 1 个工作日 = 当天
-	}
 	var y, m, d int
 	fmt.Sscanf(date, "%d-%d-%d", &y, &m, &d)
 
-	// 需要再往前找 workDays-1 个工作日
-	for remaining := workDays - 1; remaining > 0; {
+	// 从 date 的前一日开始往前数 workDays 个工作日
+	for remaining := workDays; remaining > 0; {
 		d--
 		if d < 1 {
 			m--

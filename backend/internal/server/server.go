@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"followitup/internal/api"
 	"followitup/internal/auth"
 	"followitup/internal/db"
+	"followitup/internal/scheduler"
 	"followitup/internal/ws"
 
 	"github.com/go-chi/chi/v5"
@@ -101,6 +103,38 @@ func Run(opts Options) error {
 	// 注册工作日历 API
 	calHandler := api.NewCalendarHandler(database.Conn, authMid)
 	calHandler.RegisterRoutes(r)
+
+	// 启动时全项目重排：v7 迁移（end 独占式）后依赖链衔接修正；幂等（非 manual 任务日期由排程决定）。
+	// 延迟 3 秒执行（避开启动初期连接池锁竞争 SQLITE_BUSY），失败整体重试 2 次
+	go func() {
+		time.Sleep(3 * time.Second)
+		for attempt := 0; attempt < 2; attempt++ {
+			rows, err := database.Conn.Query(`SELECT id FROM projects WHERE deleted_at IS NULL`)
+			if err != nil {
+				log.Printf("[Scheduler] 启动重排查询项目失败: %v", err)
+				return
+			}
+			var pids []int64
+			for rows.Next() {
+				var pid int64
+				if rows.Scan(&pid) == nil {
+					pids = append(pids, pid)
+				}
+			}
+			rows.Close()
+			ok := true
+			for _, pid := range pids {
+				if _, err := scheduler.RecalculateAll(database.Conn, pid); err != nil {
+					log.Printf("[Scheduler] 启动重排项目 %d 失败(第%d次): %v", pid, attempt+1, err)
+					ok = false
+				}
+			}
+			if ok {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}()
 
 	// 托管前端静态文件
 	if err := mountFrontend(r, opts.FrontendFS); err != nil {
