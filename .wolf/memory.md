@@ -1081,3 +1081,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:00 | Session end: 20 writes across 11 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 23 reads | ~36176 tok |
 | 10:05 | Session end: 20 writes across 11 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 27 reads | ~37012 tok |
 | 2026-08-05 | 回收站功能完成:SDD 5任务(2后端端点组+2前端入口),任务/项目恢复均不触发排程,浏览器实测5项全过,最终审查(fable)可合并无Critical;deferred Minor:恢复无WS广播/非active项目恢复不出现在看板 | backend/internal/api/{tasks,projects}.go, frontend/src/{components/RecycleBinModal.tsx, pages/{ProjectGantt,Dashboard}.tsx}, components.css | 交付完成,新exe已部署8080 | ~210k |
+| 10:10 | Session end: 20 writes across 11 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 27 reads | ~37012 tok |
+| 12:51 | Session end: 20 writes across 11 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 27 reads | ~37012 tok |
+| 12:53 | Edited frontend/src/pages/Dashboard.tsx | 7→7 lines | ~87 |
+| 12:54 | Edited frontend/src/pages/Dashboard.tsx | added error handling | ~356 |
+| 12:54 | Edited frontend/src/styles/components.css | expanded (+28 lines) | ~222 |
+| 2026-08-05 | 补项目删除入口:用户反馈"没有删除入口"→Dashboard卡片悬停右上角删除按钮(project-card-wrap相对定位+card-delete绝对定位,confirm确认"可回收站恢复"),浏览器实测删→看板消失→回收站→恢复闭环通过 | frontend/src/pages/Dashboard.tsx, frontend/src/styles/components.css | 交付,commit 54fb31a | ~30k |
