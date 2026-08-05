@@ -1266,3 +1266,6 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:43 | Edited frontend/src/pages/ProjectGantt.tsx | 4→4 lines | ~72 |
 | 17:44 | Edited frontend/src/pages/ProjectGantt.tsx | 5→4 lines | ~27 |
 | 17:50 | 连线重写为标准5段折线(右20/下到空隙中央/左到目标外20/下到中线/连入),空隙中央自动避让中间条,多前置自然重合 | frontend/src/pages/ProjectGantt.tsx | 实测7条连线0侵入 | ~9k |
+| 17:45 | Session end: 7 writes across 1 files (ProjectGantt.tsx) | 3 reads | ~12793 tok |
+| 17:53 | Edited frontend/src/pages/ProjectGantt.tsx | added 5 condition(s) | ~1844 |
+| 17:55 | 多前置合并画法:公共右边界(最长条右缘)+20汇合,公共下边界(最下源底边)与目标空隙中央穿过;修复segHit单点判定bug | frontend/src/pages/ProjectGantt.tsx | 实测0侵入 | ~8k |
