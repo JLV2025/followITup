@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import ChangePassword from "./pages/ChangePassword";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectGantt from "./pages/ProjectGantt";
 import UserManagement from "./pages/UserManagement";
@@ -29,6 +30,7 @@ function App() {
           </Route>
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/settings" element={<SystemSettings />} />
+          <Route path="/change-password" element={<ChangePassword />} />
         </Routes>
       </main>
     </div>

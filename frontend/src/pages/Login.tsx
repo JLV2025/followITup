@@ -21,8 +21,9 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/");
+      const needChange = await login(email, password);
+      // 首登强制改密：跳到改密页
+      navigate(needChange ? "/change-password" : "/", { replace: true });
     } catch (err: any) {
       const msg = err.response?.data?.error?.message || "登录失败，请重试";
       setError(msg);
