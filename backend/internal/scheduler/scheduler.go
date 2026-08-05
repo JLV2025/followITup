@@ -46,13 +46,44 @@ type TaskInfo struct {
 	SortOrder       int // 项目内排序序号（隐式顺序依赖依据）
 }
 
-// Recalculate 从 triggerTaskID 出发传播后继链（触发任务自身不被改写，保留手动调整）。
+// Recalculate 从 triggerTaskID 出发传播后继链。
+// 触发任务自身：start 保持（由排程/手动决定），但 duration 变更时 end 需重算
+// （end = start 后的 duration 个工作日，独占式）
 // 倒推项目改为全量倒推（duration 变更 → start 重算 → 沿前驱链传播）
 func Recalculate(db *sql.DB, projectID int64, triggerTaskID int64) (map[int64]map[string]string, error) {
 	if dir, _ := getProjectDirection(db, projectID); dir == "backward" {
 		return backwardSchedule(db, projectID)
 	}
-	return recalc(db, projectID, []int64{triggerTaskID})
+	changes, err := recalc(db, projectID, []int64{triggerTaskID})
+	if err != nil {
+		return nil, err
+	}
+	// 触发任务自身：duration 变更时 end 重算（start 保持，非 manual）
+	fixTriggerEnd(db, triggerTaskID)
+	return changes, nil
+}
+
+// fixTriggerEnd 触发任务自身 duration 变更时修正 end（end = start 后的 duration 个工作日）
+func fixTriggerEnd(db *sql.DB, taskID int64) {
+	if taskID <= 0 {
+		return
+	}
+	var start, end string
+	var duration, manual int
+	err := db.QueryRow(
+		`SELECT start_date, end_date, duration_days, manual_scheduled FROM tasks
+		 WHERE id = ? AND deleted_at IS NULL`, taskID).Scan(&start, &end, &duration, &manual)
+	if err != nil || manual != 0 || start == "" {
+		return
+	}
+	cal, cerr := LoadCalendar(db, "", "")
+	if cerr != nil {
+		cal = make(map[string]string)
+	}
+	expected := AddWorkDays(cal, start, duration)
+	if expected != end {
+		db.Exec("UPDATE tasks SET end_date = ?, updated_at = datetime('now') WHERE id = ?", expected, taskID)
+	}
 }
 
 // RecalculateAll 全项目重算；倒推项目从链尾倒推，正推项目保持现有逻辑
@@ -307,10 +338,13 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 
 		// 双向跟随：前置（或前面任务）日期变化时后继自动调整（含提前）。
 		// start 未变化时：仅当 duration 变更导致 end 过时（end ≠ start+duration）才重算 end，
-		// 否则保持不动（避免无谓更新；日期为排程唯一来源，无手动编辑场景）
+		// 否则保持不动（避免无谓更新；日期为排程唯一来源，无手动编辑场景）。
+		// 无论是否更新都要入队：让隐式/显式后继链继续传播（否则链上无变化的中间任务
+		// 会截断其后继——如删除依赖后 67 需按新隐式前驱重算却无人触发）
 		if candidateStart == succ.StartDate {
 			expectedEnd := AddWorkDays(cal, candidateStart, succ.DurationDays)
 			if succ.EndDate == expectedEnd {
+				queue = append(queue, succ.ID)
 				return
 			}
 			changes[succ.ID] = map[string]string{
@@ -349,8 +383,11 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 		}
 
 		// 隐式顺序后继（同分支内按 sort_order 的下一个任务，FS lag=0）
+		// 仅当后继没有显式前置时隐式衔接才适用——否则隐式前驱会与显式前置竞争并可能覆盖其日期
 		if nextID, ok := implicitSucc[currentID]; ok {
-			applyCandidate(taskMap[currentID], taskMap[nextID], Dep{Type: FS, LagDays: 0})
+			if len(predDeps[nextID]) == 0 {
+				applyCandidate(taskMap[currentID], taskMap[nextID], Dep{Type: FS, LagDays: 0})
+			}
 		}
 	}
 	return changes

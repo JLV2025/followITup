@@ -449,7 +449,14 @@ func (h *TaskHandler) AddDependency(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.triggerReschedule(projectID, dep.PredecessorID)
+	// 排程验证：若新依赖导致循环依赖（排程失败），回滚该依赖并明确提示——
+	// 此前失败仅记日志，用户设置成环前置时甘特条不动且无任何提示
+	if _, err := scheduler.Recalculate(h.db, projectID, dep.PredecessorID); err != nil {
+		h.db.Exec("DELETE FROM dependencies WHERE predecessor_id = ? AND successor_id = ?",
+			dep.PredecessorID, dep.SuccessorID)
+		writeError(w, http.StatusBadRequest, "CIRCULAR_DEPENDENCY", "该前置会导致循环依赖，未添加：请检查前置任务链")
+		return
+	}
 	h.broadcastChange(r, projectID, 0)
 
 	writeJSON(w, http.StatusCreated, dep)
@@ -462,7 +469,10 @@ func (h *TaskHandler) DeleteDependency(w http.ResponseWriter, r *http.Request) {
 	// 需要 projectID 来触发排程——从路由参数获取
 	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	h.db.Exec("DELETE FROM dependencies WHERE id = ?", depID)
-	h.triggerReschedule(projectID, 0)
+	// 依赖结构变化 → 全量重算（此前 trigger=0 空转：删除依赖后链上任务日期不更新）
+	if _, err := scheduler.RecalculateAll(h.db, projectID); err != nil {
+		log.Printf("[Scheduler] 删除依赖后项目 %d 重算失败: %v", projectID, err)
+	}
 	h.broadcastChange(r, projectID, 0)
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "依赖已删除"})
