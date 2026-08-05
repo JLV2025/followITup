@@ -33,12 +33,14 @@ func NewTaskHandler(db *sql.DB, mid *auth.Middleware, hub *ws.Hub) *TaskHandler 
 func (h *TaskHandler) RegisterRoutes(r chi.Router) {
 	// 只读（公开或可选认证）
 	r.Get("/api/projects/{id}/tasks", h.ListTasks)
+	r.Get("/api/projects/{id}/tasks/deleted", h.ListDeletedTasks) // 回收站：必须注册在 /{taskID} 之前
 	r.Get("/api/projects/{id}/tasks/{taskID}", h.GetTask)
 
 	// 写操作（需登录）
 	r.Group(func(r chi.Router) {
 		r.Use(h.mid.RequireAuth)
 		r.Post("/api/projects/{id}/tasks", h.CreateTask)
+		r.Post("/api/projects/{id}/tasks/{taskID}/restore", h.RestoreTask)
 		r.Put("/api/projects/{id}/tasks/{taskID}", h.UpdateTask)
 		r.Patch("/api/projects/{id}/tasks/{taskID}/sort_order", h.UpdateTaskSortOrder)
 		r.Delete("/api/projects/{id}/tasks/{taskID}", h.DeleteTask)
@@ -97,6 +99,78 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 		"tasks":        tasks,
 		"dependencies": deps,
 	})
+}
+
+// ListDeletedTasks 列出项目已删除任务（回收站）
+func (h *TaskHandler) ListDeletedTasks(w http.ResponseWriter, r *http.Request) {
+	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	rows, err := h.db.Query(
+		`SELECT id, project_id, parent_id, name, task_type, status, priority, assignee,
+		        start_date, end_date, duration_days, progress_pct,
+		        sort_order, deleted_at
+		 FROM tasks WHERE project_id = ? AND deleted_at IS NOT NULL
+		 ORDER BY deleted_at DESC`, projectID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "查询已删除任务失败")
+		return
+	}
+	defer rows.Close()
+
+	type DeletedTask struct {
+		ID           int64   `json:"id"`
+		ProjectID    int64   `json:"project_id"`
+		ParentID     *int64  `json:"parent_id"`
+		Name         string  `json:"name"`
+		TaskType     string  `json:"task_type"`
+		Status       string  `json:"status"`
+		Priority     string  `json:"priority"`
+		Assignee     string  `json:"assignee"`
+		StartDate    string  `json:"start_date"`
+		EndDate      string  `json:"end_date"`
+		DurationDays int     `json:"duration_days"`
+		ProgressPct  float64 `json:"progress_pct"`
+		SortOrder    int     `json:"sort_order"`
+		DeletedAt    string  `json:"deleted_at"`
+	}
+	var tasks []DeletedTask
+	for rows.Next() {
+		var t DeletedTask
+		var parentID sql.NullInt64
+		if err := rows.Scan(&t.ID, &t.ProjectID, &parentID, &t.Name, &t.TaskType, &t.Status,
+			&t.Priority, &t.Assignee, &t.StartDate, &t.EndDate, &t.DurationDays,
+			&t.ProgressPct, &t.SortOrder, &t.DeletedAt); err != nil {
+			continue
+		}
+		if parentID.Valid {
+			t.ParentID = &parentID.Int64
+		}
+		tasks = append(tasks, t)
+	}
+	writeJSON(w, http.StatusOK, tasks)
+}
+
+// RestoreTask 恢复已删除任务（软删除置空，不触发排程）
+func (h *TaskHandler) RestoreTask(w http.ResponseWriter, r *http.Request) {
+	taskID, _ := strconv.ParseInt(chi.URLParam(r, "taskID"), 10, 64)
+	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	result, err := h.db.Exec(
+		`UPDATE tasks SET deleted_at = NULL, updated_at = datetime('now')
+		 WHERE id = ? AND project_id = ? AND deleted_at IS NOT NULL`,
+		taskID, projectID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "恢复任务失败")
+		return
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "任务不存在或未删除")
+		return
+	}
+
+	// 返回恢复后的任务（复用 GetTask 的查询逻辑：按 id 查询单任务并 JSON 返回）
+	h.GetTask(w, r)
 }
 
 // GetTask 获取单个任务
