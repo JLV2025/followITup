@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectGantt from "./pages/ProjectGantt";
 import UserManagement from "./pages/UserManagement";
+import SystemSettings from "./pages/SystemSettings";
 import Navbar from "./components/Navbar";
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             />
           </Route>
           <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/settings" element={<SystemSettings />} />
         </Routes>
       </main>
     </div>

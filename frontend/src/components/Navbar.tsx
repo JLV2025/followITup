@@ -19,9 +19,14 @@ export default function Navbar() {
           <>
             <span className="navbar-user">{user?.display_name || user?.email}</span>
             {user?.is_admin && (
-              <Link to="/admin/users" className="btn btn-link">
-                用户管理
-              </Link>
+              <>
+                <Link to="/admin/users" className="btn btn-link">
+                  用户管理
+                </Link>
+                <Link to="/admin/settings" className="btn btn-link">
+                  系统设置
+                </Link>
+              </>
             )}
             <button onClick={logout} className="btn btn-link">
               退出

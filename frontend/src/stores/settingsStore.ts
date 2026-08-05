@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import api from "../api/client";
 
 export type DisplayMode = "calendar" | "fiscal";
 
@@ -6,60 +7,57 @@ interface SettingsState {
   displayMode: DisplayMode;
   fiscalStartMonth: number;
   setDisplayMode: (mode: DisplayMode) => void;
-  setFiscalStartMonth: (month: number) => void;
 }
 
 const STORAGE_KEY = "followitup-settings";
 
-function loadFromStorage(): { displayMode: DisplayMode; fiscalStartMonth: number } {
+function loadDisplayMode(): DisplayMode {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      return {
-        displayMode: data.displayMode === "fiscal" ? "fiscal" : "calendar",
-        fiscalStartMonth: typeof data.fiscalStartMonth === "number" && data.fiscalStartMonth >= 1 && data.fiscalStartMonth <= 12
-          ? data.fiscalStartMonth
-          : 4,
-      };
+      if (data.displayMode === "fiscal" || data.displayMode === "calendar") {
+        return data.displayMode;
+      }
     }
   } catch {
     // 解析失败时使用默认值
   }
-  return { displayMode: "calendar", fiscalStartMonth: 4 };
+  return "calendar";
 }
 
-function saveToStorage(state: SettingsState) {
+function saveToStorage(displayMode: DisplayMode) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      displayMode: state.displayMode,
-      fiscalStartMonth: state.fiscalStartMonth,
-    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ displayMode }));
   } catch {
     // localStorage 不可用时静默忽略
   }
 }
 
+/** 财年起始月从系统配置读取（管理员在系统设置页修改），不再本地存储 */
+async function loadFiscalStartMonth(): Promise<number> {
+  try {
+    const res = await api.get("/api/settings");
+    const m = res.data?.data?.fiscal_start_month;
+    return typeof m === "number" && m >= 1 && m <= 12 ? m : 4;
+  } catch {
+    return 4;
+  }
+}
+
 export const useSettingsStore = create<SettingsState>((set) => {
-  const saved = loadFromStorage();
+  // 启动时异步拉取财年配置（未登录/失败时默认 4 月）
+  loadFiscalStartMonth().then((m) => set({ fiscalStartMonth: m }));
+
   return {
-    displayMode: saved.displayMode,
-    fiscalStartMonth: saved.fiscalStartMonth,
+    displayMode: loadDisplayMode(),
+    fiscalStartMonth: 4,
 
     setDisplayMode: (mode: DisplayMode) => {
       set((s) => {
         const next = { ...s, displayMode: mode };
-        saveToStorage(next);
+        saveToStorage(mode);
         return { displayMode: mode };
-      });
-    },
-
-    setFiscalStartMonth: (month: number) => {
-      if (month < 1 || month > 12) return;
-      set((s) => {
-        const next = { ...s, fiscalStartMonth: month };
-        saveToStorage(next);
-        return { fiscalStartMonth: month };
       });
     },
   };

@@ -13,7 +13,7 @@ export default function Dashboard() {
   const { stats, projects, period, loading, fetchStats, fetchProjects, setPeriod } =
     useDashboardStore();
 
-  const { displayMode, fiscalStartMonth, setDisplayMode, setFiscalStartMonth } = useSettingsStore();
+  const { displayMode, fiscalStartMonth, setDisplayMode } = useSettingsStore();
 
   // 创建项目模态框状态
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -203,18 +203,6 @@ export default function Dashboard() {
         >
           {displayMode === "fiscal" ? "📅 财年" : "🗓 自然年"}
         </button>
-        {displayMode === "fiscal" && (
-          <select
-            className="fiscal-month-select"
-            value={fiscalStartMonth}
-            onChange={(e) => setFiscalStartMonth(Number(e.target.value))}
-            title="财年起始月份"
-          >
-            {["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"].map((label, i) => (
-              <option key={i + 1} value={i + 1}>{label}起始</option>
-            ))}
-          </select>
-        )}
       </div>
 
       {/* 主体双栏 */}
