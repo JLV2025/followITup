@@ -1184,3 +1184,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:39 | Edited backend/internal/auth/auth.go | 7→7 lines | ~106 |
 | 14:39 | Edited backend/internal/auth/auth.go | expanded (+6 lines) | ~122 |
 | 2026-08-05 | 修bug-030:邮箱登录大小写敏感(用户 jing.lv 全小写登录失败)——Login加COLLATE NOCASE + CreateUser NOCASE去重,实测全小写/混合变体均200 | backend/internal/auth/auth.go | 已修复部署 | ~10k |
+| 14:41 | Session end: 102 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~90135 tok |
+| 14:56 | Session end: 102 writes across 35 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~90135 tok |
+| 15:04 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 condition(s) | ~508 |
+| 2026-08-05 | 修bug-031:弹窗保存409自冲突(排序保存递增version后弹窗旧version保存必409)——自动重取最新version重放,实测409→GET→200链路 | frontend/src/components/TaskDetailModal.tsx | 已修复部署 | ~15k |
