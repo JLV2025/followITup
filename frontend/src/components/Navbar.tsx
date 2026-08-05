@@ -13,16 +13,16 @@ export default function Navbar() {
           <img src="/logo.gif" alt="FollowITup" className="navbar-logo" />
           <span>FollowITup</span>
         </Link>
-        {isLoggedIn && user?.is_admin && (
-          <Link to="/admin/users" style={{ fontSize: 13, color: "var(--text-secondary)", textDecoration: "none" }}>
-            用户管理
-          </Link>
-        )}
       </div>
       <div className="navbar-actions">
         {isLoggedIn ? (
           <>
             <span className="navbar-user">{user?.display_name || user?.email}</span>
+            {user?.is_admin && (
+              <Link to="/admin/users" className="btn btn-link">
+                用户管理
+              </Link>
+            )}
             <button onClick={logout} className="btn btn-link">
               退出
             </button>
