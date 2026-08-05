@@ -54,8 +54,7 @@ export const useSettingsStore = create<SettingsState>((set) => {
     fiscalStartMonth: 4,
 
     setDisplayMode: (mode: DisplayMode) => {
-      set((s) => {
-        const next = { ...s, displayMode: mode };
+      set(() => {
         saveToStorage(mode);
         return { displayMode: mode };
       });
