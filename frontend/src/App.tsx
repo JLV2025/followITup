@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +12,12 @@ import Navbar from "./components/Navbar";
 
 function App() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
+
+  // 全局恢复登录态：任何页面整页加载/刷新都生效（原只在 Dashboard/ProjectGantt 挂载时执行，直达非首页会丢登录态）
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
 
   return (
     <div className="app">
