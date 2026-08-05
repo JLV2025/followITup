@@ -1194,3 +1194,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:20 | Edited backend/internal/api/tasks.go | modified RestoreTask() | ~251 |
 | 15:24 | Edited backend/internal/api/tasks.go | Recalculate() → RecalculateAll() | ~60 |
 | 2026-08-05 | 恢复任务改全量实时重算:Recalculate对triggerTaskID自身豁免→恢复任务保持旧日期;改用RecalculateAll(同排序保存),实测恢复B由旧8/5重算为新8/7衔接;清理项目9测试任务 | backend/internal/api/tasks.go | 已交付 | ~20k |
+| 15:25 | Edited docs/superpowers/specs/2026-08-05-recycle-bin-design.md | inline fix | ~37 |
+| 15:26 | Session end: 106 writes across 36 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 41 reads | ~97536 tok |
+| 15:27 | Edited backend/internal/server/server.go | "[Server] FollowITup v0.8." → "[Server] FollowITup v0.9." | ~19 |
+| 15:27 | Edited README.md | 7.28 → 9.0 | ~25 |
+| 15:27 | Edited README.md | 8→11 lines | ~446 |
+| 2026-08-05 | v0.9.0 发布:版本号+README更新(排程方向/用户管理升级/系统配置页/节假日补班/大小写不敏感),服务器已重启验证 | backend/internal/server/server.go, README.md | 已交付 | ~5k |
