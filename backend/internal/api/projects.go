@@ -35,7 +35,9 @@ func (h *ProjectHandler) RegisterRoutes(r chi.Router) {
 	// 项目 CRUD（需登录）
 	r.Group(func(r chi.Router) {
 		r.Use(h.mid.RequireAuth)
+		r.Get("/api/projects", h.ListProjects)               // ?deleted=1 已删项目
 		r.Post("/api/projects", h.CreateProject)
+		r.Post("/api/projects/{id}/restore", h.RestoreProject)
 		r.Put("/api/projects/{id}", h.UpdateProject)
 		r.Delete("/api/projects/{id}", h.DeleteProject)
 		r.Get("/api/projects/{id}", h.GetProject)
@@ -331,4 +333,71 @@ func boolToInt(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+// ListProjects 项目列表：?deleted=1 返回已删除项目（回收站），否则返回未删除项目
+func (h *ProjectHandler) ListProjects(w http.ResponseWriter, r *http.Request) {
+	deleted := r.URL.Query().Get("deleted")
+	where := "deleted_at IS NULL"
+	if deleted == "1" {
+		where = "deleted_at IS NOT NULL"
+	}
+	rows, err := h.db.Query(
+		`SELECT id, name, description, start_date, end_date, status, is_public,
+		        COALESCE(schedule_direction, 'forward'), deleted_at
+		 FROM projects WHERE ` + where + ` ORDER BY deleted_at DESC, created_at DESC`)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "查询项目失败")
+		return
+	}
+	defer rows.Close()
+
+	type ProjectItem struct {
+		ID                int64   `json:"id"`
+		Name              string  `json:"name"`
+		Description       string  `json:"description"`
+		StartDate         string  `json:"start_date"`
+		EndDate           string  `json:"end_date"`
+		Status            string  `json:"status"`
+		IsPublic          bool    `json:"is_public"`
+		ScheduleDirection string  `json:"schedule_direction"`
+		DeletedAt         *string `json:"deleted_at"`
+	}
+	var projects []ProjectItem
+	for rows.Next() {
+		var p ProjectItem
+		var isPublic int
+		var deletedAt sql.NullString
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate,
+			&p.Status, &isPublic, &p.ScheduleDirection, &deletedAt); err != nil {
+			continue
+		}
+		p.IsPublic = isPublic != 0
+		if deletedAt.Valid {
+			p.DeletedAt = &deletedAt.String
+		}
+		projects = append(projects, p)
+	}
+	writeJSON(w, http.StatusOK, projects)
+}
+
+// RestoreProject 恢复已删除项目（项目标记置空；项目内任务本就未删，自动可见；不触发排程）
+func (h *ProjectHandler) RestoreProject(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	result, err := h.db.Exec(
+		`UPDATE projects SET deleted_at = NULL, updated_at = datetime('now')
+		 WHERE id = ? AND deleted_at IS NOT NULL`, id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "恢复项目失败")
+		return
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "项目不存在或未删除")
+		return
+	}
+
+	// 返回恢复后的项目（复用 GetProject 查询）
+	h.GetProject(w, r)
 }
