@@ -156,7 +156,7 @@ func TestIsWorkDayWorkdayType(t *testing.T) {
 	if !IsWorkDay(cal, "2026-08-07") {
 		t.Error("普通周五应为工作日")
 	}
-	if IsWorkDay(cal, "2026-08-10") {
+	if !IsWorkDay(cal, "2026-08-10") {
 		t.Error("普通周一应为工作日")
 	}
 }

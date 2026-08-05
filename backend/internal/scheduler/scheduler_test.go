@@ -485,3 +485,20 @@ func TestSubWorkDays(t *testing.T) {
 		t.Errorf("SubWorkDays(8/7, 0) = %s, want 原样 2026-08-07", got)
 	}
 }
+
+func TestIsWorkDayWorkdayType(t *testing.T) {
+	// 2026-08-08 是周六，标记补班后应为工作日
+	cal := map[string]string{"2026-08-08": "workday", "2026-08-09": "holiday"}
+	if !IsWorkDay(cal, "2026-08-08") {
+		t.Error("补班日(workday)应视为工作日")
+	}
+	if IsWorkDay(cal, "2026-08-09") {
+		t.Error("假日(holiday)不应视为工作日")
+	}
+	if !IsWorkDay(cal, "2026-08-07") {
+		t.Error("普通周五应为工作日")
+	}
+	if !IsWorkDay(cal, "2026-08-10") {
+		t.Error("普通周一应为工作日")
+	}
+}
