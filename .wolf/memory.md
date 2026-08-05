@@ -1153,3 +1153,4 @@ cd backend && followitup.exe config.yaml   # 启动
 | 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | 7→8 lines | ~90 |
 | 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | 15→12 lines | ~112 |
 | 13:48 | Edited frontend/src/stores/settingsStore.ts | 7→6 lines | ~42 |
+| 2026-08-05 | 用户管理升级完成:11任务内联执行(settings表+邮件服务+建号改造+删号角色+首登改密+财年迁移+配置页+用户管理页+改密页+assignee下拉),浏览器/API验证10项全过;邮件SMTP开发机不可达,明文密码回退创建者;验证中修复settingsStore未使用变量 | backend/internal/{settings,mail}/ + {api,auth,db,server} + frontend/{SystemSettings,ChangePassword,UserManagement,Login,Dashboard}.tsx等 | 交付,新exe已部署 | ~220k |
