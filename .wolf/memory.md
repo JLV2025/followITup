@@ -1024,3 +1024,16 @@ cd backend && followitup.exe config.yaml   # 启动
 | 08:35 | 实测倒排：项目8「倒排演示-网站改版」完成日期9/30，5任务链（页面设计3/前端10/后端8/联调5/上线2）自动倒推，链尾对齐9/30全链无缝 | API+浏览器 | 每次创建立即纳入倒推(bug-028修复验证)；甘特图5任务条渲染正确 | ~1K |
 | 08:37 | 演示改duration级联：前端10→5天 → start后移9/8、页面设计级联后移、后端以后不动 | 项目8 | 用户满意「不错」；演示项目保留供体验 | ~300 |
 | 08:35 | 失误：API脚本PID变量为空导致5任务创建到project_id=0(孤儿) | 已清理 | 教训→cerebrum Do-Not-Repeat | ~100 |
+| 08:38 | Session end: 54 writes across 22 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md, sqlite_test.go, sqlite.go, models.go) | 43 reads | ~62490 tok |
+| 09:07 | Session end: 54 writes across 22 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md, sqlite_test.go, sqlite.go, models.go) | 43 reads | ~62490 tok |
+| 09:12 | Session end: 54 writes across 22 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md, sqlite_test.go, sqlite.go, models.go) | 43 reads | ~62490 tok |
+| 09:17 | Session end: 54 writes across 22 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md, sqlite_test.go, sqlite.go, models.go) | 43 reads | ~62490 tok |
+| 09:19 | Created docs/superpowers/specs/2026-08-05-recycle-bin-design.md | — | ~892 |
+
+## Session: 2026-08-05 09:30（回收站功能设计）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 09:10 | 用户确认权限模型：不区分管理员/普通用户（10人可信团队），删除权限全员一致；管理员特权仅系统配置 | 讨论 | 否决管理员删项目方案 | ~500 |
+| 09:15 | 用户决策：任务恢复=项目页回收站弹窗；项目恢复=首页回收站；恢复任务不触发排程；统一文案回收站；弹窗信息详细 | 讨论 | 6条决策 | ~300 |
+| 09:25 | 设计文档写入 specs/2026-08-05-recycle-bin-design.md（4端点:任务列表/恢复+项目列表?deleted=1/恢复；2入口）| 设计文档 | 提交待用户复审 | ~1K |
