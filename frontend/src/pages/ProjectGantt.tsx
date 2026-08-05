@@ -483,6 +483,20 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const links = gantt.getLinks();
       if (!links || links.length === 0) return;
       const ganttRect = c.getBoundingClientRect();
+      // 收集所有任务条位置（相对 gantt 容器）
+      const barRects = new Map<number, { left: number; right: number; top: number; bottom: number; mid: number }>();
+      gantt.eachTask((t: any) => {
+        const n = gantt.getTaskNode(t.id);
+        if (!n) return;
+        const r = n.getBoundingClientRect();
+        barRects.set(Number(t.id), {
+          left: r.left - ganttRect.left,
+          right: r.right - ganttRect.left,
+          top: r.top - ganttRect.top,
+          bottom: r.bottom - ganttRect.top,
+          mid: r.top - ganttRect.top + r.height / 2,
+        });
+      });
       // 按后继任务分组（多前置合并）
       const groups = new Map<number, any[]>();
       for (const l of links) {
@@ -492,20 +506,73 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         groups.set(tid, arr);
       }
       for (const [targetId, group] of groups) {
-        const tNode = gantt.getTaskNode(Number(targetId));
-        if (!tNode) continue;
-        const tr = tNode.getBoundingClientRect();
-        const tx = tr.left - ganttRect.left - 6; // 后继任务条左边缘
-        const ty = tr.top - ganttRect.top + tr.height / 2;
-        const mergeX = tx - 26; // 汇合竖线 x（多前置在此汇合）
+        const tRect = barRects.get(Number(targetId));
+        if (!tRect) continue;
+        const srcIds = new Set(group.map((l) => Number(l.source)));
+        const srcs = group.map((l) => barRects.get(Number(l.source))).filter(Boolean) as any[];
+        if (srcs.length === 0) continue;
+        const tx = tRect.left - 8; // 箭头起点（尖端 = 条左缘，绝不入条）
+        const ty = tRect.mid;
+        const maxSx = Math.max(...srcs.map((s) => s.right)); // 最右源条右缘
+        const yMin = Math.min(ty, ...srcs.map((s) => s.mid));
+        const yMax = Math.max(ty, ...srcs.map((s) => s.mid));
+        // 汇合竖线 x：目标条左缘外 15px，但不小于最右源条右缘（相邻条则贴边）
+        let mergeX = Math.min(maxSx + 15, tRect.left - 15);
+        if (mergeX < maxSx) mergeX = maxSx;
+        // 障碍检测：竖线区间内穿过 mergeX 的非源非目标条（严格边界，贴边不算）
+        const obstacles: any[] = [];
+        for (const [bid, br] of barRects) {
+          if (bid === Number(targetId) || srcIds.has(bid)) continue;
+          if (mergeX > br.left + 0.5 && mergeX < br.right - 0.5 && yMax > br.top + 0.5 && yMin < br.bottom - 0.5) {
+            obstacles.push(br);
+          }
+        }
+        let bypassY: number | null = null; // 绕行高度（水平段在障碍条下方通过）
+        if (obstacles.length > 0) {
+          // 尝试贴最左障碍条左缘（不穿任何条的位置）
+          const cand = Math.min(...obstacles.map((o) => o.left)) - 8;
+          let candClear = cand >= maxSx && cand < tRect.left - 4;
+          if (candClear) {
+            for (const [bid, br] of barRects) {
+              if (bid === Number(targetId) || srcIds.has(bid)) continue;
+              if (cand > br.left + 0.5 && cand < br.right - 0.5 && yMax > br.top + 0.5 && yMin < br.bottom - 0.5) {
+                candClear = false;
+                break;
+              }
+            }
+          }
+          if (candClear) {
+            mergeX = cand;
+          } else {
+            // 贴边下沉绕行：竖线贴障碍左缘（至少源条右缘），水平段沉到障碍条下方
+            mergeX = Math.max(maxSx, ...obstacles.map((o) => o.left));
+            bypassY = Math.max(...obstacles.map((o) => o.bottom)) + 8;
+          }
+        }
         for (const link of group) {
-          const sNode = gantt.getTaskNode(Number(link.source));
-          if (!sNode) continue;
-          const sr = sNode.getBoundingClientRect();
-          const sx = sr.left - ganttRect.left + sr.width; // 前置任务条右边缘
-          const sy = sr.top - ganttRect.top + sr.height / 2;
-          // 路径：前置右缘 → 水平到汇合线 → 垂直 → 水平连入后继（多前置共享最后一段）
-          const d = `M ${sx} ${sy} L ${mergeX} ${sy} L ${mergeX} ${ty} L ${tx} ${ty}`;
+          const sRect = barRects.get(Number(link.source));
+          if (!sRect) continue;
+          const sx = sRect.right; // 前置任务条右边缘
+          const sy = sRect.mid;
+          // 折线：源右缘 → 汇合竖线 →（绕行时下沉→水平）→ 目标左缘（连续重复点合并）
+          const pts: Array<[number, number]> = [];
+          const addPt = (x: number, y: number) => {
+            const last = pts[pts.length - 1];
+            if (!last || last[0] !== x || last[1] !== y) pts.push([x, y]);
+          };
+          addPt(sx, sy);
+          addPt(mergeX, sy);
+          if (bypassY !== null) {
+            // 绕行：竖线下沉 → 水平在障碍下方 → 竖线上行 → 箭头
+            addPt(mergeX, bypassY);
+            addPt(tx, bypassY);
+            addPt(tx, ty);
+          } else {
+            // 正常：竖线到目标高度 → 水平连入
+            addPt(mergeX, ty);
+            addPt(tx, ty);
+          }
+          const d = "M " + pts.map((p) => p.join(" ")).join(" L ");
           const path = document.createElementNS(NS, "path");
           path.setAttribute("d", d);
           path.setAttribute("fill", "none");

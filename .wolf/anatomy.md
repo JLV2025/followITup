@@ -1,13 +1,14 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-05T05:48:34.134Z
-> Files: 36 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-05T09:23:40.204Z
+> Files: 44 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
 
 ## ./
 
+- `README.md` — Project documentation (~1673 tok)
 
 ## .claude/
 
@@ -58,25 +59,26 @@
 
 ## backend/internal/api/
 
-- `auth.go` — Struct: AuthHandler (~2047 tok)
+- `auth.go` — Struct: AuthHandler (~2466 tok)
+- `calendar.go` — Struct: CalendarHandler (~1106 tok)
 - `projects.go` — Struct: ProjectHandler (~3784 tok)
 - `settings.go` — Struct: SettingsHandler (~917 tok)
-- `tasks.go` — Struct: TaskHandler (~4843 tok)
+- `tasks.go` — Struct: TaskHandler (~5035 tok)
 
 ## backend/internal/auth/
 
-- `auth.go` — Struct: Service (~2136 tok)
+- `auth.go` — Struct: Service (~2335 tok)
 - `middleware.go` — Struct: Middleware (~956 tok)
 - `password_test.go` — TestDeriveDisplayName, TestGenerateRandomPassword (~241 tok)
 - `password.go` — GenerateRandomPassword, DeriveDisplayName (~391 tok)
 
 ## backend/internal/db/
 
-- `sqlite.go` — Struct: DB (~1874 tok)
+- `sqlite.go` — Struct: DB (~1947 tok)
 
 ## backend/internal/mail/
 
-- `mail.go` — Send, SendTemporaryPassword (~380 tok)
+- `mail.go` — Send, SendPasswordReset, SendTemporaryPassword (~474 tok)
 
 ## backend/internal/models/
 
@@ -84,10 +86,13 @@
 
 ## backend/internal/scheduler/
 
+- `calendar.go` — Struct: CalendarEntry (~935 tok)
+- `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~5291 tok)
+- `scheduler.go` — Struct: Dep (~6169 tok)
 
 ## backend/internal/server/
 
-- `server.go` — Struct: Options (~1232 tok)
+- `server.go` — Struct: Options (~1458 tok)
 
 ## backend/internal/settings/
 
@@ -104,12 +109,14 @@
 
 ## docs/superpowers/plans/
 
+- `2026-08-05-holiday-range-password-reset.md` — 节假日范围管理 + 管理员密码重置实施计划 (~4534 tok)
 - `2026-08-05-recycle-bin.md` — 回收站（已删除任务/项目恢复）实施计划 (~4520 tok)
 - `2026-08-05-user-management.md` — 用户管理升级实施计划 (~12021 tok)
 
 ## docs/superpowers/specs/
 
-- `2026-08-05-recycle-bin-design.md` — 回收站（已删除任务/项目恢复）设计 (~836 tok)
+- `2026-08-05-holiday-range-password-reset-design.md` — 节假日范围管理 + 管理员密码重置设计 (~1118 tok)
+- `2026-08-05-recycle-bin-design.md` — 回收站（已删除任务/项目恢复）设计 (~856 tok)
 - `2026-08-05-user-management-design.md` — 用户管理升级设计（邮件通知 / 首登改密 / 权限模型 / 系统配置页） (~1643 tok)
 
 ## frontend/
@@ -117,26 +124,27 @@
 
 ## frontend/src/
 
-- `App.tsx` — App (~385 tok)
+- `App.tsx` — App (~454 tok)
 
 ## frontend/src/api/
 
 - `client.ts` — Declares api (~244 tok)
+- `gantt-adapter.ts` — dhtmlx-gantt 数据格式适配层 (~1234 tok)
 
 ## frontend/src/components/
 
 - `Navbar.tsx` — Navbar (~374 tok)
 - `RecycleBinModal.tsx` — RecycleBinModal (~955 tok)
-- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~6349 tok)
+- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~6520 tok)
 
 ## frontend/src/pages/
 
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
 - `Dashboard.tsx` — Dashboard (~5145 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~8017 tok)
-- `SystemSettings.tsx` — SystemSettings — renders table (~2302 tok)
-- `UserManagement.tsx` — UserManagement — renders form, table (~1783 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~9837 tok)
+- `SystemSettings.tsx` — SystemSettings — renders table (~2939 tok)
+- `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)
 
 ## frontend/src/stores/
 
@@ -145,7 +153,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 100 rules (~7214 tok)
+- `components.css` — Styles: 100 rules (~7317 tok)
 
 ## frontend/src/utils/
 

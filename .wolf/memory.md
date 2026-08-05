@@ -1251,3 +1251,13 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:00 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~44 |
 | 17:03 | Edited frontend/src/pages/ProjectGantt.tsx | modified for() | ~188 |
 | 2026-08-05 | 甘特连线优化:show_links=false+自定义SVG层(drawMergedLinks按target分组,汇合线x-26合并,双击删除保留)+字号统一13px——实测65→66/67汇合分支、66/67→68汇合进,水平段28px | frontend/src/pages/ProjectGantt.tsx + components.css | 已交付 | ~20k |
+| 17:07 | Session end: 146 writes across 40 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 44 reads | ~119216 tok |
+
+## Session: 2026-08-05 17:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 17:11 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~302 |
+| 17:22 | Edited frontend/src/pages/ProjectGantt.tsx | added 10 condition(s) | ~1382 |
+| 17:22 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: x, y | ~158 |
+| 17:23 | Edited frontend/src/pages/ProjectGantt.tsx | modified if() | ~100 |
