@@ -1456,6 +1456,38 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-05T17:30:00+08:00"
+    },
+    {
+      "id": "bug-091",
+      "timestamp": "2026-08-05T09:53:58.893Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T09:53:58.893Z"
+    },
+    {
+      "id": "bug-092",
+      "timestamp": "2026-08-05T09:59:58.852Z",
+      "error_message": "Incorrect value in code",
+      "file": "backend/internal/server/server.go",
+      "root_cause": "Had \"[Server] FollowITup v0.9.0 启动于 http://localhost%s",
+      "fix": "Changed to \"[Server] FollowITup v0.8.5 启动于 http://localhost%s",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T09:59:58.852Z"
     }
   ]
 }

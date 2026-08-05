@@ -1273,3 +1273,4 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:56 | Session end: 8 writes across 1 files (ProjectGantt.tsx) | 3 reads | ~14635 tok |
 | 17:59 | Edited backend/internal/server/server.go | "[Server] FollowITup v0.9." → "[Server] FollowITup v0.8." | ~19 |
 | 18:00 | Edited README.md | 9.0 → 8.5 | ~25 |
+| 18:01 | Session end: 10 writes across 3 files (ProjectGantt.tsx, server.go, README.md) | 4 reads | ~16355 tok |
