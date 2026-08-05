@@ -463,7 +463,82 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       ].filter(Boolean).join("<br>");
     };
 
+    // 隐藏默认连线，改用自定义合并连线层（MS Project 风格：多前置先汇合再连入）
+    gantt.config.show_links = false;
+
     gantt.init(containerRef.current);
+
+    // === 自定义合并连线层（SVG）===
+    const NS = "http://www.w3.org/2000/svg";
+    const linkColor = "#8A9AA3";
+    const svgLayer = document.createElementNS(NS, "svg");
+    svgLayer.setAttribute("class", "gantt-merged-links");
+    svgLayer.setAttribute("style", "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;");
+    containerRef.current!.appendChild(svgLayer);
+
+    const drawMergedLinks = () => {
+      const c = containerRef.current;
+      if (!svgLayer || !c || svgLayer.parentElement !== c) return;
+      svgLayer.innerHTML = "";
+      const links = gantt.getLinks();
+      if (!links || links.length === 0) return;
+      const ganttRect = c.getBoundingClientRect();
+      // 按后继任务分组（多前置合并）
+      const groups = new Map<number, any[]>();
+      for (const l of links) {
+        const tid = Number(l.target);
+        const arr = groups.get(tid) || [];
+        arr.push(l);
+        groups.set(tid, arr);
+      }
+      for (const [targetId, group] of groups) {
+        const tNode = gantt.getTaskNode(Number(targetId));
+        if (!tNode) continue;
+        const tr = tNode.getBoundingClientRect();
+        const tx = tr.left - ganttRect.left - 6; // 后继任务条左边缘
+        const ty = tr.top - ganttRect.top + tr.height / 2;
+        const mergeX = tx - 26; // 汇合竖线 x（多前置在此汇合）
+        for (const link of group) {
+          const sNode = gantt.getTaskNode(Number(link.source));
+          if (!sNode) continue;
+          const sr = sNode.getBoundingClientRect();
+          const sx = sr.left - ganttRect.left + sr.width; // 前置任务条右边缘
+          const sy = sr.top - ganttRect.top + sr.height / 2;
+          // 路径：前置右缘 → 水平到汇合线 → 垂直 → 水平连入后继（多前置共享最后一段）
+          const d = `M ${sx} ${sy} L ${mergeX} ${sy} L ${mergeX} ${ty} L ${tx} ${ty}`;
+          const path = document.createElementNS(NS, "path");
+          path.setAttribute("d", d);
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke", linkColor);
+          path.setAttribute("stroke-width", "1.5");
+          path.setAttribute("stroke-linejoin", "round");
+          path.style.pointerEvents = "stroke";
+          path.style.cursor = "pointer";
+          // 箭头（后继端）
+          const arrow = document.createElementNS(NS, "polygon");
+          arrow.setAttribute("points", `${tx},${ty - 4} ${tx + 8},${ty} ${tx},${ty + 4}`);
+          arrow.setAttribute("fill", linkColor);
+          // 双击删除依赖（保留原有交互）
+          const del = () => {
+            if (readonlyRef.current) return;
+            if (window.confirm("删除此依赖关系？")) {
+              gantt.deleteLink(link.id);
+              setTimeout(drawMergedLinks, 50);
+            }
+          };
+          path.addEventListener("dblclick", (e) => { e.stopPropagation(); del(); });
+          arrow.addEventListener("dblclick", (e) => { e.stopPropagation(); del(); });
+          svgLayer.appendChild(path);
+          svgLayer.appendChild(arrow);
+        }
+      }
+    };
+
+    // 数据渲染/滚动/缩放后重绘合并连线
+    gantt.attachEvent("onDataRender", () => setTimeout(drawMergedLinks, 0));
+    gantt.attachEvent("onGanttScroll", () => setTimeout(drawMergedLinks, 0));
+    (window as any).__drawMergedLinks = drawMergedLinks;
+
     setGanttReady(true);
     selectedTaskRef.current = null;
 
@@ -577,6 +652,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         }
       });
       gantt.render();
+      // 自定义合并连线重绘（依赖数据变化后）
+      setTimeout(() => (window as any).__drawMergedLinks?.(), 50);
       if (!autoZoomDoneRef.current) {
         autoZoomDoneRef.current = true;
         setTimeout(() => {

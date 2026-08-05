@@ -54,7 +54,6 @@ const GANTT_TO_DEP_TYPE: Record<string, string> = {
  */
 export function toGanttTask(t: any, readonly: boolean): GanttTask {
   const startDate = t.start_date || "";
-  const isMilestone = t.task_type === "milestone";
   // 若无 end_date 或格式异常（Date 对象被序列化），从 start_date + duration_days 推算
   let endDate = t.end_date || "";
   let duration = t.duration_days || 1;

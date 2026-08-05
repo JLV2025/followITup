@@ -882,6 +882,15 @@
   background: var(--primary) !important;
 }
 
+/* 甘特条文字与任务列表同字号（显式统一，避免 dhtmlx 默认差异） */
+.gantt_task_content {
+  font-size: 13px;
+}
+.gantt_tree_content,
+.gantt_cell {
+  font-size: 13px;
+}
+
 .gantt-task-delayed .gantt_task_content {
   color: var(--danger) !important;
 }
