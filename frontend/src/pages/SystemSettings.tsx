@@ -16,7 +16,9 @@ export default function SystemSettings() {
   const [passwordMinLength, setPasswordMinLength] = useState(8);
   // 节假日
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [holidayDate, setHolidayDate] = useState("");
+  const [holidayStart, setHolidayStart] = useState("");
+  const [holidayEnd, setHolidayEnd] = useState("");
+  const [holidayType, setHolidayType] = useState("holiday");
   const [holidayLabel, setHolidayLabel] = useState("");
   const [message, setMessage] = useState("");
 
@@ -65,46 +67,67 @@ export default function SystemSettings() {
     }
   };
 
+  const addHolidayRange = async () => {
+    if (!holidayStart) { setMessage("请选择开始日期"); return; }
+    try {
+      const res = await api.post("/api/calendar", {
+        start_date: holidayStart,
+        end_date: holidayEnd || undefined,
+        type: holidayType,
+        label: holidayLabel,
+      });
+      setMessage(res.data?.data?.message || "已添加");
+      setHolidayStart(""); setHolidayEnd(""); setHolidayLabel("");
+      fetchHolidays();
+    } catch (err: any) {
+      setMessage(err?.response?.data?.error?.message || "添加失败");
+    }
+  };
+
   const inputStyle = {
     width: "100%", padding: "8px 10px", borderRadius: 6,
     border: "1px solid var(--card-border)", fontSize: 14,
   };
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto" }}>
-      <div className="dashboard-header-row" style={{ marginBottom: 24 }}>
+    <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <div className="dashboard-header-row" style={{ marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 4 }}>系统设置</h1>
-          <p className="text-secondary">SMTP 邮件、财年、节假日与密码策略（仅管理员）</p>
+          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 2 }}>系统设置</h1>
+          <p className="text-secondary" style={{ fontSize: 13 }}>SMTP 邮件、财年、节假日与密码策略（仅管理员）</p>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {/* SMTP */}
-        <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 20 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>邮件通知（SMTP）</h3>
-          <div className="form-group">
-            <label>服务器地址</label>
-            <input style={inputStyle} value={smtp.smtp_host}
-              onChange={(e) => setSmtp({ ...smtp, smtp_host: e.target.value })} placeholder="smtp.example.com" />
+        <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>邮件通知（SMTP）</h3>
+          <div className="form-row" style={{ gap: 10 }}>
+            <div className="form-group" style={{ marginBottom: 8, flex: 2 }}>
+              <label style={{ fontSize: 13 }}>服务器地址</label>
+              <input style={inputStyle} value={smtp.smtp_host}
+                onChange={(e) => setSmtp({ ...smtp, smtp_host: e.target.value })} placeholder="smtp.example.com" />
+            </div>
+            <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
+              <label style={{ fontSize: 13 }}>端口</label>
+              <input style={inputStyle} value={smtp.smtp_port}
+                onChange={(e) => setSmtp({ ...smtp, smtp_port: e.target.value })} />
+            </div>
           </div>
-          <div className="form-group">
-            <label>端口</label>
-            <input style={inputStyle} value={smtp.smtp_port}
-              onChange={(e) => setSmtp({ ...smtp, smtp_port: e.target.value })} />
+          <div className="form-row" style={{ gap: 10 }}>
+            <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
+              <label style={{ fontSize: 13 }}>发件人</label>
+              <input style={inputStyle} value={smtp.smtp_sender}
+                onChange={(e) => setSmtp({ ...smtp, smtp_sender: e.target.value })} placeholder="FollowITup@qorvo.com" />
+            </div>
+            <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
+              <label style={{ fontSize: 13 }}>认证用户名（留空 = 无需登录）</label>
+              <input style={inputStyle} value={smtp.smtp_username}
+                onChange={(e) => setSmtp({ ...smtp, smtp_username: e.target.value })} />
+            </div>
           </div>
-          <div className="form-group">
-            <label>发件人</label>
-            <input style={inputStyle} value={smtp.smtp_sender}
-              onChange={(e) => setSmtp({ ...smtp, smtp_sender: e.target.value })} placeholder="FollowITup@qorvo.com" />
-          </div>
-          <div className="form-group">
-            <label>认证用户名（留空 = 无需登录）</label>
-            <input style={inputStyle} value={smtp.smtp_username}
-              onChange={(e) => setSmtp({ ...smtp, smtp_username: e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label>认证密码</label>
+          <div className="form-group" style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 13 }}>认证密码</label>
             <input style={inputStyle} type="password" value={smtp.smtp_password}
               onChange={(e) => setSmtp({ ...smtp, smtp_password: e.target.value })} />
           </div>
@@ -115,21 +138,23 @@ export default function SystemSettings() {
         </div>
 
         {/* 财年 + 密码策略 */}
-        <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 20 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>财年与密码</h3>
-          <div className="form-group">
-            <label>财年起始月份（首页只读）</label>
-            <select style={inputStyle} value={fiscalStartMonth}
-              onChange={(e) => setFiscalStartMonth(Number(e.target.value))}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
-                <option key={m} value={m}>{m} 月起始</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>密码最小长度（随机初始密码/改密校验）</label>
-            <input style={inputStyle} type="number" min={6} max={32} value={passwordMinLength}
-              onChange={(e) => setPasswordMinLength(Number(e.target.value))} />
+        <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>财年与密码</h3>
+          <div className="form-row" style={{ gap: 10 }}>
+            <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
+              <label style={{ fontSize: 13 }}>财年起始月份（首页只读）</label>
+              <select style={inputStyle} value={fiscalStartMonth}
+                onChange={(e) => setFiscalStartMonth(Number(e.target.value))}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
+                  <option key={m} value={m}>{m} 月起始</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
+              <label style={{ fontSize: 13 }}>密码最小长度</label>
+              <input style={inputStyle} type="number" min={6} max={32} value={passwordMinLength}
+                onChange={(e) => setPasswordMinLength(Number(e.target.value))} />
+            </div>
           </div>
           <button className="btn btn-primary"
             onClick={() => saveSettings({ fiscal_start_month: fiscalStartMonth, password_min_length: passwordMinLength }, "财年与密码设置已保存")}>
@@ -138,38 +163,42 @@ export default function SystemSettings() {
         </div>
       </div>
 
-      {/* 节假日 */}
-      <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 20, marginTop: 20 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>节假日（排程自动排除）</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>日期</label>
-            <input style={inputStyle} type="date" value={holidayDate}
-              onChange={(e) => setHolidayDate(e.target.value)} />
+      {/* 节假日与补班 */}
+      <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14, marginTop: 14 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>节假日与补班（假日排除工作日 / 补班周末计工作日）</h3>
+        <div className="form-row" style={{ gap: 8 }}>
+          <div className="form-group" style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 13 }}>开始日期</label>
+            <input style={inputStyle} type="date" value={holidayStart}
+              onChange={(e) => setHolidayStart(e.target.value)} />
           </div>
-          <div className="form-group">
-            <label>名称</label>
+          <div className="form-group" style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 13 }}>结束日期</label>
+            <input style={inputStyle} type="date" value={holidayEnd}
+              onChange={(e) => setHolidayEnd(e.target.value)} />
+          </div>
+          <div className="form-group" style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 13 }}>类型</label>
+            <select style={inputStyle} value={holidayType}
+              onChange={(e) => setHolidayType(e.target.value)}>
+              <option value="holiday">假日（排除工作日）</option>
+              <option value="workday">补班（周末计工作日）</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
+            <label style={{ fontSize: 13 }}>名称</label>
             <input style={inputStyle} placeholder="如：春节" value={holidayLabel}
               onChange={(e) => setHolidayLabel(e.target.value)} />
           </div>
-          <div className="form-group" style={{ alignSelf: "flex-end" }}>
-            <button className="btn btn-primary" onClick={async () => {
-              if (!holidayDate) { setMessage("请选择日期"); return; }
-              try {
-                await api.post("/api/calendar", { date: holidayDate, type: "holiday", label: holidayLabel });
-                setHolidayDate(""); setHolidayLabel("");
-                fetchHolidays();
-                setMessage("节假日已添加");
-              } catch (err: any) {
-                setMessage(err?.response?.data?.error?.message || "添加失败");
-              }
-            }}>新增</button>
+          <div className="form-group" style={{ marginBottom: 8, alignSelf: "flex-end" }}>
+            <button className="btn btn-primary" onClick={addHolidayRange}>添加</button>
           </div>
         </div>
-        <table className="task-table" style={{ marginTop: 16 }}>
+        <table className="task-table" style={{ marginTop: 8 }}>
           <thead>
             <tr>
               <th>日期</th>
+              <th style={{ width: 70 }}>类型</th>
               <th>名称</th>
               <th style={{ width: 80 }}>操作</th>
             </tr>
@@ -178,6 +207,14 @@ export default function SystemSettings() {
             {holidays.map((h) => (
               <tr key={h.id}>
                 <td>{h.date}</td>
+                <td>
+                  <span className="status-badge"
+                    style={h.type === "workday"
+                      ? { background: "rgba(8, 145, 178, 0.1)", color: "var(--accent)" }
+                      : { background: "var(--surface-alt)", color: "var(--text-secondary)" }}>
+                    {h.type === "workday" ? "补班" : "假日"}
+                  </span>
+                </td>
                 <td>{h.label || "—"}</td>
                 <td>
                   <button className="btn btn-ghost btn-sm" onClick={async () => {
@@ -192,7 +229,7 @@ export default function SystemSettings() {
               </tr>
             ))}
             {holidays.length === 0 && (
-              <tr><td colSpan={3} className="text-secondary">暂无节假日</td></tr>
+              <tr><td colSpan={4} className="text-secondary">暂无节假日</td></tr>
             )}
           </tbody>
         </table>
