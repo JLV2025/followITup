@@ -1081,22 +1081,22 @@
   width: 860px;
   max-width: 860px !important;
   max-height: 90vh;
-  overflow-y: auto; /* 兜底：极端情况下仍可滚动 */
-  padding: 24px 28px !important;
+  overflow-y: auto; /* 兜底：极端情况（小屏/超长依赖列表）仍可滚动 */
+  padding: 16px 20px !important;
 }
 .task-detail-modal .task-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 28px;
+  column-gap: 20px;
   align-items: start;
 }
 .task-detail-modal .task-detail-col + .task-detail-col {
   border-left: 1px solid var(--card-border);
-  padding-left: 28px;
+  padding-left: 20px;
 }
-.task-detail-modal .form-group { margin-bottom: 12px; }
-.task-detail-modal .modal-divider { margin: 14px 0 12px; }
-.task-detail-modal .dep-list { max-height: 220px; overflow-y: auto; }
+.task-detail-modal .form-group { margin-bottom: 8px; }
+.task-detail-modal .modal-divider { margin: 10px 0 8px; }
+.task-detail-modal .dep-list { max-height: 180px; overflow-y: auto; }
 
 .modal-divider {
   border: none;
