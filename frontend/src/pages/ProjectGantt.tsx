@@ -497,106 +497,144 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           mid: r.top - ganttRect.top + r.height / 2,
         });
       });
-      // 逐条绘制：标准 5 段折线（多前置时第一段水平线自然重合）
-      // 源条右缘 → 右 20px → 垂直下到空隙中央 → 水平左到目标左缘外 20px → 垂直下到目标中线 → 水平连入
-      for (const link of links) {
-        const sRect = barRects.get(Number(link.source));
-        const tRect = barRects.get(Number(link.target));
-        if (!sRect || !tRect) continue;
-        const sx = sRect.right; // 源条右缘
-        const sy = sRect.mid;
+      // 按后继任务分组：多前置合并画法，单前置标准 5 段折线
+      const groups = new Map<number, any[]>();
+      for (const l of links) {
+        const tid = Number(l.target);
+        const arr = groups.get(tid) || [];
+        arr.push(l);
+        groups.set(tid, arr);
+      }
+      for (const [targetId, group] of groups) {
+        const tRect = barRects.get(Number(targetId));
+        if (!tRect) continue;
+        const srcs = group
+          .map((l) => ({ link: l, rect: barRects.get(Number(l.source)) }))
+          .filter((x) => x.rect) as Array<{ link: any; rect: { left: number; right: number; top: number; bottom: number; mid: number } }>;
+        if (srcs.length === 0) continue;
+        const srcIdSet = new Set(srcs.map((s) => Number(s.link.source)));
         const ty = tRect.mid;
-        const v1x = sx + 20;          // 源侧垂直段 x（右缘外 20px）
-        const txEnd = tRect.left - 20; // 目标侧垂直段 x（左缘外 20px）
-        const txFinal = tRect.left - 8; // 箭头起点（尖端 = 条左缘，绝不入条）
-        // 空隙中央：在 [min(sy,ty), max(sy,ty)] 上取所有条 y 区间并集的补集（空隙带），
-        // 选最接近 (sy+ty)/2 且不穿过任何条的空隙中央（自动避开中间的条）
-        const lo = Math.min(sy, ty);
-        const hi = Math.max(sy, ty);
-        const hMin = Math.min(v1x, txEnd);
-        const hMax = Math.max(v1x, txEnd);
-        const occ: Array<[number, number]> = [];
-        for (const [, br] of barRects) {
-          // 条的水平范围与水平段区域重叠才可能阻挡
-          if (br.right > hMin && br.left < hMax) occ.push([br.top, br.bottom]);
-        }
-        occ.sort((a, b) => a[0] - b[0]);
-        const merged: Array<[number, number]> = [];
-        for (const [a, b] of occ) {
-          const last = merged[merged.length - 1];
-          if (last && a <= last[1]) last[1] = Math.max(last[1], b);
-          else merged.push([a, b]);
-        }
-        const bands: Array<[number, number]> = [];
-        let cursor = lo;
-        for (const [a, b] of merged) {
-          const s2 = Math.max(a, lo);
-          const e2 = Math.min(b, hi);
-          if (s2 >= e2) continue;
-          if (s2 > cursor) bands.push([cursor, s2]);
-          cursor = Math.max(cursor, e2);
-        }
-        if (cursor < hi) bands.push([cursor, hi]);
-        // 线段是否穿过任意任务条（源条/目标条除外：端点接触是自然连接）
+        const txEnd = tRect.left - 20;   // 目标侧垂直段 x（左缘外 20px）
+        const txFinal = tRect.left - 8;  // 箭头起点（尖端 = 条左缘，绝不入条）
+        // 线段是否穿过任意任务条（组内源/目标除外：端点接触是自然连接；贴边不算）
         const segHit = (x1: number, y1: number, x2: number, y2: number) => {
           const xMin = Math.min(x1, x2);
           const xMax = Math.max(x1, x2);
           const yMin2 = Math.min(y1, y2);
           const yMax2 = Math.max(y1, y2);
           for (const [bid, br] of barRects) {
-            if (bid === Number(link.source) || bid === Number(link.target)) continue;
-            if (Math.max(xMin, br.left) < Math.min(xMax, br.right) &&
-                Math.max(yMin2, br.top) < Math.min(yMax2, br.bottom)) return true;
+            if (srcIdSet.has(bid) || bid === Number(targetId)) continue;
+            // 水平段：x 为区间、y 为单点；垂直段：x 为单点、y 为区间（单点需严格在条内）
+            const xIn = xMax - xMin > 0.5
+              ? Math.max(xMin, br.left) < Math.min(xMax, br.right)
+              : xMin > br.left + 0.5 && xMin < br.right - 0.5;
+            const yIn = yMax2 - yMin2 > 0.5
+              ? Math.max(yMin2, br.top) < Math.min(yMax2, br.bottom)
+              : yMin2 > br.top + 0.5 && yMin2 < br.bottom - 0.5;
+            if (xIn && yIn) return true;
           }
           return false;
         };
-        const targetMid = (sy + ty) / 2;
-        let midY = targetMid;
-        for (const [a, b] of bands) {
-          const cand = (a + b) / 2;
-          if (!segHit(v1x, sy, v1x, cand) && !segHit(v1x, cand, txEnd, cand) && !segHit(txEnd, cand, txEnd, ty)) {
-            midY = cand;
-            break;
+        // 空隙中央：在 [lo, hi] 上取所有条 y 区间并集的补集（空隙带），
+        // 选最接近 (lo+hi)/2 且各线段都不穿条的中央（自动避开中间的条）
+        const findGapMidY = (lo: number, hi: number, hMin: number, hMax: number, ok: (y: number) => boolean) => {
+          const occ: Array<[number, number]> = [];
+          for (const [, br] of barRects) {
+            if (br.right > hMin && br.left < hMax) occ.push([br.top, br.bottom]);
           }
-        }
-        // 折线：源右缘 → 右 20 → 下到空隙中央 → 左到目标外 20 → 下到目标中线 → 连入（连续重复点合并）
-        const pts: Array<[number, number]> = [];
-        const addPt = (x: number, y: number) => {
-          const last = pts[pts.length - 1];
-          if (!last || last[0] !== x || last[1] !== y) pts.push([x, y]);
+          occ.sort((a, b) => a[0] - b[0]);
+          const merged: Array<[number, number]> = [];
+          for (const [a, b] of occ) {
+            const last = merged[merged.length - 1];
+            if (last && a <= last[1]) last[1] = Math.max(last[1], b);
+            else merged.push([a, b]);
+          }
+          const bands: Array<[number, number]> = [];
+          let cursor = lo;
+          for (const [a, b] of merged) {
+            const s2 = Math.max(a, lo);
+            const e2 = Math.min(b, hi);
+            if (s2 >= e2) continue;
+            if (s2 > cursor) bands.push([cursor, s2]);
+            cursor = Math.max(cursor, e2);
+          }
+          if (cursor < hi) bands.push([cursor, hi]);
+          const target = (lo + hi) / 2;
+          let best = target;
+          let bestDist = Infinity;
+          for (const [a, b] of bands) {
+            const cand = (a + b) / 2;
+            const dist = Math.abs(cand - target);
+            if (dist < bestDist) { bestDist = dist; best = cand; }
+            if (ok(cand)) return cand;
+          }
+          return best;
         };
-        addPt(sx, sy);
-        addPt(v1x, sy);
-        addPt(v1x, midY);
-        addPt(txEnd, midY);
-        addPt(txEnd, ty);
-        addPt(txFinal, ty);
-        const d = "M " + pts.map((p) => p.join(" ")).join(" L ");
+        // 折线点序列（连续重复点合并）
+        const toPath = (pts: Array<[number, number]>) => {
+          const out: Array<[number, number]> = [];
+          for (const p of pts) {
+            const last = out[out.length - 1];
+            if (!last || last[0] !== p[0] || last[1] !== p[1]) out.push(p);
+          }
+          return "M " + out.map((p) => p.join(" ")).join(" L ");
+        };
+        let ds: string[] = [];
+        if (srcs.length === 1) {
+          // 单条：源右缘 → 右 20 → 下到空隙中央 → 左到目标外 20 → 下到目标中线 → 连入
+          const s = srcs[0].rect;
+          const sx = s.right;
+          const sy = s.mid;
+          const v1x = sx + 20;
+          const midY = findGapMidY(Math.min(sy, ty), Math.max(sy, ty), Math.min(v1x, txEnd), Math.max(v1x, txEnd), (y) =>
+            !segHit(v1x, sy, v1x, y) && !segHit(v1x, y, txEnd, y) && !segHit(txEnd, y, txEnd, ty));
+          ds = [toPath([[sx, sy], [v1x, sy], [v1x, midY], [txEnd, midY], [txEnd, ty], [txFinal, ty]])];
+        } else {
+          // 多前置合并：公共右边界（时间最长的条右缘）+20 处汇合下折；
+          // 公共下边界（任务列表最下面的源底边）与目标之间的空隙中央水平穿过
+          const comX = Math.max(...srcs.map((s) => s.rect.right)) + 20;
+          const comBottom = Math.max(...srcs.map((s) => s.rect.bottom));
+          const midY = findGapMidY(comBottom, tRect.top, Math.min(comX, txEnd), Math.max(comX, txEnd), (y) =>
+            srcs.every((s) => !segHit(comX, s.rect.mid, comX, y)) &&
+            !segHit(comX, y, txEnd, y) && !segHit(txEnd, y, txEnd, ty));
+          const shared: Array<[number, number]> = [[comX, midY], [txEnd, midY], [txEnd, ty], [txFinal, ty]];
+          ds = srcs.map((s) => toPath([[s.rect.right, s.rect.mid], [comX, s.rect.mid], [comX, midY], ...shared]));
+        }
+        // 画路径（每条源线一个，共享段自然重叠）
+        for (let i = 0; i < ds.length; i++) {
           const path = document.createElementNS(NS, "path");
-          path.setAttribute("d", d);
+          path.setAttribute("d", ds[i]);
           path.setAttribute("fill", "none");
           path.setAttribute("stroke", linkColor);
           path.setAttribute("stroke-width", "1.5");
           path.setAttribute("stroke-linejoin", "round");
           path.style.pointerEvents = "stroke";
           path.style.cursor = "pointer";
-          // 箭头（后继端，尖端 = 条左缘）
-          const arrow = document.createElementNS(NS, "polygon");
-          arrow.setAttribute("points", `${txFinal},${ty - 4} ${txFinal + 8},${ty} ${txFinal},${ty + 4}`);
-          arrow.setAttribute("fill", linkColor);
-          // 双击删除依赖（保留原有交互）
-          const del = () => {
+          const link = srcs[i].link;
+          path.addEventListener("dblclick", (e) => {
+            e.stopPropagation();
             if (readonlyRef.current) return;
             if (window.confirm("删除此依赖关系？")) {
               gantt.deleteLink(link.id);
               setTimeout(drawMergedLinks, 50);
             }
-          };
-          path.addEventListener("dblclick", (e) => { e.stopPropagation(); del(); });
-          arrow.addEventListener("dblclick", (e) => { e.stopPropagation(); del(); });
+          });
           svgLayer.appendChild(path);
-          svgLayer.appendChild(arrow);
         }
+        // 共享箭头（尖端 = 条左缘；双击删除整组依赖）
+        const arrow = document.createElementNS(NS, "polygon");
+        arrow.setAttribute("points", `${txFinal},${ty - 4} ${txFinal + 8},${ty} ${txFinal},${ty + 4}`);
+        arrow.setAttribute("fill", linkColor);
+        arrow.addEventListener("dblclick", (e) => {
+          e.stopPropagation();
+          if (readonlyRef.current) return;
+          if (window.confirm(`删除这 ${group.length} 条依赖关系？`)) {
+            for (const l of group) gantt.deleteLink(l.id);
+            setTimeout(drawMergedLinks, 50);
+          }
+        });
+        svgLayer.appendChild(arrow);
+      }
     };
 
     // 数据渲染/滚动/缩放后重绘合并连线
