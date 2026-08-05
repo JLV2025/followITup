@@ -74,7 +74,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
   const [duration, setDuration] = useState(1);
 
   // 现有用户列表（用于负责人下拉）
-  const [users, setUsers] = useState<{ name: string }[]>([]);
+  const [users, setUsers] = useState<{ id: number; display_name: string }[]>([]);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("open");
   const [priority, setPriority] = useState("medium");
@@ -109,10 +109,11 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // 加载用户列表（用于负责人下拉）
+  // 加载用户列表（用于负责人下拉，全部登录用户可用的精简端点）
   useEffect(() => {
-    api.get("/api/admin/users").then((res) => {
-      const list: { name: string }[] = (res.data.data || []).map((u: any) => ({ name: u.display_name || u.email }));
+    api.get("/api/users").then((res) => {
+      const list: { id: number; display_name: string }[] =
+        (res.data.data || []).map((u: any) => ({ id: u.id, display_name: u.display_name || u.email }));
       setUsers(list);
     }).catch(() => {});
   }, []);
@@ -472,18 +473,15 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         </div>
         <div className="form-group">
           <label>负责人</label>
-          <input
+          <select
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
-            placeholder="输入或选择姓名"
-            list="assignee-list"
-            autoComplete="off"
-          />
-          <datalist id="assignee-list">
-            {users.map((u, i) => (
-              <option key={i} value={u.name} />
+          >
+            <option value="">未指派</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.display_name}>{u.display_name}</option>
             ))}
-          </datalist>
+          </select>
         </div>
         </div>{/* 左栏结束 */}
 
