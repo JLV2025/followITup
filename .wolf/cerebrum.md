@@ -53,3 +53,7 @@
 - **[2026-08-03] Windows 终端 curl 写中文会污染数据库**：Git Bash/GBK 终端里 `curl -X PUT -d '{"name":"中文"}'` 发送的字节是 GBK 编码，Go 后端按 UTF-8 解析成替换字符（U+FFFD）入库，导致甘特图中文乱码。测试/脚本写中文必须：用 UTF-8 文件 + `curl --data-binary @file.json`，或 python -c 直接操作。产品代码无 bug（bug-025）。
 - **[2026-08-03] UpdateTask 是全列覆盖 UPDATE**：PUT /tasks 只传部分字段会清空其余列（name/日期/进度等）。排序等单字段更新必须走专用 PATCH 端点（/tasks/{id}/sort_order），不能用 PUT。
 - **[2026-08-03] # 列行号语义**：甘特图 # 列显示 `task.$index + 1`（dhtmlx 全树深度优先 0 基索引，渲染前赋值），与数据库 id 解耦；拖拽全局重排后行号自动连续。弹窗"前置任务快速添加"的 ID 提示已与行号不对应，待后续改按行号解析。
+
+## Key Learnings
+- gitnexus detect_changes 对新增 handler/符号常报行号偏移误报（把相邻函数标为 touched，风险 HIGH/MEDIUM）：新增代码不修改既有符号时，先人工核对 diff 再决定是否警示，不要盲信风险等级（2026-08-05，回收站 Task 1/4 两次出现）
+- SDD 审查中发现"Important 但实为文档建议"的项：协调者可按审查者自析结论裁决为 Minor deferred，不必为无真实缺陷的建议跑完整 fix loop（2026-08-05，Task 2 RestoreProject auto-commit 时序）

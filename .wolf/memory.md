@@ -1079,3 +1079,5 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:58 | Created .superpowers/sdd/2026-08-05-recycle-bin/task-5-report.md | — | ~652 |
 | 09:59 | Task 5 全量回归验证完成：go test 全部 PASS, tsc 无错误, detect_changes low risk, 浏览器 5 项验证全部通过 | task-5-report.md | DONE | ~3000 |
 | 10:00 | Session end: 20 writes across 11 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 23 reads | ~36176 tok |
+| 10:05 | Session end: 20 writes across 11 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 27 reads | ~37012 tok |
+| 2026-08-05 | 回收站功能完成:SDD 5任务(2后端端点组+2前端入口),任务/项目恢复均不触发排程,浏览器实测5项全过,最终审查(fable)可合并无Critical;deferred Minor:恢复无WS广播/非active项目恢复不出现在看板 | backend/internal/api/{tasks,projects}.go, frontend/src/{components/RecycleBinModal.tsx, pages/{ProjectGantt,Dashboard}.tsx}, components.css | 交付完成,新exe已部署8080 | ~210k |
