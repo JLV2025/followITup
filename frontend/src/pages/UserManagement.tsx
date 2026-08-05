@@ -23,6 +23,10 @@ export default function UserManagement() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [creating, setCreating] = useState(false);
+  // 重置密码弹窗
+  const [resetTarget, setResetTarget] = useState<User | null>(null);
+  const [resetMustChange, setResetMustChange] = useState(true);
+  const [resetting, setResetting] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -73,6 +77,26 @@ export default function UserManagement() {
       fetchUsers();
     } catch (err: any) {
       alert(err?.response?.data?.error?.message || "删除失败");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetTarget) return;
+    setResetting(true);
+    try {
+      const res = await api.post(`/api/admin/users/${resetTarget.id}/reset-password`, {
+        must_change: resetMustChange,
+      });
+      const d = res.data?.data;
+      setMessage(d?.initial_password
+        ? `${d.message}（新密码：${d.initial_password}）`
+        : d?.message || "密码已重置");
+      setResetTarget(null);
+    } catch (err: any) {
+      alert(err?.response?.data?.error?.message || "重置失败");
+      setResetTarget(null);
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -145,6 +169,10 @@ export default function UserManagement() {
                     <button className="btn btn-ghost btn-sm" onClick={() => handleRole(u)}>
                       {u.is_admin ? "取消管理员" : "设为管理员"}
                     </button>{" "}
+                    <button className="btn btn-ghost btn-sm"
+                      onClick={() => { setResetMustChange(true); setResetTarget(u); }}>
+                      重置密码
+                    </button>{" "}
                     <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => handleDelete(u)}>
                       删除
                     </button>
@@ -159,6 +187,35 @@ export default function UserManagement() {
         </table>
       )}
       {message && <div className="form-error" style={{ marginTop: 12 }}>{message}</div>}
+
+      {/* 重置密码弹窗 */}
+      {resetTarget && (
+        <div className="modal-overlay" onClick={() => setResetTarget(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-title">
+              <h2>重置密码 · {resetTarget.display_name || resetTarget.email}</h2>
+              <button className="btn btn-ghost btn-sm" onClick={() => setResetTarget(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p className="text-secondary" style={{ fontSize: 13, marginBottom: 12 }}>
+                将生成随机新密码，通过邮件发送；邮件不可达时会在下方显示新密码。
+              </p>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                <input type="checkbox" checked={resetMustChange}
+                  onChange={(e) => setResetMustChange(e.target.checked)} />
+                用户下次登录时须更改密码
+              </label>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setResetTarget(null)}>取消</button>
+              <button className="btn btn-primary" disabled={resetting}
+                onClick={handleResetPassword}>
+                {resetting ? "重置中..." : "确认重置"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
