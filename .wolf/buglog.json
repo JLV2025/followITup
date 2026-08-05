@@ -893,6 +893,54 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-04T10:12:02.221Z"
+    },
+    {
+      "id": "bug-056",
+      "timestamp": "2026-08-05T01:39:43.171Z",
+      "error_message": "CSS fix: font-size, font-weight, margin-bottom",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "font-size: 20px → inherit; font-weight: 600 → inherit; margin-bottom: 24px → 0",
+      "fix": "Changed font-size: 20px → inherit; font-weight: 600 → inherit; margin-bottom: 24px → 0",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T01:39:43.171Z"
+    },
+    {
+      "id": "bug-057",
+      "timestamp": "2026-08-05T01:40:16.256Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T01:40:16.256Z"
+    },
+    {
+      "id": "bug-058",
+      "timestamp": "2026-08-05T01:46:56.291Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block | Also: {/* 回收站模态框 */}; {showRecycleBin && (",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-05T01:47:07.642Z"
     }
   ]
 }

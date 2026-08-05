@@ -1045,3 +1045,36 @@ cd backend && followitup.exe config.yaml   # 启动
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+| 09:28 | Edited backend/internal/api/tasks.go | modified Group() | ~107 |
+| 09:28 | Edited backend/internal/api/tasks.go | modified ListDeletedTasks() | ~646 |
+| 09:29 | Edited backend/internal/api/tasks.go | added ListDeletedTasks/RestoreTask handlers + routes (recycle bin task-1) | ~1250 |
+| 09:29 | Created .superpowers/sdd/2026-08-05-recycle-bin/task-1-report.md | — | ~622 |
+| 09:30 | Session end: 3 writes across 2 files (tasks.go, task-1-report.md) | 3 reads | ~5992 tok |
+| 09:32 | Session end: 3 writes across 2 files (tasks.go, task-1-report.md) | 5 reads | ~11418 tok |
+| 09:33 | Edited backend/internal/api/projects.go | modified Group() | ~79 |
+| 09:33 | Edited backend/internal/api/projects.go | modified boolToInt() | ~594 |
+| 09:34 | Created .superpowers/sdd/2026-08-05-recycle-bin/task-2-report.md | — | ~552 |
+| 01:35 | 后端项目回收站端点:新增GET /api/projects(?deleted=1)+POST /{id}/restore,ListProjects/RestoreProject按brief逐字实现,路由注册于RequireAuth组 | backend/internal/api/projects.go | 编译通过+全部测试PASS,detect_changes LOW,提交c7b14f2 | ~2k |
+| 09:35 | Session end: 6 writes across 4 files (tasks.go, task-1-report.md, projects.go, task-2-report.md) | 7 reads | ~12730 tok |
+| 09:37 | Session end: 6 writes across 4 files (tasks.go, task-1-report.md, projects.go, task-2-report.md) | 9 reads | ~13248 tok |
+| 09:39 | Created frontend/src/components/RecycleBinModal.tsx | — | ~955 |
+| 09:39 | Edited frontend/src/styles/components.css | expanded (+12 lines) | ~77 |
+| 09:39 | Edited frontend/src/styles/components.css | expanded (+29 lines) | ~186 |
+| 09:39 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 import(s) | ~35 |
+| 09:40 | Edited frontend/src/pages/ProjectGantt.tsx | 1→3 lines | ~49 |
+| 09:40 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~95 |
+| 09:40 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+9 lines) | ~147 |
+| 09:40 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+9 lines) | ~163 |
+| 09:41 | Task 3: 前端回收站 RecycleBinModal + ProjectGantt 工具栏按钮 | RecycleBinModal.tsx/ProjectGantt.tsx/components.css | tsc 通过, 提交 56e35b2 | ~650 |
+| 09:41 | Created .superpowers/sdd/2026-08-05-recycle-bin/task-3-report.md | — | ~340 |
+| 09:42 | Session end: 15 writes across 8 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 14 reads | ~19159 tok |
+| 09:45 | Session end: 15 writes across 8 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 18 reads | ~19478 tok |
+| 09:46 | Edited frontend/src/pages/Dashboard.tsx | 5→9 lines | ~140 |
+| 09:46 | Edited frontend/src/pages/Dashboard.tsx | added error handling | ~217 |
+| 09:47 | Edited frontend/src/pages/Dashboard.tsx | added error handling | ~659 |
+| 09:47 | Created .superpowers/sdd/2026-08-05-recycle-bin/task-4-report.md | — | ~476 |
+| 09:47 | Task4: 首页回收站完成(按钮+弹窗+恢复), 提交 1f55cd9 | frontend/src/pages/Dashboard.tsx | DONE | ~600 tok |
+| 09:48 | Session end: 19 writes across 10 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 20 reads | ~21959 tok |
+| 09:51 | Session end: 19 writes across 10 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 23 reads | ~27461 tok |
+| 09:58 | Created .superpowers/sdd/2026-08-05-recycle-bin/task-5-report.md | — | ~652 |
+| 09:59 | Task 5 全量回归验证完成：go test 全部 PASS, tsc 无错误, detect_changes low risk, 浏览器 5 项验证全部通过 | task-5-report.md | DONE | ~3000 |
