@@ -1014,3 +1014,13 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:40 | 发现 bug-028：CreateTask 不触发排程，倒推项目新任务不纳入 | tasks.go | 修复 77667d8（triggersReschedule + Recalculate）| ~300 |
 | 17:55 | 最终整体审查：3 项修复（错误路径 data.error.message / SF 单测 / 方向锁定前端禁用+提示）| ProjectDetail.tsx, scheduler_test.go | 5694286+5ff221b+a3506e8；re-review all addressed；浏览器双向验证通过 | ~2K |
 | 18:20 | 收尾：测试项目删除、workspace 清理、12 提交全在 master | — | 功能完成；服务器 8080 运行中 | — |
+| 18:20 | Session end: 54 writes across 22 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md, sqlite_test.go, sqlite.go, models.go) | 41 reads | ~62490 tok |
+| 08:35 | Session end: 54 writes across 22 files (2026-08-04-schedule-direction-design.md, 2026-08-04-schedule-direction.md, sqlite_test.go, sqlite.go, models.go) | 43 reads | ~62490 tok |
+
+## Session: 2026-08-05 08:40（倒排功能实测）
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|--------|--------|
+| 08:35 | 实测倒排：项目8「倒排演示-网站改版」完成日期9/30，5任务链（页面设计3/前端10/后端8/联调5/上线2）自动倒推，链尾对齐9/30全链无缝 | API+浏览器 | 每次创建立即纳入倒推(bug-028修复验证)；甘特图5任务条渲染正确 | ~1K |
+| 08:37 | 演示改duration级联：前端10→5天 → start后移9/8、页面设计级联后移、后端以后不动 | 项目8 | 用户满意「不错」；演示项目保留供体验 | ~300 |
+| 08:35 | 失误：API脚本PID变量为空导致5任务创建到project_id=0(孤儿) | 已清理 | 教训→cerebrum Do-Not-Repeat | ~100 |

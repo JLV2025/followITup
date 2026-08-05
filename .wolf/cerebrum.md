@@ -33,6 +33,7 @@
 - **[2026-08-03] 前向传播跳过父任务**：`forwardPass` 中 `parentSet[succ.ID]`（有子任务的任务）被跳过，父任务日期由 `rollupParentDates` 汇总子任务范围维护。验证级联时不能选父任务做触发器/后继——选叶子链路（如 37→38→39）。
 - **[2026-08-03] PUT /tasks 是全量更新**：请求体缺字段会把 DB 值清零（duration_days/progress_pct/status 等）。前端 TaskDetailModal 保存时传完整对象没问题，curl/脚本调用必须带全字段，否则会破坏数据（27 的 duration 被清 0 即此因）。
 
+| 2026-08-05 | 调用 API 创建任务前必须确认 projectID 非空（shell 变量提取失败会把任务创建到 project_id=0 的孤儿项目，前端不可见需清理） |
 ## Decision Log
 
 <!-- Significant technical decisions with rationale. Why X was chosen over Y. -->
