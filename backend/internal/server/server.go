@@ -143,7 +143,7 @@ func Run(opts Options) error {
 
 	// 启动
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
-	log.Printf("[Server] FollowITup v0.9.0 启动于 http://localhost%s", addr)
+	log.Printf("[Server] FollowITup v0.8.5 启动于 http://localhost%s", addr)
 	return http.ListenAndServe(addr, r)
 }
 

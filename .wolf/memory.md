@@ -1269,3 +1269,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:45 | Session end: 7 writes across 1 files (ProjectGantt.tsx) | 3 reads | ~12793 tok |
 | 17:53 | Edited frontend/src/pages/ProjectGantt.tsx | added 5 condition(s) | ~1844 |
 | 17:55 | 多前置合并画法:公共右边界(最长条右缘)+20汇合,公共下边界(最下源底边)与目标空隙中央穿过;修复segHit单点判定bug | frontend/src/pages/ProjectGantt.tsx | 实测0侵入 | ~8k |
+| 17:55 | Session end: 8 writes across 1 files (ProjectGantt.tsx) | 3 reads | ~14635 tok |
+| 17:56 | Session end: 8 writes across 1 files (ProjectGantt.tsx) | 3 reads | ~14635 tok |
+| 17:59 | Edited backend/internal/server/server.go | "[Server] FollowITup v0.9." → "[Server] FollowITup v0.8." | ~19 |
+| 18:00 | Edited README.md | 9.0 → 8.5 | ~25 |

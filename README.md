@@ -1,6 +1,6 @@
 # FollowITup
 
-> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v0.9.0
+> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v0.8.5
 
 ## What is FollowITup?
 
