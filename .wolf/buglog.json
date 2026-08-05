@@ -1439,6 +1439,23 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-05T09:22:23.820Z"
+    },
+    {
+      "id": "bug-090",
+      "timestamp": "2026-08-05T17:30:00+08:00",
+      "error_message": "前端代码改了,重启后页面无变化(exe 一直提供旧 bundle index-B_3_wcgR.js)",
+      "file": "backend/cmd/server/main.go (embed 指令) / 构建流程",
+      "root_cause": "embed 指令 //go:embed all:frontend-dist 相对 main.go,实际嵌入目录是 backend/cmd/server/frontend-dist;之前一直把前端产物复制到 backend/frontend-dist(错误位置),go build 静默嵌入旧产物。叠加 go build 2>&1 | tail 管道吞掉失败退出码,exe 被占用时构建失败仍打印 BUILD OK",
+      "fix": "产物复制到 backend/cmd/server/frontend-dist;构建命令去掉管道直连(go build && echo),失败即中断;先杀进程再构建",
+      "tags": [
+        "build",
+        "go-embed",
+        "前端缓存",
+        "进程占用"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-05T17:30:00+08:00"
     }
   ]
 }

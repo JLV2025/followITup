@@ -57,3 +57,7 @@
 ## Key Learnings
 - gitnexus detect_changes 对新增 handler/符号常报行号偏移误报（把相邻函数标为 touched，风险 HIGH/MEDIUM）：新增代码不修改既有符号时，先人工核对 diff 再决定是否警示，不要盲信风险等级（2026-08-05，回收站 Task 1/4 两次出现）
 - SDD 审查中发现"Important 但实为文档建议"的项：协调者可按审查者自析结论裁决为 Minor deferred，不必为无真实缺陷的建议跑完整 fix loop（2026-08-05，Task 2 RestoreProject auto-commit 时序）
+
+## Do-Not-Repeat
+- **[2026-08-05] go build 嵌入目录 + 管道吞退出码**：embed 指令 `//go:embed all:frontend-dist` 在 `backend/cmd/server/main.go`，嵌入目录是 `backend/cmd/server/frontend-dist`（相对 .go 文件），不是 `backend/frontend-dist`！前端产物必须复制到 `cmd/server/frontend-dist`。构建命令严禁 `go build | tail` 之类管道（管道退出码是 tail 的，go build 失败被静默）；exe 被运行进程占用时 Windows 下构建会失败，必须先杀进程再 build。
+- **[2026-08-05] 页面无变化先查 bundle 文件名**：前端改了不生效时，先比对「页面加载的 script src」vs「exe 内嵌的 index-*.js 文件名」(grep -a -o)，再比对 exe 嵌入 vs cmd/server/frontend-dist 磁盘内容，快速定位是哪一层旧了。
