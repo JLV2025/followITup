@@ -236,7 +236,9 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
   const handleSave = async () => {
     setSaving(true);
     setError("");
-    try {
+
+    // 提交函数：version 由调用方传入（支持 409 后自动重试）
+    const submit = async (version: number) => {
       const payload = {
         name: name.trim() || "未命名",
         parent_id: parentId,
@@ -254,7 +256,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         actual_start: actualStart || "",
         actual_end: actualEnd || "",
         sort_order: task?.sort_order ?? 0,
-        version: task?.version ?? 0,
+        version,
       };
 
       if (isNew) {
@@ -265,9 +267,24 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
           id: task!.id,
         });
       }
+    };
+
+    try {
+      await submit(task?.version ?? 0);
       onSaved();
     } catch (err: any) {
-      if (err.response?.status === 409) {
+      // 409 自冲突（如排序保存/其他会话递增了 version）：自动重取最新 version 重放一次，
+      // 弹窗内已编辑的字段保持不变——"自己改自己"场景下重试几乎必然成功
+      if (err.response?.status === 409 && !isNew) {
+        try {
+          const res = await api.get(`/api/projects/${projectId}/tasks/${task!.id}`);
+          const fresh = res.data?.data;
+          if (fresh && typeof fresh.version === "number" && fresh.version !== task!.version) {
+            await submit(fresh.version);
+            onSaved();
+            return;
+          }
+        } catch { /* 重取失败走下方错误提示 */ }
         setError("任务已被他人修改，请关闭窗口重试");
       } else {
         setError("保存失败，请重试");
