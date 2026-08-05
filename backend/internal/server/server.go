@@ -83,7 +83,7 @@ func Run(opts Options) error {
 	settingsHandler.RegisterRoutes(r)
 
 	// 注册项目与看板 API
-	projectHandler := api.NewProjectHandler(database.Conn, authMid, cfg.Fiscal.YearStartMonth)
+	projectHandler := api.NewProjectHandler(database.Conn, authMid) // 财年起始月已迁移至 settings 表
 	projectHandler.RegisterRoutes(r)
 
 	// 初始化 WebSocket Hub

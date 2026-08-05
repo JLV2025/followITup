@@ -9,6 +9,7 @@ import (
 
 	"followitup/internal/auth"
 	"followitup/internal/models"
+	"followitup/internal/settings"
 	"followitup/internal/util"
 
 	"github.com/go-chi/chi/v5"
@@ -16,14 +17,13 @@ import (
 
 // ProjectHandler 项目与看板端点
 type ProjectHandler struct {
-	db               *sql.DB
-	mid              *auth.Middleware
-	fiscalStartMonth int
+	db  *sql.DB
+	mid *auth.Middleware
 }
 
-// NewProjectHandler 创建项目端点实例
-func NewProjectHandler(db *sql.DB, mid *auth.Middleware, fiscalStartMonth int) *ProjectHandler {
-	return &ProjectHandler{db: db, mid: mid, fiscalStartMonth: fiscalStartMonth}
+// NewProjectHandler 创建项目端点实例（财年起始月已迁移至 settings 表动态读取）
+func NewProjectHandler(db *sql.DB, mid *auth.Middleware) *ProjectHandler {
+	return &ProjectHandler{db: db, mid: mid}
 }
 
 // RegisterRoutes 注册路由
@@ -179,7 +179,9 @@ func (h *ProjectHandler) buildTimeFilter(tableAlias string, year, fy string) (st
 		if err != nil {
 			return "", nil
 		}
-		start, end, err := util.FiscalYearRange(fyInt, h.fiscalStartMonth)
+		// 财年起始月从 settings 表动态读取（管理员在系统配置页修改，即时生效）
+		fiscalMonth := settings.GetInt(h.db, settings.KeyFiscalStartMonth, 4)
+		start, end, err := util.FiscalYearRange(fyInt, fiscalMonth)
 		if err != nil {
 			return "", nil
 		}
