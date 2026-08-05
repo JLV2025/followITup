@@ -1087,3 +1087,6 @@ cd backend && followitup.exe config.yaml   # 启动
 | 12:54 | Edited frontend/src/pages/Dashboard.tsx | added error handling | ~356 |
 | 12:54 | Edited frontend/src/styles/components.css | expanded (+28 lines) | ~222 |
 | 2026-08-05 | 补项目删除入口:用户反馈"没有删除入口"→Dashboard卡片悬停右上角删除按钮(project-card-wrap相对定位+card-delete绝对定位,confirm确认"可回收站恢复"),浏览器实测删→看板消失→回收站→恢复闭环通过 | frontend/src/pages/Dashboard.tsx, frontend/src/styles/components.css | 交付,commit 54fb31a | ~30k |
+| 12:57 | Session end: 23 writes across 11 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 28 reads | ~44753 tok |
+| 13:00 | Edited frontend/src/components/Navbar.tsx | 25→25 lines | ~232 |
+| 2026-08-05 | 导航栏调整:用户反馈"用户管理/管理员/退出逻辑乱"→对调,右侧组顺序=当前用户标识→用户管理→退出(身份→功能→操作) | frontend/src/components/Navbar.tsx | 交付,浏览器验证通过 | ~10k |
