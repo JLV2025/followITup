@@ -1245,3 +1245,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:48 | Edited backend/internal/scheduler/scheduler.go | 8→11 lines | ~114 |
 | 16:50 | Edited backend/internal/scheduler/scheduler.go | 4→7 lines | ~72 |
 | 2026-08-05 | 修bug-037:删依赖排程空转(trigger=0)+隐式传播覆盖显式前置——DeleteDependency改RecalculateAll、无变化入队保传播、隐式仅无显式前置时生效、trigger自身duration重算end;实测65→66/65→67并行8/7、删→8/10隐式、恢复→8/7 ✓ | backend/internal/api/tasks.go + scheduler/scheduler.go | 已交付 | ~25k |
+| 16:52 | Session end: 142 writes across 40 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 44 reads | ~116967 tok |
+| 16:59 | Edited frontend/src/styles/components.css | CSS: font-size, font-size | ~66 |
+| 17:00 | Edited frontend/src/pages/ProjectGantt.tsx | added 6 condition(s) | ~946 |
+| 17:00 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~44 |
+| 17:03 | Edited frontend/src/pages/ProjectGantt.tsx | modified for() | ~188 |
+| 2026-08-05 | 甘特连线优化:show_links=false+自定义SVG层(drawMergedLinks按target分组,汇合线x-26合并,双击删除保留)+字号统一13px——实测65→66/67汇合分支、66/67→68汇合进,水平段28px | frontend/src/pages/ProjectGantt.tsx + components.css | 已交付 | ~20k |
