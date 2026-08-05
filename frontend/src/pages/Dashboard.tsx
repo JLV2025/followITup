@@ -236,9 +236,9 @@ export default function Dashboard() {
           ) : (
             <div className="project-cards">
               {projects.map((p) => (
+                <div className="project-card-wrap" key={p.id}>
                 <Link
                   to={`/project/${p.id}`}
-                  key={p.id}
                   className={`project-card ${p.has_risk ? "has-risk" : ""}`}
                 >
                   <div className="project-card-header">
@@ -276,6 +276,25 @@ export default function Dashboard() {
                     )}
                   </div>
                 </Link>
+                {isLoggedIn && (
+                  <button
+                    className="card-delete"
+                    title="删除项目（可在首页回收站恢复）"
+                    onClick={async () => {
+                      if (!confirm(`确认删除项目「${p.name}」？\n\n项目内任务不会被删除，删除后可在首页「回收站」恢复。`)) return;
+                      try {
+                        await api.delete(`/api/projects/${p.id}`);
+                        fetchProjects();
+                        alert(`项目「${p.name}」已删除，可在「回收站」恢复`);
+                      } catch (err: any) {
+                        alert(err?.response?.data?.error?.message || "删除失败");
+                      }
+                    }}
+                  >
+                    删除
+                  </button>
+                )}
+                </div>
               ))}
             </div>
           )}
