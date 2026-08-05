@@ -150,7 +150,7 @@ func (h *TaskHandler) ListDeletedTasks(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, tasks)
 }
 
-// RestoreTask 恢复已删除任务（软删除置空，不触发排程）
+// RestoreTask 恢复已删除任务（软删除置空，恢复后触发排程实时重建依赖链）
 func (h *TaskHandler) RestoreTask(w http.ResponseWriter, r *http.Request) {
 	taskID, _ := strconv.ParseInt(chi.URLParam(r, "taskID"), 10, 64)
 	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
@@ -167,6 +167,12 @@ func (h *TaskHandler) RestoreTask(w http.ResponseWriter, r *http.Request) {
 	if affected == 0 {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "任务不存在或未删除")
 		return
+	}
+
+	// 恢复后立即全项目重算（同排序保存）：恢复的任务完全纳入排程，
+	// 日期按当前链重新推导、隐式顺序链按当前 sort_order 实时重建
+	if _, err := scheduler.RecalculateAll(h.db, projectID); err != nil {
+		log.Printf("[Scheduler] 恢复任务 %d 后项目 %d 重算失败: %v", taskID, projectID, err)
 	}
 
 	// 返回恢复后的任务（复用 GetTask 的查询逻辑：按 id 查询单任务并 JSON 返回）
