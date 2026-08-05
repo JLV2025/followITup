@@ -1073,6 +1073,10 @@ async function loadFiscalStartMonth(): Promise<number> {
 
 在 store 初始化（或 Dashboard 挂载时）调用并 set；移除 localStorage 中 fiscalStartMonth 的读写（保留 displayMode 的本地存储）。具体接入方式以 settingsStore.ts 现有结构为准，最小改动：初始化时 `loadFiscalStartMonth().then((m) => set({ fiscalStartMonth: m }))`，`setFiscalStartMonth` 逻辑保留（页面内切换立即生效，刷新后按配置还原）。
 
+- [ ] **Step 1b: Dashboard 移除财年起始月修改入口**
+
+`frontend/src/pages/Dashboard.tsx`：删除「财年起始月份」select（约第 206-217 行，`displayMode === "fiscal"` 条件内的 `fiscal-month-select`），**保留**「📅 财年/🗓 自然年」模式切换按钮（第 199-205 行）。同时第 16 行 destructure 移除 `setFiscalStartMonth`（`fiscalStartMonth` 读取保留——财年计算仍用它）；若 settingsStore 的 `setFiscalStartMonth` 不再被任何组件使用则一并移除（仅保留配置页通过 PUT /api/settings 修改）。
+
 - [ ] **Step 2: SystemSettings 页面**
 
 `frontend/src/pages/SystemSettings.tsx`（完整代码）：
@@ -1291,8 +1295,8 @@ Expected: 无类型错误
 - [ ] **Step 5: 提交**
 
 ```bash
-git add frontend/src/pages/SystemSettings.tsx frontend/src/App.tsx frontend/src/components/Navbar.tsx frontend/src/stores/settingsStore.ts
-git commit -m "前端:系统配置页(邮件SMTP+测试发送/财年起始月/节假日管理/密码长度)+导航入口+财年读取迁移"
+git add frontend/src/pages/SystemSettings.tsx frontend/src/App.tsx frontend/src/components/Navbar.tsx frontend/src/stores/settingsStore.ts frontend/src/pages/Dashboard.tsx
+git commit -m "前端:系统配置页(邮件SMTP+测试发送/财年起始月/节假日管理/密码长度)+导航入口+财年读取迁移(首页仅可切换财年,不可修改起始月)"
 ```
 
 ---
@@ -1622,7 +1626,7 @@ cd ../backend && go build -o followitup.exe ./cmd/server/
 重启服务器（查 8080 PID → `taskkill //F //PID <pid>` → 后台启动新 exe → curl 登录确认）。
 
 浏览器验证清单：
-1. 配置页（管理员）：SMTP 填写 + 测试发送（qorvo 内网 smtprelay 可达则应收到邮件，失败则 alert 错误信息）；财年起始月修改 → Dashboard 财年标签跟随
+1. 配置页（管理员）：SMTP 填写 + 测试发送（qorvo 内网 smtprelay 可达则应收到邮件，失败则 alert 错误信息）；财年起始月修改 → Dashboard 财年标签跟随；**首页已无财年起始月选择器**（仅「📅 财年/🗓 自然年」切换按钮）
 2. 创建用户（普通用户身份）：`new.user@qorvo.com` → 显示名自动「New User」→ 收到邮件（含初始密码）→ 用初始密码登录 → 强制跳改密页 → 改密后进入首页
 3. 未改密用户直接访问其他页面 → 403 拦截（直接输 URL 验证）
 4. 普通用户创建用户时无「设为管理员」勾选；创建的用户非管理员
