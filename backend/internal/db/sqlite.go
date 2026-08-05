@@ -186,6 +186,14 @@ var migrations = []migration{
 	-- 项目排程方向（v5）：forward=正推(基于开始日期) backward=倒推(基于完成日期)
 	ALTER TABLE projects ADD COLUMN schedule_direction TEXT NOT NULL DEFAULT 'forward';
 	`},
+	{6, `
+	-- 系统配置表（v6）：key-value 存储（SMTP/财年/密码策略等）
+	CREATE TABLE IF NOT EXISTS settings (
+		key        TEXT PRIMARY KEY,
+		value      TEXT NOT NULL,
+		updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+	);
+	`},
 }
 
 // migrate 执行所有未应用的迁移

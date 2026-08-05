@@ -78,6 +78,10 @@ func Run(opts Options) error {
 	authHandler := api.NewAuthHandler(authSvc, authMid)
 	authHandler.RegisterRoutes(r)
 
+	// 注册系统配置 API
+	settingsHandler := api.NewSettingsHandler(database.Conn, authMid)
+	settingsHandler.RegisterRoutes(r)
+
 	// 注册项目与看板 API
 	projectHandler := api.NewProjectHandler(database.Conn, authMid, cfg.Fiscal.YearStartMonth)
 	projectHandler.RegisterRoutes(r)
