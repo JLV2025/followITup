@@ -1203,3 +1203,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:28 | Session end: 109 writes across 37 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 42 reads | ~98061 tok |
 | 15:47 | Edited frontend/src/styles/components.css | 20→20 lines | ~176 |
 | 2026-08-05 | 任务弹窗压缩:用户反馈弹窗有滑动条(内容817>矮视口90vh)→padding/字段间距/分隔线/列距收紧,实测内容796<813无溢出;节假日删除按钮本就有(用户确认) | frontend/src/styles/components.css | 已交付,需刷新页面生效 | ~10k |
+| 15:50 | Session end: 110 writes across 37 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 42 reads | ~98375 tok |
+| 15:51 | Session end: 110 writes across 37 files (tasks.go, task-1-report.md, projects.go, task-2-report.md, RecycleBinModal.tsx) | 42 reads | ~98375 tok |
+| 15:56 | Edited frontend/src/styles/components.css | expanded (+9 lines) | ~94 |
+| 2026-08-05 | 修bug-033:弹窗底部横向滑动条(父任务/前置任务下拉按最长option撑宽,百分比max-width对grid min-content无效→固定220px,grid 957→818零溢出) | frontend/src/styles/components.css | 已修复部署 | ~15k |
