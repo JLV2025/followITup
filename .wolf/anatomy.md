@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T08:36:20.340Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T08:48:37.678Z
 > Files: 51 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
@@ -142,7 +142,7 @@
 ## frontend/src/pages/
 
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
-- `Dashboard.tsx` — Dashboard (~7194 tok)
+- `Dashboard.tsx` — Dashboard (~7231 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~1317 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~12250 tok)

@@ -1498,3 +1498,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:36 | Edited frontend/src/pages/Dashboard.tsx | 9→8 lines | ~88 |
 | 16:36 | Edited frontend/src/stores/dashboardStore.ts | 12→11 lines | ~96 |
 | 08:40 | 状态总览状态收敛:只留进行中(默认,全量显示不受年度影响)/已完成(end_date落点按年度过滤);fetchProjects改拉全量,年度范围计算上移复用;浏览器验证四场景通过 | Dashboard.tsx, dashboardStore.ts | 服务器200,未commit | ~350 |
+| 16:40 | Session end: 4 writes across 2 files (Dashboard.tsx, dashboardStore.ts) | 2 reads | ~8380 tok |
+| 16:45 | Edited frontend/src/pages/Dashboard.tsx | 9→11 lines | ~167 |
+| 16:48 | Edited frontend/src/pages/Dashboard.tsx | 8→9 lines | ~126 |
+| 08:50 | 状态灯/进度条三态色统一:未开始灰/进行中蓝/完成绿,风险红覆盖;发现项目status字段恒为active,完成判定改用progress口径 | Dashboard.tsx | 浏览器验证完成=绿,服务器200 | ~250 |

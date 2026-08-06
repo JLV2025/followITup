@@ -156,15 +156,18 @@ export default function Dashboard() {
     }
   };
 
+  // 状态灯三态色：未开始 = 灰，进行中 = 蓝，完成 = 绿（与进度条、时间线统一）
+  // 完成判定基于 progress（与"已完成"tab 同一口径：防呆设计下 100% 必然整体完成；
+  // 项目 status 字段恒为 active，不可作为完成依据）；风险红优先级最高
   const statusColor = (p: { has_risk: boolean; status: string; progress: number }) => {
     if (p.has_risk) return "var(--danger)";
-    if (p.status === "completed" || p.status === "archived") return "var(--text-muted)";
-    if (p.progress >= 80) return "var(--success)";
-    if (p.progress >= 30) return "var(--accent)";
+    if (p.status === "archived" || isDone(p)) return "var(--success)";
+    if (p.progress > 0) return "var(--accent)";
     return "var(--text-secondary)";
   };
-  // 进度条颜色：完成（100%）= 绿，进行中 = 蓝（总览与时间线统一）
-  const progressColor = (p: { progress: number }) => (isDone(p) ? "var(--success)" : "var(--accent)");
+  // 进度条颜色：完成（100%）= 绿，进行中 = 蓝，未开始 = 灰（总览与时间线统一）
+  const progressColor = (p: { progress: number }) =>
+    isDone(p) ? "var(--success)" : p.progress > 0 ? "var(--accent)" : "var(--text-secondary)";
 
   const statRiskClass = (stats?.at_risk ?? 0) > 0 ? "text-danger pulse-once" : "text-success";
 
