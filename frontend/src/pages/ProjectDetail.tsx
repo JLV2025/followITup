@@ -16,8 +16,6 @@ export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [hasProgress, setHasProgress] = useState(false);
-  // 项目开始/结束日期变化时递增，通知甘特图等子路由重新拉取任务数据
-  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     api.get(`/api/projects/${id}`).then((res) => setProject(res.data.data));
@@ -33,10 +31,9 @@ export default function ProjectDetail() {
     if (!project) return;
     try {
       await api.put(`/api/projects/${id}`, { ...project, [field]: value });
-      setProject({ ...project, [field]: value });
-      setRefreshKey((k) => k + 1); // 通知子路由刷新（重排已落库）
-      // 双保险：全局事件通知（不依赖 Outlet context 层级，甘特图/列表均监听）
-      window.dispatchEvent(new CustomEvent("project-refresh", { detail: { projectId: id } }));
+      // 后端已全项目重排并落库。整页重载加载最新数据——最可靠，
+      // 不依赖任何前端事件/路由机制（改日期是低频操作，重载无感知）
+      window.location.reload();
     } catch (err: any) {
       alert(err?.response?.data?.error?.message || "项目日期更新失败");
     }
@@ -106,7 +103,7 @@ export default function ProjectDetail() {
       </div>
 
       {/* 子路由内容 */}
-      <Outlet context={{ project, refreshKey }} />
+      <Outlet context={{ project }} />
     </div>
   );
 }
