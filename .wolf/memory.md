@@ -1295,3 +1295,11 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:23 | Edited backend/internal/api/tasks.go | modified hasBadEncoding() | ~98 |
 | 09:23 | Edited backend/internal/api/projects.go | modified hasBadEncoding() | ~108 |
 | 09:24 | Edited backend/internal/api/projects.go | modified hasBadEncoding() | ~132 |
+| 09:27 | Session end: 24 writes across 9 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 11 reads | ~48715 tok |
+| 09:31 | Edited backend/internal/api/projects.go | modified NewProjectHandler() | ~159 |
+| 09:32 | Edited backend/internal/api/projects.go | expanded (+9 lines) | ~170 |
+| 09:32 | Edited backend/internal/server/server.go | inline fix | ~26 |
+| 09:32 | Edited backend/internal/server/server.go | 11→11 lines | ~99 |
+| 09:37 | Edited frontend/src/pages/TaskListView.tsx | 2→2 lines | ~37 |
+| 09:37 | Edited frontend/src/pages/TaskListView.tsx | added optional chaining | ~133 |
+| 01:40 | 项目日期变更链路补强:重排日志+WS广播+列表视图联动 | projects.go, server.go, TaskListView.tsx | 单页实测正常,多标签受Playwright环境限制 | ~10k |
