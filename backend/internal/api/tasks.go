@@ -228,6 +228,12 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 坏编码防护：连续替换字符（GBK 终端误传中文的指纹）直接拒绝
+	if hasBadEncoding(t.Name) || hasBadEncoding(t.Description) {
+		writeError(w, http.StatusBadRequest, "INVALID_ENCODING", "名称/描述含非法字符（编码错误），请使用 UTF-8 输入")
+		return
+	}
+
 	// 校验 parent_id
 	if t.ParentID != nil {
 		if err := h.validateParent(*t.ParentID, projectID, 0); err != nil {
@@ -291,6 +297,12 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	if t.DurationDays < 1 && t.TaskType != "milestone" {
 		writeError(w, http.StatusBadRequest, "INVALID_DURATION", "工期至少 1 天")
+		return
+	}
+
+	// 坏编码防护：连续替换字符（GBK 终端误传中文的指纹）直接拒绝
+	if hasBadEncoding(t.Name) || hasBadEncoding(t.Description) {
+		writeError(w, http.StatusBadRequest, "INVALID_ENCODING", "名称/描述含非法字符（编码错误），请使用 UTF-8 输入")
 		return
 	}
 

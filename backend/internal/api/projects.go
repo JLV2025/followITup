@@ -209,6 +209,12 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 坏编码防护：连续替换字符（GBK 终端误传中文的指纹）直接拒绝
+	if hasBadEncoding(p.Name) || hasBadEncoding(p.Description) {
+		writeError(w, http.StatusBadRequest, "INVALID_ENCODING", "项目名称/描述含非法字符（编码错误），请使用 UTF-8 输入")
+		return
+	}
+
 	if p.ScheduleDirection == "" {
 		p.ScheduleDirection = "forward" // 默认正推
 	}
@@ -242,6 +248,12 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	var p models.Project
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+
+	// 坏编码防护：连续替换字符（GBK 终端误传中文的指纹）直接拒绝
+	if hasBadEncoding(p.Name) || hasBadEncoding(p.Description) {
+		writeError(w, http.StatusBadRequest, "INVALID_ENCODING", "项目名称/描述含非法字符（编码错误），请使用 UTF-8 输入")
 		return
 	}
 
