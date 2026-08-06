@@ -564,6 +564,8 @@
 .mini-gantt-chart {
   width: 100%;
   position: relative;
+  /* 左列总宽 = 编号 26 + 名称 120 + 两处 gap 12×2；overlay 用同一变量保证与轨道同基准 */
+  --mini-left: 170px;
 }
 
 .mini-gantt-row {
@@ -582,7 +584,7 @@
 }
 
 .mini-gantt-name {
-  width: 150px;
+  width: 120px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -597,7 +599,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
+  max-width: 120px;
 }
 
 .mini-gantt-name-dates {
@@ -609,7 +611,7 @@
 .mini-gantt-track {
   flex: 1;
   height: 20px;
-  background: var(--surface-alt);
+  background: var(--surface-alt); /* 轨道浅灰 */
   border-radius: 4px;
   position: relative;
 }
@@ -619,17 +621,40 @@
   top: 2px;
   height: 16px;
   border-radius: 4px;
-  background: var(--accent-soft); /* 项目总跨度底色（与全站蓝系统一） */
   overflow: hidden;
 }
 
+/* 进行中蓝段（深灰条上的完成部分） */
 .mini-gantt-bar-done {
   height: 100%;
   border-radius: 4px;
   min-width: 2px;
 }
 
-/* 顶部月份刻度 */
+/* 跨年裁剪箭头：条被年度边界截断的一端 */
+.mini-gantt-clip {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.95);
+  pointer-events: none;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+}
+.mini-gantt-clip-left { left: 1px; }
+.mini-gantt-clip-right { right: 1px; }
+
+/* 风险标记：条右端红色小三角（与卡片红灯同口径 has_risk） */
+.mini-gantt-risk {
+  position: absolute;
+  right: -6px;
+  top: -2px;
+  font-size: 9px;
+  color: var(--danger);
+  pointer-events: none;
+}
+
+/* 顶部刻度：第一行年度标识 + 第二行 12 个月份 */
 .mini-gantt-scale-row {
   display: flex;
   align-items: flex-start;
@@ -638,10 +663,25 @@
   margin-bottom: 4px;
 }
 
+.mini-gantt-year-row {
+  height: 18px;
+  margin-bottom: 2px;
+}
+
 .mini-gantt-scale {
   position: relative;
   flex: 1;
   height: 100%;
+}
+
+.mini-gantt-year-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .mini-gantt-mark {
@@ -653,10 +693,20 @@
   white-space: nowrap;
 }
 
-/* 刻度竖线（从标签下方贯穿全部行） */
+/* 覆盖层：与轨道同宽同基准（left = 左列宽），月份分格线与今日线挂在此层 */
+.mini-gantt-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--mini-left);
+  right: 0;
+  pointer-events: none;
+}
+
+/* 刻度竖线（从月份刻度下方贯穿全部行） */
 .mini-gantt-gridline {
   position: absolute;
-  top: 22px;
+  top: 44px;
   bottom: 0;
   width: 1px;
   background: var(--card-border);

@@ -2343,6 +2343,38 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-06T09:03:05.911Z"
+    },
+    {
+      "id": "bug-146",
+      "timestamp": "2026-08-06T09:47:28.788Z",
+      "error_message": "CSS fix: arr, label, x",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "arr: { x: number → number[] = [pct(yearStart)]; label: i === 0 ? firstLabel : `${cur.getUTCMonth() + 1 → string; x: pct(cur.toISOString().slice(0, 10)), → (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[i]",
+      "fix": "Changed arr: { x: number → number[] = [pct(yearStart)]; label: i === 0 ? firstLabel : `${cur.getUTCMonth() + 1 → string; x: pct(cur.toISOString().slice(0, 10)), → (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[i]",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-06T09:47:52.519Z"
+    },
+    {
+      "id": "bug-147",
+      "timestamp": "2026-08-06T09:48:08.601Z",
+      "error_message": "CSS fix: max-width, top, margin-bottom",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "max-width: 150px → 120px; top: 22px → 44px; margin-bottom: 4px → 2px",
+      "fix": "Changed max-width: 150px → 120px; top: 22px → 44px; margin-bottom: 4px → 2px",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T09:48:08.601Z"
     }
   ]
 }

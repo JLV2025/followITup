@@ -1521,3 +1521,12 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:06 | Edited frontend/src/pages/ProjectGantt.tsx | added 3 condition(s) | ~115 |
 | 17:06 | Edited frontend/src/styles/components.css | 4→9 lines | ~114 |
 | 09:10 | 全站颜色review落地:甘特图状态灯/进度填充按状态三态色(完成绿/进行中蓝/未开始灰),双套红绿统一为--danger/--success+软色变量,--bg-light未定义bug修复,父任务进度条主色,时间线/周末底色变量化 | Dashboard.tsx, ProjectGantt.tsx, index.css, components.css | 浏览器验证甘特图三态色全过,服务器200 | ~400 |
+| 17:08 | Session end: 23 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~51457 tok |
+| 17:13 | Session end: 23 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~51458 tok |
+| 17:30 | Session end: 23 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~51458 tok |
+| 17:44 | Session end: 23 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~51458 tok |
+| 17:47 | Edited frontend/src/pages/Dashboard.tsx | CSS: iso | ~400 |
+| 17:47 | Edited frontend/src/pages/Dashboard.tsx | expanded (+7 lines) | ~1074 |
+| 17:48 | Edited frontend/src/styles/components.css | CSS: --mini-left | ~42 |
+| 17:48 | Edited frontend/src/styles/components.css | expanded (+48 lines) | ~641 |
+| 09:52 | 时间线概览重构:两行刻度(FY/CY+英文月格中心首尾留空)、13条网格线、today线/网格线移入overlay修复基准偏移(像素级0.35px)、条重构(灰轨/深灰底/蓝段/全绿)、跨年裁剪箭头◀▶、风险红三角、左列144px日期去年份 | Dashboard.tsx, components.css | 浏览器像素级验证全过,测试项目已清理 | ~450 |

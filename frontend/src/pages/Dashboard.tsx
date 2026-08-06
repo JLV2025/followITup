@@ -71,20 +71,43 @@ export default function Dashboard() {
     .filter((p) => p.start_date && p.end_date && !(p.start_date > yearEnd || p.end_date < yearStart));
   const todayPct = pct(today);
   const todayInYear = today >= yearStart && today <= yearEnd;
-  // 月份刻度：所选年度内固定 12 个月（财年从 startMonth 起跨年）
+  // 月份刻度：所选年度内固定 12 个月（财年从 startMonth 起跨年），
+  // 标签定位在每格中心（首末格留空避免 AUG/JUL 被画框边缘裁掉）
+  const MONTHS_EN = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const marks = (() => {
     const arr: { x: number; label: string }[] = [];
-    const cur = new Date(Date.parse(yearStart + "T00:00:00Z"));
-    const firstLabel = displayMode === "calendar" ? `${period}年` : `FY${period}`;
+    const base = new Date(Date.parse(yearStart + "T00:00:00Z"));
     for (let i = 0; i < 12; i++) {
-      arr.push({
-        x: pct(cur.toISOString().slice(0, 10)),
-        label: i === 0 ? firstLabel : `${cur.getUTCMonth() + 1}月`,
-      });
-      cur.setUTCMonth(cur.getUTCMonth() + 1);
+      const s = new Date(base);
+      s.setUTCMonth(s.getUTCMonth() + i);
+      const e = new Date(s);
+      if (i < 11) {
+        e.setUTCMonth(e.getUTCMonth() + 1);
+      } else {
+        e.setTime(Date.parse(yearEnd + "T00:00:00Z")); // 第 12 个月结束 = 年度末
+      }
+      arr.push({ x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[i] });
     }
     return arr;
   })();
+  // 月份分格线：每月边界 13 条（含画框首尾边界），与月份标签同基准
+  const gridlines = (() => {
+    const arr: number[] = [pct(yearStart)];
+    const base = new Date(Date.parse(yearStart + "T00:00:00Z"));
+    for (let i = 1; i < 12; i++) {
+      const d = new Date(base);
+      d.setUTCMonth(d.getUTCMonth() + i);
+      arr.push(pct(d.toISOString().slice(0, 10)));
+    }
+    arr.push(pct(yearEnd));
+    return arr;
+  })();
+  // 时间线日期文字：去掉年份（画框已显示年度），紧凑 M/D 格式
+  const fmtNoYear = (iso: string) => {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso).slice(5, 10);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  };
 
   useEffect(() => {
     loadFromStorage();
@@ -389,42 +412,43 @@ export default function Dashboard() {
               <p className="text-secondary">该年度内没有排期项目（未设置日期范围的项目不参与时间线）</p>
             ) : (
               <div className="mini-gantt-chart">
-                {/* 顶部共享月份刻度 */}
+                {/* 第一行：年度标识（FY27 / CY2026，画框名字） */}
+                <div className="mini-gantt-scale-row mini-gantt-year-row">
+                  <span className="mini-gantt-no" />
+                  <span className="mini-gantt-name" />
+                  <div className="mini-gantt-scale">
+                    <span className="mini-gantt-year-label">
+                      {displayMode === "calendar" ? `CY${period}` : `FY${period}`}
+                    </span>
+                  </div>
+                </div>
+                {/* 第二行：12 个月份（格中心定位，首末格留空避免标签被画框边缘裁掉） */}
                 <div className="mini-gantt-scale-row">
                   <span className="mini-gantt-no" />
                   <span className="mini-gantt-name" />
                   <div className="mini-gantt-scale">
                     {marks.map((m, i) => (
-                      <span
-                        key={i}
-                        className="mini-gantt-mark"
-                        style={{
-                          left: `${m.x}%`,
-                          // 首刻度左对齐、末刻度右对齐，避免标签溢出卡片边界
-                          transform:
-                            i === 0
-                              ? "translateX(0)"
-                              : i === marks.length - 1
-                                ? "translateX(-100%)"
-                                : "translateX(-50%)",
-                        }}
-                      >
+                      <span key={i} className="mini-gantt-mark" style={{ left: `${m.x}%`, transform: "translateX(-50%)" }}>
                         {m.label}
                       </span>
                     ))}
                   </div>
                 </div>
-                {/* 每个项目一条按真实日期定位的甘特条 */}
+                {/* 每个项目一条按真实日期定位的甘特条：轨道浅灰、条底深灰（排期跨度）、
+                    未开始=全深灰、完成=全绿、进行中=深灰底+蓝段；跨年裁剪端加小箭头 */}
                 {datedProjects.map((p) => {
                   const spanPct = pct(p.end_date) - pct(p.start_date);
                   const donePct = (spanPct * Math.min(100, p.progress)) / 100;
+                  const clipLeft = p.start_date < yearStart; // 头被裁（年度外还有内容）
+                  const clipRight = p.end_date > yearEnd;    // 尾被裁
+                  const barBg = isDone(p) ? "var(--success)" : "var(--text-muted)";
                   return (
                     <div key={p.id} className="mini-gantt-row">
                       <span className="mini-gantt-no">#{p.no}</span>
                       <span className="mini-gantt-name">
                         <span className="mini-gantt-name-text">{p.name}</span>
                         <span className="mini-gantt-name-dates">
-                          {formatDate(p.start_date)} ~ {formatDate(p.end_date)}
+                          {fmtNoYear(p.start_date)} ~ {fmtNoYear(p.end_date)}
                         </span>
                       </span>
                       <div className="mini-gantt-track">
@@ -433,24 +457,30 @@ export default function Dashboard() {
                           style={{
                             left: `${pct(p.start_date)}%`,
                             width: `${Math.max(spanPct, 1.5)}%`,
+                            background: barBg,
                           }}
                         >
-                          <div
-                            className="mini-gantt-bar-done"
-                            style={{ width: `${donePct}%`, background: progressColor(p) }}
-                          />
+                          {clipLeft && <span className="mini-gantt-clip mini-gantt-clip-left">◀</span>}
+                          {clipRight && <span className="mini-gantt-clip mini-gantt-clip-right">▶</span>}
+                          {!isDone(p) && p.progress > 0 && (
+                            <div className="mini-gantt-bar-done" style={{ width: `${donePct}%`, background: "var(--accent)" }} />
+                          )}
                         </div>
+                        {p.has_risk && <span className="mini-gantt-risk" title="存在延迟任务">▼</span>}
                       </div>
                     </div>
                   );
                 })}
-                {/* 月份刻度竖线 + 今日线（仅当今天在所选年度内显示） */}
-                {marks.map((m, i) => (
-                  <div key={i} className="mini-gantt-gridline" style={{ left: `${m.x}%` }} />
-                ))}
-                {todayInYear && (
-                  <div className="mini-gantt-today" style={{ left: `${todayPct}%` }} title="今日" />
-                )}
+                {/* overlay：月份分格线 + 今日线——与轨道同宽同基准（left: 左列宽），
+                    修复此前百分比基准不一致导致的 today 线偏移 */}
+                <div className="mini-gantt-overlay">
+                  {gridlines.map((x, i) => (
+                    <div key={i} className="mini-gantt-gridline" style={{ left: `${x}%` }} />
+                  ))}
+                  {todayInYear && (
+                    <div className="mini-gantt-today" style={{ left: `${todayPct}%` }} title="今日" />
+                  )}
+                </div>
               </div>
             )}
           </div>
