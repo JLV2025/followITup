@@ -35,6 +35,53 @@ export default function Dashboard() {
   );
   const numberedProjects = filteredProjects.map((p, idx) => ({ ...p, no: idx + 1 }));
 
+  // ===== 时间线概览：按真实日期定位的迷你甘特图 =====
+  const DAY_MS = 86400000;
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const dayDiff = (a: string, b: string) =>
+    Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
+  const today = todayStr();
+  // 只显示有日期范围的项目（无日期无法定位）
+  const datedProjects = numberedProjects.filter((p) => p.start_date && p.end_date);
+  // 时间范围：可见项目最小开始 ~ 最大结束，并夹入今天（保证今日线始终可见）
+  let rangeMin = datedProjects.length
+    ? datedProjects.reduce((m, p) => (p.start_date < m ? p.start_date : m), datedProjects[0].start_date)
+    : today;
+  let rangeMax = datedProjects.length
+    ? datedProjects.reduce((m, p) => (p.end_date > m ? p.end_date : m), datedProjects[0].end_date)
+    : today;
+  if (today < rangeMin) rangeMin = today;
+  if (today > rangeMax) rangeMax = today;
+  // 范围对齐到整月（月初 ~ 月末），保证首尾刻度线完整显示
+  rangeMin = rangeMin.slice(0, 8) + "01";
+  {
+    const nm = new Date(Date.parse(rangeMax + "T00:00:00Z"));
+    nm.setUTCMonth(nm.getUTCMonth() + 1);
+    nm.setUTCDate(1);
+    rangeMax = new Date(nm.getTime() - DAY_MS).toISOString().slice(0, 10);
+  }
+  const totalDays = dayDiff(rangeMin, rangeMax);
+  const pct = (s: string) => (dayDiff(rangeMin, s) / totalDays) * 100;
+  const todayPct = pct(today);
+  // 月份刻度（跨年时 1 月显示年份）
+  const marks: { x: number; label: string }[] = [];
+  {
+    const cur = new Date(Date.parse(rangeMin));
+    cur.setUTCDate(1);
+    const rangeEnd = new Date(Date.parse(rangeMax));
+    while (cur <= rangeEnd) {
+      const isJan = cur.getUTCMonth() === 0;
+      marks.push({
+        x: pct(cur.toISOString().slice(0, 10)),
+        label: isJan ? `${cur.getUTCFullYear()}年` : `${cur.getUTCMonth() + 1}月`,
+      });
+      cur.setUTCMonth(cur.getUTCMonth() + 1);
+    }
+  }
+
   useEffect(() => {
     loadFromStorage();
     if (displayMode === "fiscal") {
@@ -316,25 +363,70 @@ export default function Dashboard() {
           <div className="mini-gantt-placeholder">
             {numberedProjects.length === 0 ? (
               <p className="text-secondary">创建项目后将在此显示跨项目甘特图</p>
+            ) : datedProjects.length === 0 ? (
+              <p className="text-secondary">项目未设置日期范围，无法显示时间线</p>
             ) : (
-              <div className="mini-gantt-bars">
-                {numberedProjects.map((p) => (
-                  <div key={p.id} className="mini-gantt-row">
-                    <span className="mini-gantt-no">#{p.no}</span>
-                    <span className="mini-gantt-name">{p.name}</span>
-                    <div className="mini-gantt-track">
-                      <div
-                        className="mini-gantt-bar"
+              <div className="mini-gantt-chart">
+                {/* 顶部共享月份刻度 */}
+                <div className="mini-gantt-scale-row">
+                  <span className="mini-gantt-no" />
+                  <span className="mini-gantt-name" />
+                  <div className="mini-gantt-scale">
+                    {marks.map((m, i) => (
+                      <span
+                        key={i}
+                        className="mini-gantt-mark"
                         style={{
-                          left: 0,
-                          width: `${Math.max(p.progress, 5)}%`,
-                          background: progressColor(p),
+                          left: `${m.x}%`,
+                          // 首刻度左对齐、末刻度右对齐，避免标签溢出卡片边界
+                          transform:
+                            i === 0
+                              ? "translateX(0)"
+                              : i === marks.length - 1
+                                ? "translateX(-100%)"
+                                : "translateX(-50%)",
                         }}
-                      />
-                    </div>
+                      >
+                        {m.label}
+                      </span>
+                    ))}
                   </div>
+                </div>
+                {/* 每个项目一条按真实日期定位的甘特条 */}
+                {datedProjects.map((p) => {
+                  const spanPct = pct(p.end_date) - pct(p.start_date);
+                  const donePct = (spanPct * Math.min(100, p.progress)) / 100;
+                  return (
+                    <div key={p.id} className="mini-gantt-row">
+                      <span className="mini-gantt-no">#{p.no}</span>
+                      <span className="mini-gantt-name">
+                        <span className="mini-gantt-name-text">{p.name}</span>
+                        <span className="mini-gantt-name-dates">
+                          {p.start_date} ~ {p.end_date}
+                        </span>
+                      </span>
+                      <div className="mini-gantt-track">
+                        <div
+                          className="mini-gantt-bar"
+                          style={{
+                            left: `${pct(p.start_date)}%`,
+                            width: `${Math.max(spanPct, 1.5)}%`,
+                          }}
+                        >
+                          <div
+                            className="mini-gantt-bar-done"
+                            style={{ width: `${donePct}%`, background: progressColor(p) }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* 月份刻度竖线 + 今日线（贯穿全部行） */}
+                {marks.map((m, i) => (
+                  <div key={i} className="mini-gantt-gridline" style={{ left: `${m.x}%` }} />
                 ))}
-                <div className="mini-gantt-today" title="今日" />
+                <div className="mini-gantt-today" style={{ left: `${todayPct}%` }} title="今日" />
               </div>
             )}
           </div>

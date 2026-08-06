@@ -518,7 +518,7 @@
   justify-content: center;
 }
 
-.mini-gantt-bars {
+.mini-gantt-chart {
   width: 100%;
   position: relative;
 }
@@ -539,14 +539,28 @@
 }
 
 .mini-gantt-name {
+  width: 150px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.mini-gantt-name-text {
   font-size: 13px;
   color: var(--text-primary);
-  width: 110px;
-  text-align: right;
-  flex-shrink: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.mini-gantt-name-dates {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .mini-gantt-track {
@@ -562,13 +576,53 @@
   top: 2px;
   height: 16px;
   border-radius: 4px;
-  min-width: 4px;
+  background: rgba(43, 108, 176, 0.14); /* 项目总跨度底色 */
+  overflow: hidden;
+}
+
+.mini-gantt-bar-done {
+  height: 100%;
+  border-radius: 4px;
+  min-width: 2px;
+}
+
+/* 顶部月份刻度 */
+.mini-gantt-scale-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 22px;
+  margin-bottom: 4px;
+}
+
+.mini-gantt-scale {
+  position: relative;
+  flex: 1;
+  height: 100%;
+}
+
+.mini-gantt-mark {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 刻度竖线（贯穿全部行，覆盖在行之上） */
+.mini-gantt-gridline {
+  position: absolute;
+  top: 26px;
+  bottom: 0;
+  width: 1px;
+  background: var(--card-border);
+  pointer-events: none;
 }
 
 .mini-gantt-today {
   position: absolute;
-  left: 50%;
-  top: 0;
+  top: 26px;
   bottom: 0;
   width: 2px; /* 加粗一倍 */
   background: var(--primary);
