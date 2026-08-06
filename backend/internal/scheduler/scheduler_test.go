@@ -513,3 +513,28 @@ func TestIsWorkDayWorkdayType(t *testing.T) {
 		t.Error("普通周一应为工作日")
 	}
 }
+
+func TestChainHeadDurationChangePropagates(t *testing.T) {
+	// 链头 A(2天) ──FS──→ B(1天) ──FS──→ C(1天)
+	// A 时长从 2 天改为 1 天:end 提前 1 天 → B、C 应随之前移
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-08-10", EndDate: "2026-08-12", DurationDays: 2, ManualScheduled: false},
+		{ID: 2, StartDate: "2026-08-12", EndDate: "2026-08-13", DurationDays: 1, ManualScheduled: false},
+		{ID: 3, StartDate: "2026-08-13", EndDate: "2026-08-14", DurationDays: 1, ManualScheduled: false},
+	}
+	deps := []Dep{
+		{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0},
+		{ID: 2, PredecessorID: 2, SuccessorID: 3, Type: FS, LagDays: 0},
+	}
+	// 模拟 Recalculate 顺序:先 fixTriggerEnd 修正链头 end,再传播(测试直接改内存 end)
+	tasks[0].DurationDays = 1
+	tasks[0].EndDate = "2026-08-11" // fixTriggerEnd 已落库的新 end
+
+	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "2026-08-10")
+	if ch, ok := changes[2]; !ok || ch["start_date"] != "2026-08-11" {
+		t.Errorf("链头时长缩短后 B 应提前到 08-11 开始(衔接新 end),实际 changes=%v", changes[2])
+	}
+	if ch, ok := changes[3]; !ok || ch["start_date"] != "2026-08-12" {
+		t.Errorf("C 应提前到 08-12 开始,实际 changes=%v", changes[3])
+	}
+}

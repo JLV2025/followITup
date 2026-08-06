@@ -49,17 +49,19 @@ type TaskInfo struct {
 // Recalculate 从 triggerTaskID 出发传播后继链。
 // 触发任务自身：start 保持（由排程/手动决定），但 duration 变更时 end 需重算
 // （end = start 后的 duration 个工作日，独占式）
+// 注意：fixTriggerEnd 必须在 recalc 之前——链头改时长时,end 重算要先落库,
+// 传播阶段(loadTasks)才能读到新 end 并沿后继链下推(否则后继仍按旧 end 排)。
 // 倒推项目改为全量倒推（duration 变更 → start 重算 → 沿前驱链传播）
 func Recalculate(db *sql.DB, projectID int64, triggerTaskID int64) (map[int64]map[string]string, error) {
 	if dir, _ := getProjectDirection(db, projectID); dir == "backward" {
 		return backwardSchedule(db, projectID)
 	}
+	// 触发任务自身：duration 变更时先修正 end（start 保持，非 manual）
+	fixTriggerEnd(db, triggerTaskID)
 	changes, err := recalc(db, projectID, []int64{triggerTaskID})
 	if err != nil {
 		return nil, err
 	}
-	// 触发任务自身：duration 变更时 end 重算（start 保持，非 manual）
-	fixTriggerEnd(db, triggerTaskID)
 	return changes, nil
 }
 
