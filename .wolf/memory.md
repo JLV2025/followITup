@@ -1316,3 +1316,11 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:06 | Edited frontend/src/pages/ProjectDetail.tsx | 4→2 lines | ~35 |
 | 10:06 | Edited frontend/src/pages/ProjectDetail.tsx | 2→2 lines | ~17 |
 | 02:10 | 项目日期保存后整页自动重载(100%可靠);清理refreshKey依赖;再次踩管道吞退出码坑 | ProjectDetail.tsx | 实测改8/13自动重载+锚定 | ~4k |
+| 10:08 | Session end: 37 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 15 reads | ~52714 tok |
+| 10:26 | Session end: 37 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 15 reads | ~52714 tok |
+| 10:30 | Session end: 37 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 15 reads | ~53009 tok |
+| 10:38 | Created C:/Users/jingl/.claude/plans/inherited-humming-sunset.md | — | ~728 |
+| 10:40 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~367 |
+| 10:40 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~278 |
+| 10:40 | Edited frontend/src/pages/ProjectGantt.tsx | 4→6 lines | ~112 |
+| 02:45 | 折叠父任务连线聚合(显示层提升),折叠/展开验证通过 | ProjectGantt.tsx | 12条连线折叠不丢 | ~6k |
