@@ -666,15 +666,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             const uy = (p1[1] - p0[1]) / segIn;
             const vx = (p2[0] - p1[0]) / segOut;
             const vy = (p2[1] - p1[1]) / segOut;
-            // 圆弧起点 = 拐角沿进入方向后退 rr；终点 = 沿离开方向前进 rr
+            // 圆角起点 = 拐角沿进入方向后退 rr；终点 = 沿离开方向前进 rr。
+            // 用二次贝塞尔 Q(控制点=拐角)圆滑过渡——无 A 命令 sweep 方向的渲染歧义
             const sx = p1[0] - ux * rr;
             const sy = p1[1] - uy * rr;
             const ex = p1[0] + vx * rr;
             const ey = p1[1] + vy * rr;
-            // 叉积决定 sweep：右转(顺时针)=1，左转(逆时针)=0
-            const cross = ux * vy - uy * vx;
-            const sweep = cross > 0 ? 1 : 0;
-            d += ` L ${sx} ${sy} A ${rr} ${rr} 0 0 ${sweep} ${ex} ${ey}`;
+            d += ` L ${sx} ${sy} Q ${p1[0]} ${p1[1]} ${ex} ${ey}`;
           }
           const last = out[out.length - 1];
           d += ` L ${last[0]} ${last[1]}`;
