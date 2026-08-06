@@ -86,7 +86,8 @@ export default function Dashboard() {
       } else {
         e.setTime(Date.parse(yearEnd + "T00:00:00Z")); // 第 12 个月结束 = 年度末
       }
-      arr.push({ x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[i] });
+      // 标签取实际月份（财年从 startMonth 起，第一格是 4 月而非 1 月）
+      arr.push({ x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[s.getUTCMonth()] });
     }
     return arr;
   })();

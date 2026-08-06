@@ -2391,6 +2391,38 @@
       "related_bugs": [],
       "occurrences": 4,
       "last_seen": "2026-08-06T09:54:17.131Z"
+    },
+    {
+      "id": "bug-149",
+      "timestamp": "2026-08-06T09:57:16.472Z",
+      "error_message": "CSS fix: x",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[i] → (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[s.getUTCMonth()]",
+      "fix": "Changed x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[i] → (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[s.getUTCMonth()]",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T09:57:16.472Z"
+    },
+    {
+      "id": "bug-140",
+      "timestamp": "2026-08-06T09:58:00Z",
+      "error_message": "today线还是偏移了(财年视图月份刻度从JAN开始,应为4月)",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "marks 用 MONTHS_EN[i] 取标签(固定JAN~DEC),未按实际月份 s.getUTCMonth() 取值;财年从4月开始,标签错位误导 today 线位置判断",
+      "fix": "label 改为 MONTHS_EN[s.getUTCMonth()],按真实月份取标签",
+      "tags": [
+        "timeline",
+        "fiscal-year",
+        "label-mapping"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T09:58:00Z"
     }
   ]
 }
