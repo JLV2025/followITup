@@ -1486,3 +1486,15 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:20 | Edited frontend/src/styles/components.css | 12→12 lines | ~57 |
 | 16:22 | owner名字区改为12字母72px(icon18+72=90总宽),对齐保持461=461 | components.css | 实测nameW72/diff0,commit 已提交 | ~100 |
 | 16:21 | Session end: 46 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~14609 tok |
+| 16:30 | 版本号更新v0.8.6(0+月+日,package.json+两css注释);git add -A误提交截图残留已清理 | package.json, index.css, components.css | 服务器已重启200,commit f89ed78+edad812 | ~200 |
+| 16:24 | Session end: 46 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~14609 tok |
+
+## Session: 2026-08-06 16:25
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:35 | Edited frontend/src/pages/Dashboard.tsx | added 2 condition(s) | ~330 |
+| 16:35 | Edited frontend/src/pages/Dashboard.tsx | reduced (-9 lines) | ~130 |
+| 16:36 | Edited frontend/src/pages/Dashboard.tsx | 9→8 lines | ~88 |
+| 16:36 | Edited frontend/src/stores/dashboardStore.ts | 12→11 lines | ~96 |
+| 08:40 | 状态总览状态收敛:只留进行中(默认,全量显示不受年度影响)/已完成(end_date落点按年度过滤);fetchProjects改拉全量,年度范围计算上移复用;浏览器验证四场景通过 | Dashboard.tsx, dashboardStore.ts | 服务器200,未commit | ~350 |

@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T08:20:35.429Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T08:36:20.340Z
 > Files: 51 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
@@ -142,7 +142,7 @@
 ## frontend/src/pages/
 
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
-- `Dashboard.tsx` — Dashboard (~7168 tok)
+- `Dashboard.tsx` — Dashboard (~7194 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~1317 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~12250 tok)
@@ -153,7 +153,7 @@
 ## frontend/src/stores/
 
 - `authStore.ts` — API routes: POST (1 endpoints) (~460 tok)
-- `dashboardStore.ts` — API routes: GET (2 endpoints) (~568 tok)
+- `dashboardStore.ts` — API routes: GET (2 endpoints) (~543 tok)
 - `ganttStore.ts` — 聚焦信息：某用户正在查看/编辑某任务 (~1653 tok)
 - `settingsStore.ts` — 财年起始月从系统配置读取（管理员在系统设置页修改），不再本地存储 (~716 tok)
 

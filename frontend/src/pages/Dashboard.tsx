@@ -30,26 +30,13 @@ export default function Dashboard() {
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [deletedProjects, setDeletedProjects] = useState<any[]>([]);
 
-  // 项目筛选：全部 / 进行中 / 已完成（统一作用于状态总览与时间线概览）
-  const [projectFilter, setProjectFilter] = useState<"all" | "active" | "completed">("all");
+  // 项目筛选：仅两个状态——进行中（默认，全量显示不受年度影响）/ 已完成（按所选年度过滤）
+  const [projectFilter, setProjectFilter] = useState<"active" | "completed">("active");
   // 已完成判定：完成度 100%（防呆设计下必然整体完成）
   const isDone = (p: any) => (p.progress ?? 0) >= 100;
-  // 过滤 + 排序（后端已按创建时间老→新返回）+ 编号
-  const filteredProjects = projects.filter((p) =>
-    projectFilter === "all" ? true : projectFilter === "completed" ? isDone(p) : !isDone(p)
-  );
-  const numberedProjects = filteredProjects.map((p, idx) => ({ ...p, no: idx + 1 }));
-
-  // ===== 时间线概览：按所选年度（自然年/财年）固定范围的迷你甘特图 =====
+  // 所选年度范围：自然年 = 1/1~12/31；财年 FY{n} = 前一年 startMonth ~ 本年 (startMonth-1) 月末
+  //（状态总览"已完成"按此过滤，时间线概览亦复用）
   const DAY_MS = 86400000;
-  const todayStr = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
-  const dayDiff = (a: string, b: string) =>
-    Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
-  const today = todayStr();
-  // 年度范围：自然年 = 所选年份 1/1~12/31；财年 FY{n} = 前一年 startMonth ~ 本年 (startMonth-1) 月末
   const { start: yearStart, end: yearEnd } = (() => {
     if (displayMode === "calendar") return { start: `${period}-01-01`, end: `${period}-12-31` };
     const y = 2000 + period;
@@ -58,6 +45,23 @@ export default function Dashboard() {
     const end = new Date(Date.parse(`${y}-${m}-01T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
     return { start: `${y - 1}-${m}-01`, end };
   })();
+  // 进行中：全量（不管跨年）；已完成：按结束日期落在所选年度内（归档视角）
+  const filteredProjects = projects.filter((p) =>
+    projectFilter === "completed"
+      ? isDone(p) && !!p.end_date && p.end_date >= yearStart && p.end_date <= yearEnd
+      : !isDone(p)
+  );
+  const numberedProjects = filteredProjects.map((p, idx) => ({ ...p, no: idx + 1 }));
+
+  // ===== 时间线概览：按所选年度（自然年/财年）固定范围的迷你甘特图 =====
+  // DAY_MS / yearStart / yearEnd 已在状态总览过滤处定义，此处复用
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const dayDiff = (a: string, b: string) =>
+    Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
+  const today = todayStr();
   const totalDays = dayDiff(yearStart, yearEnd);
   const pct = (s: string) => Math.min(100, Math.max(0, (dayDiff(yearStart, s) / totalDays) * 100));
   // 过滤：完全不在所选年度内 → 不显示；跨年的条裁到年度边界（显示头/尾）
@@ -284,7 +288,6 @@ export default function Dashboard() {
               value={projectFilter}
               onChange={(e) => setProjectFilter(e.target.value as any)}
             >
-              <option value="all">全部</option>
               <option value="active">进行中</option>
               <option value="completed">已完成</option>
             </select>

@@ -59,11 +59,10 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
   fetchProjects: async () => {
     set({ loading: true });
-    const { period } = get();
-    const { displayMode } = useSettingsStore.getState();
-    const param = displayMode === "fiscal" ? `fy=${period}` : `year=${period}`;
+    // 拉全量：状态总览"进行中"不受年度影响（跨年项目也要显示），
+    // "已完成"按结束日期归属年度的过滤在前端基于 yearStart/yearEnd 完成
     try {
-      const res = await api.get(`/api/dashboard/projects?${param}`);
+      const res = await api.get("/api/dashboard/projects");
       set({ projects: res.data.data || [], loading: false });
     } catch {
       set({ loading: false });
