@@ -1306,3 +1306,8 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:38 | Session end: 30 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 13 reads | ~50941 tok |
 | 09:49 | Session end: 30 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 13 reads | ~50941 tok |
 | 09:50 | Edited backend/internal/scheduler/scheduler.go | modified Recalculate() | ~190 |
+| 09:54 | Session end: 31 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 13 reads | ~51422 tok |
+| 10:00 | Edited frontend/src/pages/ProjectDetail.tsx | CSS: detail, projectId | ~164 |
+| 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: e | ~261 |
+| 10:00 | Edited frontend/src/pages/TaskListView.tsx | CSS: e | ~238 |
+| 02:05 | 日期变更刷新双保险:全局project-refresh事件兜底(不依赖Outlet层级),WS断开也生效 | ProjectDetail.tsx, ProjectGantt.tsx, TaskListView.tsx | 实测通过 | ~5k |
