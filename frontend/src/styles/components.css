@@ -473,14 +473,14 @@
   margin-right: 6px;
 }
 
-/* 小人头图标固定宽 + 名字区固定 15 字母宽（≈90px），位置不随名字长度浮动 */
+/* 小人头图标固定宽 + 名字区固定 12 字母宽（≈72px），位置不随名字长度浮动 */
 .owner-icon {
   width: 18px;
   flex-shrink: 0;
 }
 
 .owner-name {
-  width: 90px;
+  width: 72px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
