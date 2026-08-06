@@ -28,6 +28,7 @@ export interface GanttTask {
   version?: number;
   sort_order?: number;   // 项目内排序序号（拖拽持久化用）
   duration_days?: number; // 后端工期（parse 后强制覆盖 dhtmlx 按 end-start 算出的 duration）
+  critical?: boolean;    // 关键路径任务（TF=0）
   $readonly?: boolean;   // 只读模式
 }
 
@@ -96,6 +97,7 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     actual_end: t.actual_end || "",
     version: t.version,
     sort_order: t.sort_order,
+    critical: !!t.critical,
     $readonly: readonly,
   };
 }

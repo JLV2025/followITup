@@ -266,6 +266,7 @@ export default function TaskListView() {
             <th style={{ width: 80 }}>状态</th>
             <th style={{ width: 80 }}>优先级</th>
             <th style={{ width: 100 }}>负责人</th>
+            <th style={{ width: 60 }}>时长</th>
             <th style={{ width: 110 }}>开始</th>
             <th style={{ width: 110 }}>结束</th>
             <th style={{ width: 100 }}>进度</th>
@@ -337,6 +338,7 @@ export default function TaskListView() {
                     t.assignee || "—"
                   )}
                 </td>
+                <td>{t.duration_days ?? "—"}</td>
                 <td>{formatDate(t.start_date)}</td>
                 <td>{formatDate(t.end_date)}</td>
                 <td>

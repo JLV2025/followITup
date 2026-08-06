@@ -337,6 +337,12 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           </span>`;
         } as any,
       },
+      { name: "duration_col", label: "时长", width: 52, align: "center",
+        template: function (task: Record<string, any>) {
+          if (task.type === "milestone") return '<span style="color:var(--text-muted);">◆</span>';
+          return `<span style="font-size:12px;color:var(--text-secondary);">${task.duration_days ?? task.duration ?? ""}</span>`;
+        } as any,
+      },
       { name: "progress_bar", label: "进度", width: 90, align: "center",
         template: function (task: Record<string, any>) {
           const pct = Math.round((task.progress || 0) * 100);
@@ -358,11 +364,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     // 任务条内不显示百分比（dhtmlx 默认 progress_text 模板即返回空串，删除自定义模板）
     // 左侧"进度"列（progress_bar 列模板）保留百分比显示
 
-    // 任务条样式：父任务深色粗体、超期红色、选中高亮
+    // 任务条样式：父任务深色粗体、超期红色、关键路径红色标记、选中高亮
     (gantt.templates as any).task_class = function (_s: Date, _e: Date, task: Record<string, any>) {
       const classes: string[] = [];
       if (task.status === "delayed") classes.push("gantt-task-delayed");
       if (gantt.hasChild(task.id)) classes.push("gantt-task-parent");
+      // 关键路径：TF=0 的叶子/手动任务红色左缘标记（父任务由子任务汇总，不标记）
+      if (task.critical && !gantt.hasChild(task.id) && !task.manual_scheduled) classes.push("gantt-task-critical");
       if (selectedTaskRef.current === task.id) classes.push("gantt-row-selected");
       const fm = useGanttStore.getState().focusMap;
       if (fm[task.id as number]) classes.push("gantt-task-focus");
@@ -457,11 +465,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       });
     }
 
-    // 今日线
-    try {
-      gantt.plugins({ marker: true });
-      (gantt as any).addMarker({ start_date: new Date(), css: "today-marker", title: "今天" });
-    } catch (_) {}
+    // 今日线：GPL 版无 marker 插件（addMarker 不存在），改为自绘（drawMergedLinks 中绘制）
 
     // 缩放
     try {
@@ -499,6 +503,24 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const c = containerRef.current;
       if (!svgLayer || !c || svgLayer.parentElement !== c) return;
       svgLayer.innerHTML = "";
+      // 今日线（自绘，置于连线之下）：x = 今天在甘特图中的位置，贯穿数据区全高
+      try {
+        const todayX = (gantt as any).posFromDate(new Date());
+        const dataArea = c.querySelector(".gantt_data_area") as HTMLElement;
+        const todayH = dataArea ? dataArea.clientHeight : 0;
+        if (todayH > 0 && typeof todayX === "number") {
+          const tl = document.createElementNS(NS, "line");
+          tl.setAttribute("x1", String(todayX));
+          tl.setAttribute("y1", "0");
+          tl.setAttribute("x2", String(todayX));
+          tl.setAttribute("y2", String(todayH));
+          tl.setAttribute("class", "today-marker-line");
+          tl.setAttribute("stroke", "var(--danger, #DC2626)");
+          tl.setAttribute("stroke-width", "1.5");
+          tl.setAttribute("stroke-dasharray", "4 3");
+          svgLayer.appendChild(tl);
+        }
+      } catch { /* 位置计算失败时跳过今日线 */ }
       const links = gantt.getLinks();
       if (!links || links.length === 0) return;
       const ganttRect = c.getBoundingClientRect();

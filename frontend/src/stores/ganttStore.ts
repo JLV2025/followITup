@@ -64,7 +64,8 @@ export const useGanttStore = create<GanttState>((set, get) => ({
     try {
       const res = await api.get(`/api/projects/${projectId}/tasks`);
       const data = res.data.data;
-      const tasks = (data.tasks || []).map((t: any) => toGanttTask(t, readonly));
+      const criticalSet = new Set((data.critical_ids || []).map(Number));
+      const tasks = (data.tasks || []).map((t: any) => toGanttTask({ ...t, critical: criticalSet.has(Number(t.id)) }, readonly));
       const links = (data.dependencies || []).map((d: any) => toGanttLink(d));
       set({ tasks, links, loading: false });
     } catch {
@@ -128,8 +129,9 @@ export const useGanttStore = create<GanttState>((set, get) => ({
       // 调度器现已同步执行，PUT 返回后数据库已是最新状态
       const fullRes = await api.get(`/api/projects/${projectId}/tasks`);
       const data = fullRes.data.data;
+      const criticalSet = new Set((data.critical_ids || []).map(Number));
       set({
-        tasks: (data.tasks || []).map((t: any) => toGanttTask(t, get().readonly)),
+        tasks: (data.tasks || []).map((t: any) => toGanttTask({ ...t, critical: criticalSet.has(Number(t.id)) }, get().readonly)),
         links: (data.dependencies || []).map((d: any) => toGanttLink(d)),
       });
       return true;

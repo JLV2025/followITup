@@ -95,9 +95,20 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 	// 也加载依赖关系
 	deps, _ := h.loadDependencies(projectID)
 
+	// 关键路径：计算总浮动时间（不写库），TF=0 的任务即关键路径
+	criticalIDs := []int64{}
+	if tfMap, err := scheduler.ComputeTotalFloat(h.db, projectID); err == nil {
+		for id, tf := range tfMap {
+			if tf == 0 {
+				criticalIDs = append(criticalIDs, id)
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"tasks":        tasks,
-		"dependencies": deps,
+		"tasks":         tasks,
+		"dependencies":  deps,
+		"critical_ids":  criticalIDs,
 	})
 }
 

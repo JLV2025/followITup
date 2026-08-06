@@ -88,6 +88,73 @@ func fixTriggerEnd(db *sql.DB, taskID int64) {
 	}
 }
 
+// ComputeTotalFloat 计算所有任务的总浮动时间（不写库，用于关键路径展示）。
+// 与 recalc 同构：链头锚定 → 迭代收敛 → 倒推 → TF。父任务/manual 任务不参与倒推。
+func ComputeTotalFloat(db *sql.DB, projectID int64) (map[int64]int, error) {
+	tasks, err := loadTasks(db, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("加载任务失败: %w", err)
+	}
+	deps, err := loadDeps(db, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("加载依赖失败: %w", err)
+	}
+	if cycle := detectCycle(tasks, deps); len(cycle) > 0 {
+		return nil, fmt.Errorf("CIRCULAR_DEPENDENCY: 存在循环依赖 %v", cycle)
+	}
+	cal, err := LoadCalendar(db, "", "")
+	if err != nil {
+		cal = make(map[string]string)
+	}
+	parentSet := make(map[int64]bool)
+	for i := range tasks {
+		if tasks[i].ParentID != nil {
+			parentSet[*tasks[i].ParentID] = true
+		}
+	}
+	var projectStart string
+	db.QueryRow(`SELECT COALESCE(start_date, '') FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&projectStart)
+
+	// 链头（无显式+隐式前置、非 manual、非父）
+	implicitPred, _ := buildImplicitPred(tasks)
+	predDeps := make(map[int64]bool)
+	for _, d := range deps {
+		predDeps[d.SuccessorID] = true
+	}
+	var heads []int64
+	for _, t := range tasks {
+		if t.ManualScheduled {
+			continue
+		}
+		if !predDeps[t.ID] {
+			if _, ok := implicitPred[t.ID]; !ok {
+				heads = append(heads, t.ID)
+			}
+		}
+	}
+	if len(heads) == 0 {
+		return map[int64]int{}, nil
+	}
+
+	for round := 0; round < 5; round++ {
+		ch := forwardPass(tasks, deps, heads, parentSet, cal, projectStart)
+		rollupParentDates(tasks, parentSet, ch, cal)
+		if len(ch) == 0 {
+			break
+		}
+	}
+	backwardPass(tasks, deps, parentSet, cal)
+
+	tf := make(map[int64]int, len(tasks))
+	for i := range tasks {
+		t := &tasks[i]
+		if t.LateStart != "" && t.StartDate != "" {
+			tf[t.ID] = t.TotalFloat
+		}
+	}
+	return tf, nil
+}
+
 // RecalculateAll 全项目重算；倒推项目从链尾倒推，正推项目保持现有逻辑
 func RecalculateAll(db *sql.DB, projectID int64) (map[int64]map[string]string, error) {
 	if dir, _ := getProjectDirection(db, projectID); dir == "backward" {
@@ -489,15 +556,24 @@ func backwardPass(tasks []TaskInfo, deps []Dep, parentSet map[int64]bool, cal ma
 		predecessors[d.SuccessorID] = append(predecessors[d.SuccessorID], d)
 	}
 	// 隐式顺序依赖参与倒推（关键路径/浮动计算）
-	implicitPred, _ := buildImplicitPred(tasks)
+	implicitPred, implicitSucc := buildImplicitPred(tasks)
 	for succID, predID := range implicitPred {
+		// 与正推 applyCandidate 对称：有显式前置的任务，隐式前置不参与
+		// （显式前置完全决定开始时间，与顺序无关——否则倒推会引入正推不存在的约束，
+		//   造成 TF 负值，如 66 的 LF 被隐式后继 67 覆盖）
+		if len(predecessors[succID]) > 0 {
+			continue
+		}
 		predecessors[succID] = append(predecessors[succID], Dep{PredecessorID: predID, SuccessorID: succID, Type: FS, LagDays: 0})
 	}
 	hasSuccessor := make(map[int64]bool)
 	for _, d := range deps {
 		hasSuccessor[d.PredecessorID] = true
 	}
-	for predID := range implicitPred {
+	// 隐式后继：implicitSucc 的 key 是"有隐式后继"的前驱 id
+	// （implicitPred 的 key 是后继 id，range 它会把有前置的任务误标为有后继，
+	//   导致链尾不进倒推队列、TF 全空——曾潜伏的关键路径 bug）
+	for predID := range implicitSucc {
 		hasSuccessor[predID] = true
 	}
 
@@ -531,7 +607,8 @@ func backwardPass(tasks []TaskInfo, deps []Dep, parentSet map[int64]bool, cal ma
 			continue
 		}
 
-		ls := shiftDate(item.lf, -succ.DurationDays)
+		// 工作日语义倒推（与正推 AddWorkDays 对偶）：LS = LF 前 duration 个工作日
+		ls := SubWorkDays(cal, item.lf, succ.DurationDays)
 
 		if succ.LateFinish == "" || item.lf < succ.LateFinish {
 			succ.LateFinish = item.lf
@@ -541,7 +618,7 @@ func backwardPass(tasks []TaskInfo, deps []Dep, parentSet map[int64]bool, cal ma
 		if succ.ConstraintType == ConstraintFinishNoLaterThan && succ.ConstraintDate != "" {
 			if succ.LateFinish == "" || succ.ConstraintDate < succ.LateFinish {
 				succ.LateFinish = succ.ConstraintDate
-				succ.LateStart = shiftDate(succ.ConstraintDate, -succ.DurationDays)
+				succ.LateStart = SubWorkDays(cal, succ.ConstraintDate, succ.DurationDays)
 			}
 		}
 
@@ -550,10 +627,10 @@ func backwardPass(tasks []TaskInfo, deps []Dep, parentSet map[int64]bool, cal ma
 			if pred == nil || pred.ManualScheduled {
 				continue
 			}
-			predLF := calcPredecessorLFFwd(succ, dep)
+			predLF := calcPredecessorLFFwd(succ, dep, cal)
 			if pred.LateFinish == "" || predLF < pred.LateFinish {
 				pred.LateFinish = predLF
-				pred.LateStart = shiftDate(predLF, -pred.DurationDays)
+				pred.LateStart = SubWorkDays(cal, predLF, pred.DurationDays)
 			}
 			if !queued[pred.ID] {
 				queue = append(queue, qi{id: pred.ID, lf: pred.LateFinish})
@@ -618,16 +695,18 @@ func rollupParentDates(tasks []TaskInfo, parentSet map[int64]bool, changes map[i
 	}
 }
 
-func calcPredecessorLFFwd(succ *TaskInfo, dep Dep) string {
+func calcPredecessorLFFwd(succ *TaskInfo, dep Dep, cal map[string]string) string {
 	switch dep.Type {
 	case FS:
-		return shiftDate(succ.LateStart, -dep.LagDays-1)
+		// 独占式倒推：前置结束 = 后继开始前 lag 个工作日（AddWorkDays 的对偶）
+		return SubWorkDays(cal, succ.LateStart, dep.LagDays)
 	case SS:
-		return shiftDate(succ.LateStart, -dep.LagDays)
+		// 前置开始 ≈ 后继开始前 lag 个工作日（近似：作为前置结束参与取 min）
+		return SubWorkDays(cal, succ.LateStart, dep.LagDays)
 	case FF:
-		return shiftDate(succ.LateFinish, -dep.LagDays)
+		return SubWorkDays(cal, succ.LateFinish, dep.LagDays)
 	case SF:
-		return shiftDate(succ.LateFinish, -dep.LagDays)
+		return SubWorkDays(cal, succ.LateFinish, dep.LagDays)
 	default:
 		return succ.LateStart
 	}

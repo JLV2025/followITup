@@ -239,6 +239,12 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
 
     // 提交函数：version 由调用方传入（支持 409 后自动重试）
     const submit = async (version: number) => {
+      // 状态/进度联动防呆（保存兜底）：已完成↔100%；>0% → 进行中；0% 保持原状态
+      let finalStatus = status;
+      let finalProgress = progress;
+      if (finalStatus === "completed") finalProgress = 100;
+      if (finalProgress === 100) finalStatus = "completed";
+      else if (finalProgress > 0) finalStatus = "in_progress";
       const payload = {
         name: name.trim() || "未命名",
         parent_id: parentId,
@@ -246,8 +252,8 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         start_date: startDate,
         end_date: endDate || startDate,
         duration_days: duration,
-        progress_pct: progress,
-        status,
+        progress_pct: finalProgress,
+        status: finalStatus,
         priority,
         assignee: assignee.trim(),
         manual_scheduled: manualScheduled,
@@ -451,7 +457,10 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
               value={progress}
               onChange={(e) => {
                 const v = Number(e.target.value);
-                setProgress(Math.min(100, Math.max(0, isNaN(v) ? 0 : v)));
+                const p = Math.min(100, Math.max(0, isNaN(v) ? 0 : v));
+                setProgress(p);
+                // 联动防呆：100% ↔ 已完成；>0% → 进行中；0% → 待开始
+                setStatus(p === 100 ? "completed" : p > 0 ? "in_progress" : "open");
               }}
             />
           </div>
@@ -465,7 +474,12 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             <label>状态</label>
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => {
+                const s = e.target.value;
+                setStatus(s);
+                // 联动防呆：状态改为已完成 → 进度自动 100%
+                if (s === "completed") setProgress(100);
+              }}
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
