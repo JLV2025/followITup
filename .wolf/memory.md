@@ -1539,3 +1539,5 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:55 | Session end: 31 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~54398 tok |
 | 17:57 | Edited frontend/src/pages/Dashboard.tsx | 1→2 lines | ~53 |
 | 09:58 | 修复财年月份标签错位:MONTHS_EN[i]→MONTHS_EN[s.getUTCMonth()](财年第一格应为4月非1月) | Dashboard.tsx | 验证APR~MAR序列+today 0.36px | ~150 |
+| 17:59 | Session end: 32 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~54451 tok |
+| 10:00 | 收工:今日变更全部提交(状态两态化/颜色统一/时间线重构/财年标签修复),版本v0.8.6(当日规则不变号) | - | 服务器200运行中 | ~0 |
