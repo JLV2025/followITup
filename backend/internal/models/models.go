@@ -18,6 +18,7 @@ type Project struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
+	Owner       string    `json:"owner"` // 项目所有者：创建必填，未开始任务默认取该值
 	StartDate   string    `json:"start_date"`
 	EndDate     string    `json:"end_date"`
 	ScheduleDirection string `json:"schedule_direction"` // forward=正推 backward=倒推

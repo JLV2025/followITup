@@ -6,6 +6,7 @@ interface Project {
   id: number;
   name: string;
   description: string;
+  owner: string;
   start_date: string;
   end_date: string;
   status: string;
@@ -16,6 +17,8 @@ export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [hasProgress, setHasProgress] = useState(false);
+  // 用户列表（所有者下拉，可手输兜底）
+  const [userOptions, setUserOptions] = useState<{ display_name: string; email: string }[]>([]);
 
   useEffect(() => {
     api.get(`/api/projects/${id}`).then((res) => setProject(res.data.data));
@@ -24,6 +27,8 @@ export default function ProjectDetail() {
       const tasks: any[] = res.data?.data?.tasks || [];
       setHasProgress(tasks.some((t: any) => (t.progress_pct || 0) > 0));
     });
+    // 用户列表
+    api.get("/api/users").then((res) => setUserOptions(res.data.data || [])).catch(() => {});
   }, [id]);
 
   // 保存项目开始/结束日期（后端会触发全项目重排）
@@ -100,6 +105,29 @@ export default function ProjectDetail() {
             />
           </label>
         )}
+        {/* 项目所有者：修改后未开始任务自动改派（已完成/进行中不变） */}
+        <label className="direction-date direction-owner">
+          项目所有者
+          <input
+            type="text"
+            list="detail-owner-options"
+            value={project.owner}
+            onChange={async (e) => {
+              const owner = e.target.value;
+              try {
+                await api.put(`/api/projects/${id}`, { ...project, owner });
+                setProject({ ...project, owner });
+              } catch (err: any) {
+                alert(err?.response?.data?.error?.message || "所有者修改失败");
+              }
+            }}
+          />
+          <datalist id="detail-owner-options">
+            {userOptions.map((u) => (
+              <option key={u.email} value={u.display_name || u.email} />
+            ))}
+          </datalist>
+        </label>
       </div>
 
       {/* 子路由内容 */}

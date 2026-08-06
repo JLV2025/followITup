@@ -15,6 +15,7 @@ interface ProjectSummary {
   id: number;
   name: string;
   description: string;
+  owner: string;
   start_date: string;
   end_date: string;
   status: string;

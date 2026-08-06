@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"followitup/internal/auth"
@@ -256,6 +257,13 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	// 计算工作日 end_date
 	if t.StartDate != "" && t.DurationDays > 0 && t.EndDate == "" {
 		t.EndDate = scheduler.AddWorkDays(nil, t.StartDate, t.DurationDays)
+	}
+
+	// 防呆：未指定负责人时默认取项目 owner
+	if strings.TrimSpace(t.Assignee) == "" {
+		var owner string
+		h.db.QueryRow(`SELECT COALESCE(owner, '') FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&owner)
+		t.Assignee = owner
 	}
 
 	// 分配下一个 sort_order（单条 INSERT...SELECT 原子完成，消除并发创建重复序号）

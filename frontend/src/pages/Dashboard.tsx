@@ -4,6 +4,7 @@ import { useAuthStore } from "../stores/authStore";
 import { useDashboardStore } from "../stores/dashboardStore";
 import { useSettingsStore, availableCalendarYears, availableFiscalYears, fiscalYearLabel, currentFiscalYear } from "../stores/settingsStore";
 import api from "../api/client";
+import { formatDate } from "../utils/date";
 
 export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
@@ -17,9 +18,11 @@ export default function Dashboard() {
 
   // 创建项目模态框状态
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
+  const [createForm, setCreateForm] = useState({ name: "", owner: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createError, setCreateError] = useState("");
+  // 用户列表（项目所有者下拉，可手输兜底）
+  const [userOptions, setUserOptions] = useState<{ display_name: string; email: string }[]>([]);
 
   // 回收站模态框状态
   const [showRecycleBin, setShowRecycleBin] = useState(false);
@@ -92,6 +95,8 @@ export default function Dashboard() {
     }
     fetchStats();
     fetchProjects();
+    // 加载用户列表用于所有者下拉
+    api.get("/api/users").then((res) => setUserOptions(res.data.data || [])).catch(() => {});
   }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod]);
 
   const periods = displayMode === "fiscal"
@@ -112,7 +117,7 @@ export default function Dashboard() {
   };
 
   const handleOpenCreate = () => {
-    setCreateForm({ name: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
+    setCreateForm({ name: "", owner: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
     setCreateError("");
     setShowCreateModal(true);
   };
@@ -123,11 +128,16 @@ export default function Dashboard() {
       setCreateError("项目名称不能为空");
       return;
     }
+    if (!createForm.owner.trim()) {
+      setCreateError("请选择项目所有者");
+      return;
+    }
     setCreateSubmitting(true);
     setCreateError("");
     try {
       await api.post("/api/projects", {
         name: createForm.name.trim(),
+        owner: createForm.owner.trim(),
         description: createForm.description.trim(),
         start_date: createForm.start_date || null,
         end_date: createForm.end_date || null,
@@ -311,6 +321,8 @@ export default function Dashboard() {
                         Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} 天
                       </span>
                     )}
+                    {/* 项目所有者：第一行右上角 */}
+                    <span className="project-owner" title="项目所有者">👤 {p.owner || "—"}</span>
                     <span className="project-link">详情 →</span>
                   </div>
                   <div className="project-card-body">
@@ -326,9 +338,10 @@ export default function Dashboard() {
                       </div>
                       <span className="progress-text">{Math.round(p.progress)}%</span>
                     </div>
-                    {p.end_date && (
-                      <span className="project-card-end">截止: {p.end_date}</span>
-                    )}
+                    {/* 恒渲染占位：保证有无截止日期时进度条长度统一 */}
+                    <span className="project-card-end">
+                      {p.end_date ? `截止: ${formatDate(p.end_date)}` : ""}
+                    </span>
                   </div>
                 </Link>
                 {isLoggedIn && (
@@ -402,7 +415,7 @@ export default function Dashboard() {
                       <span className="mini-gantt-name">
                         <span className="mini-gantt-name-text">{p.name}</span>
                         <span className="mini-gantt-name-dates">
-                          {p.start_date} ~ {p.end_date}
+                          {formatDate(p.start_date)} ~ {formatDate(p.end_date)}
                         </span>
                       </span>
                       <div className="mini-gantt-track">
@@ -465,6 +478,23 @@ export default function Dashboard() {
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   autoFocus
                 />
+              </div>
+              <div className="form-group">
+                <label htmlFor="project-owner">项目所有者 *</label>
+                <input
+                  id="project-owner"
+                  type="text"
+                  list="owner-options"
+                  placeholder="选择或输入所有者"
+                  value={createForm.owner}
+                  onChange={(e) => setCreateForm({ ...createForm, owner: e.target.value })}
+                />
+                <datalist id="owner-options">
+                  {userOptions.map((u) => (
+                    <option key={u.email} value={u.display_name || u.email} />
+                  ))}
+                </datalist>
+                <span className="form-hint">未开始任务及新增任务默认取该所有者，可单独修改</span>
               </div>
               <div className="form-group">
                 <label htmlFor="project-direction">排程方向</label>

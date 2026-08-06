@@ -2,14 +2,12 @@
 
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-/** 将 YYYY-MM-DD 或 Date → MM/DD/YYYY */
+/** 将 YYYY-MM-DD 或 Date → M/D/YYYY */
 export function formatDate(iso: string | Date | null | undefined): string {
   if (!iso) return "—";
   const d = typeof iso === "string" ? new Date(iso) : new Date(iso);
   if (isNaN(d.getTime())) return String(iso).slice(0, 10);
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${m}/${day}/${d.getFullYear()}`;
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 }
 
 /** 将 YYYY-MM-DD 或 Date → Aug 02 格式 */

@@ -120,7 +120,7 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public,
 		COALESCE(p.baseline_created_at, '') as baseline_created_at,
 		COALESCE(p.baseline_created_by, '') as baseline_created_by,
-			p.schedule_direction
+			p.schedule_direction, COALESCE(p.owner, '') as owner
 		FROM projects p ` + baseFilter + ` ORDER BY p.created_at ASC, p.id ASC`
 
 	rows, err := h.db.Query(query, args...)
@@ -147,7 +147,7 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		var p ProjectSummary
 		var isPublic int
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate,
-			&p.Status, &isPublic, &p.BaselineCreatedAt, &p.BaselineCreatedBy, &p.ScheduleDirection); err != nil {
+			&p.Status, &isPublic, &p.BaselineCreatedAt, &p.BaselineCreatedBy, &p.ScheduleDirection, &p.Owner); err != nil {
 			continue
 		}
 		p.IsPublic = isPublic != 0
@@ -211,6 +211,11 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "项目名称不能为空")
 		return
 	}
+	// 项目所有者必填（防呆：其下任务默认 owner 来源）
+	if strings.TrimSpace(p.Owner) == "" {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "项目所有者不能为空")
+		return
+	}
 
 	// 坏编码防护：连续替换字符（GBK 终端误传中文的指纹）直接拒绝
 	if hasBadEncoding(p.Name) || hasBadEncoding(p.Description) {
@@ -222,9 +227,9 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		p.ScheduleDirection = "forward" // 默认正推
 	}
 	result, err := h.db.Exec(
-		`INSERT INTO projects (name, description, start_date, end_date, status, schedule_direction)
-		 VALUES (?, ?, ?, ?, 'active', ?)`,
-		p.Name, p.Description, p.StartDate, p.EndDate, p.ScheduleDirection,
+		`INSERT INTO projects (name, description, owner, start_date, end_date, status, schedule_direction)
+		 VALUES (?, ?, ?, ?, ?, 'active', ?)`,
+		p.Name, p.Description, p.Owner, p.StartDate, p.EndDate, p.ScheduleDirection,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "创建项目失败")
@@ -261,8 +266,8 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 读取旧值：判断日期/方向是否变化（变化才重排），未携带的字段保留旧值
-	var curDirection, oldStart, oldEnd string
-	h.db.QueryRow(`SELECT COALESCE(schedule_direction, 'forward'), COALESCE(start_date, ''), COALESCE(end_date, '') FROM projects WHERE id=? AND deleted_at IS NULL`, id).Scan(&curDirection, &oldStart, &oldEnd)
+	var curDirection, oldStart, oldEnd, oldOwner string
+	h.db.QueryRow(`SELECT COALESCE(schedule_direction, 'forward'), COALESCE(start_date, ''), COALESCE(end_date, ''), COALESCE(owner, '') FROM projects WHERE id=? AND deleted_at IS NULL`, id).Scan(&curDirection, &oldStart, &oldEnd, &oldOwner)
 
 	// 排程方向锁定：项目内任一任务有进度后不可修改方向
 	if p.ScheduleDirection != "" && p.ScheduleDirection != curDirection {
@@ -282,16 +287,33 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	if p.EndDate == "" {
 		p.EndDate = oldEnd
 	}
+	if p.Owner == "" {
+		p.Owner = oldOwner // 未携带时保留旧值
+	}
 	_, err := h.db.Exec(
-		`UPDATE projects SET name=?, description=?, start_date=?, end_date=?, status=?, is_public=?,
+		`UPDATE projects SET name=?, description=?, owner=?, start_date=?, end_date=?, status=?, is_public=?,
 		       schedule_direction=?, updated_at=datetime('now')
 		 WHERE id=? AND deleted_at IS NULL`,
-		p.Name, p.Description, p.StartDate, p.EndDate, p.Status, boolToInt(p.IsPublic),
+		p.Name, p.Description, p.Owner, p.StartDate, p.EndDate, p.Status, boolToInt(p.IsPublic),
 		p.ScheduleDirection, id,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "更新项目失败")
 		return
+	}
+
+	// 项目所有者变更 → 未开始（待开始/已延期）任务自动改派给新 owner；已完成/进行中保持不变
+	if p.Owner != oldOwner {
+		res, err := h.db.Exec(
+			`UPDATE tasks SET assignee=?, version=version+1
+			 WHERE project_id=? AND deleted_at IS NULL AND status IN ('open', 'delayed')`,
+			p.Owner, id,
+		)
+		if err != nil {
+			log.Printf("[Project] 项目 %d owner 变更后改派任务失败: %v", id, err)
+		} else if n, _ := res.RowsAffected(); n > 0 {
+			log.Printf("[Project] 项目 %d owner 变更,改派 %d 个未开始任务", id, n)
+		}
 	}
 
 	// 项目开始/结束日期或排程方向变化 → 全项目重排（正排：链头对齐新开始日期；倒排：链尾对齐新完成日期）
@@ -331,9 +353,9 @@ func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	var p models.Project
 	var isPublic int
 	err := h.db.QueryRow(
-		"SELECT id, name, description, start_date, end_date, status, is_public, schedule_direction FROM projects WHERE id = ? AND deleted_at IS NULL",
+		"SELECT id, name, description, owner, start_date, end_date, status, is_public, schedule_direction FROM projects WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate, &p.Status, &isPublic, &p.ScheduleDirection)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.Owner, &p.StartDate, &p.EndDate, &p.Status, &isPublic, &p.ScheduleDirection)
 	p.IsPublic = isPublic != 0
 	if err != nil {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "项目不存在")

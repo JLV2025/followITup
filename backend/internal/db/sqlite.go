@@ -200,6 +200,10 @@ var migrations = []migration{
 	UPDATE tasks SET end_date = date(end_date, '+1 day')
 	 WHERE end_date != '' AND task_type != 'milestone' AND date(end_date) IS NOT NULL;
 	`},
+	{8, `
+	-- 项目所有者（v8）：创建项目必填，未开始任务默认取项目 owner
+	ALTER TABLE projects ADD COLUMN owner TEXT NOT NULL DEFAULT '';
+	`},
 }
 
 // migrate 执行所有未应用的迁移
