@@ -1363,3 +1363,6 @@ cd backend && followitup.exe config.yaml   # 启动
 | 13:17 | Session end: 72 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~69907 tok |
 | 13:29 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: firstTop, lastBottom, t | ~509 |
 | 05:30 | 今日线改为任务区间纵向(首任务顶→末任务底),实线加粗绿色 | ProjectGantt.tsx | 实测对齐 | ~2k |
+| 13:30 | Session end: 73 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~70416 tok |
+| 13:34 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~265 |
+| 05:35 | 今日线移入bars_area内容层:解决固定层与滚动内容坐标系错位 | ProjectGantt.tsx | 覆盖全任务验证通过 | ~2k |
