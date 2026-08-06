@@ -462,13 +462,16 @@
   white-space: nowrap;
 }
 
-/* 项目所有者：第二排进度百分数之后，固定位置完整显示 */
+/* 项目所有者：第一排，右缘与第二排百分比数字右缘对齐（正上方） */
 .project-owner {
   font-size: 12px;
   color: var(--text-secondary);
   flex-shrink: 0;
   width: 100px;
+  text-align: right;
   white-space: nowrap;
+  /* 补齐第一排 gap(6) 与第二排 gap(12) 的差，实现右缘对齐 */
+  margin-right: 6px;
 }
 
 .project-link {
@@ -477,6 +480,9 @@
   opacity: 0;
   transition: opacity 0.15s ease;
   flex-shrink: 0;
+  /* 与第二排截止日期列同宽右对齐：owner 与百分比垂直对齐 */
+  width: 100px;
+  text-align: right;
 }
 
 .project-card:hover .project-link {

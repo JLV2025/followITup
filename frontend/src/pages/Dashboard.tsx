@@ -23,6 +23,8 @@ export default function Dashboard() {
   const [createError, setCreateError] = useState("");
   // 用户列表（项目所有者下拉，可手输兜底）
   const [userOptions, setUserOptions] = useState<{ display_name: string; email: string }[]>([]);
+  // 时间线用全量项目（按排期日期过滤所选年度）；状态总览仍按创建时间过滤
+  const [timelineProjects, setTimelineProjects] = useState<any[]>([]);
 
   // 回收站模态框状态
   const [showRecycleBin, setShowRecycleBin] = useState(false);
@@ -38,7 +40,7 @@ export default function Dashboard() {
   );
   const numberedProjects = filteredProjects.map((p, idx) => ({ ...p, no: idx + 1 }));
 
-  // ===== 时间线概览：按真实日期定位的迷你甘特图 =====
+  // ===== 时间线概览：按所选年度（自然年/财年）固定范围的迷你甘特图 =====
   const DAY_MS = 86400000;
   const todayStr = () => {
     const d = new Date();
@@ -47,43 +49,38 @@ export default function Dashboard() {
   const dayDiff = (a: string, b: string) =>
     Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
   const today = todayStr();
-  // 只显示有日期范围的项目（无日期无法定位）
-  const datedProjects = numberedProjects.filter((p) => p.start_date && p.end_date);
-  // 时间范围：可见项目最小开始 ~ 最大结束，并夹入今天（保证今日线始终可见）
-  let rangeMin = datedProjects.length
-    ? datedProjects.reduce((m, p) => (p.start_date < m ? p.start_date : m), datedProjects[0].start_date)
-    : today;
-  let rangeMax = datedProjects.length
-    ? datedProjects.reduce((m, p) => (p.end_date > m ? p.end_date : m), datedProjects[0].end_date)
-    : today;
-  if (today < rangeMin) rangeMin = today;
-  if (today > rangeMax) rangeMax = today;
-  // 范围对齐到整月（月初 ~ 月末），保证首尾刻度线完整显示
-  rangeMin = rangeMin.slice(0, 8) + "01";
-  {
-    const nm = new Date(Date.parse(rangeMax + "T00:00:00Z"));
-    nm.setUTCMonth(nm.getUTCMonth() + 1);
-    nm.setUTCDate(1);
-    rangeMax = new Date(nm.getTime() - DAY_MS).toISOString().slice(0, 10);
-  }
-  const totalDays = dayDiff(rangeMin, rangeMax);
-  const pct = (s: string) => (dayDiff(rangeMin, s) / totalDays) * 100;
+  // 年度范围：自然年 = 所选年份 1/1~12/31；财年 FY{n} = 前一年 startMonth ~ 本年 (startMonth-1) 月末
+  const { start: yearStart, end: yearEnd } = (() => {
+    if (displayMode === "calendar") return { start: `${period}-01-01`, end: `${period}-12-31` };
+    const y = 2000 + period;
+    if (fiscalStartMonth === 1) return { start: `${y}-01-01`, end: `${y}-12-31` };
+    const m = String(fiscalStartMonth).padStart(2, "0");
+    const end = new Date(Date.parse(`${y}-${m}-01T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+    return { start: `${y - 1}-${m}-01`, end };
+  })();
+  const totalDays = dayDiff(yearStart, yearEnd);
+  const pct = (s: string) => Math.min(100, Math.max(0, (dayDiff(yearStart, s) / totalDays) * 100));
+  // 过滤：完全不在所选年度内 → 不显示；跨年的条裁到年度边界（显示头/尾）
+  // 编号沿用全量列表老→新序号（与状态总览同一套编号体系）
+  const datedProjects = timelineProjects
+    .map((p, idx) => ({ ...p, no: idx + 1 }))
+    .filter((p) => p.start_date && p.end_date && !(p.start_date > yearEnd || p.end_date < yearStart));
   const todayPct = pct(today);
-  // 月份刻度（跨年时 1 月显示年份）
-  const marks: { x: number; label: string }[] = [];
-  {
-    const cur = new Date(Date.parse(rangeMin));
-    cur.setUTCDate(1);
-    const rangeEnd = new Date(Date.parse(rangeMax));
-    while (cur <= rangeEnd) {
-      const isJan = cur.getUTCMonth() === 0;
-      marks.push({
+  const todayInYear = today >= yearStart && today <= yearEnd;
+  // 月份刻度：所选年度内固定 12 个月（财年从 startMonth 起跨年）
+  const marks = (() => {
+    const arr: { x: number; label: string }[] = [];
+    const cur = new Date(Date.parse(yearStart + "T00:00:00Z"));
+    const firstLabel = displayMode === "calendar" ? `${period}年` : `FY${period}`;
+    for (let i = 0; i < 12; i++) {
+      arr.push({
         x: pct(cur.toISOString().slice(0, 10)),
-        label: isJan ? `${cur.getUTCFullYear()}年` : `${cur.getUTCMonth() + 1}月`,
+        label: i === 0 ? firstLabel : `${cur.getUTCMonth() + 1}月`,
       });
       cur.setUTCMonth(cur.getUTCMonth() + 1);
     }
-  }
+    return arr;
+  })();
 
   useEffect(() => {
     loadFromStorage();
@@ -97,6 +94,8 @@ export default function Dashboard() {
     fetchProjects();
     // 加载用户列表用于所有者下拉
     api.get("/api/users").then((res) => setUserOptions(res.data.data || [])).catch(() => {});
+    // 全量项目（不带年度参数）：时间线按排期日期过滤所选年度
+    api.get("/api/dashboard/projects").then((res) => setTimelineProjects(res.data.data || [])).catch(() => {});
   }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod]);
 
   const periods = displayMode === "fiscal"
@@ -321,6 +320,8 @@ export default function Dashboard() {
                         Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} 天
                       </span>
                     )}
+                    {/* 项目所有者：第一排，右缘与第二排百分比数字对齐（正上方） */}
+                    <span className="project-owner" title="项目所有者">👤 {p.owner || "—"}</span>
                     <span className="project-link">详情 →</span>
                   </div>
                   <div className="project-card-body">
@@ -336,8 +337,6 @@ export default function Dashboard() {
                       </div>
                       <span className="progress-text">{Math.round(p.progress)}%</span>
                     </div>
-                    {/* 项目所有者：第二排进度百分数之后，固定位置完整显示 */}
-                    <span className="project-owner" title="项目所有者">👤 {p.owner || "—"}</span>
                     {/* 恒渲染占位：保证有无截止日期时进度条长度统一 */}
                     <span className="project-card-end">
                       {p.end_date ? `截止: ${formatDate(p.end_date)}` : ""}
@@ -374,10 +373,10 @@ export default function Dashboard() {
             <h2 className="section-title">时间线概览</h2>
           </div>
           <div className="mini-gantt-placeholder">
-            {numberedProjects.length === 0 ? (
-              <p className="text-secondary">创建项目后将在此显示跨项目甘特图</p>
+            {timelineProjects.length === 0 ? (
+              <p className="text-secondary">该年度内没有排期项目</p>
             ) : datedProjects.length === 0 ? (
-              <p className="text-secondary">项目未设置日期范围，无法显示时间线</p>
+              <p className="text-secondary">该年度内没有排期项目（未设置日期范围的项目不参与时间线）</p>
             ) : (
               <div className="mini-gantt-chart">
                 {/* 顶部共享月份刻度 */}
@@ -435,11 +434,13 @@ export default function Dashboard() {
                     </div>
                   );
                 })}
-                {/* 月份刻度竖线 + 今日线（贯穿全部行） */}
+                {/* 月份刻度竖线 + 今日线（仅当今天在所选年度内显示） */}
                 {marks.map((m, i) => (
                   <div key={i} className="mini-gantt-gridline" style={{ left: `${m.x}%` }} />
                 ))}
-                <div className="mini-gantt-today" style={{ left: `${todayPct}%` }} title="今日" />
+                {todayInYear && (
+                  <div className="mini-gantt-today" style={{ left: `${todayPct}%` }} title="今日" />
+                )}
               </div>
             )}
           </div>
