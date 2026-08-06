@@ -326,9 +326,9 @@
 
 /* ===== 项目卡片列表 ===== */
 .project-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .project-card-wrap {
@@ -398,6 +398,10 @@
   font-size: 14px;
   font-weight: 500;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-link {
@@ -448,6 +452,7 @@
   color: var(--text-secondary);
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 6px;
   padding-left: 13px;
