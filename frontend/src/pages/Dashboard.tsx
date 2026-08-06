@@ -320,8 +320,12 @@ export default function Dashboard() {
                         Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} 天
                       </span>
                     )}
-                    {/* 项目所有者：第一排，右缘与第二排百分比数字对齐（正上方） */}
-                    <span className="project-owner" title="项目所有者">👤 {p.owner || "—"}</span>
+                    {/* 项目所有者：第一排，右缘与第二排百分比数字对齐（正上方）；
+                        图标固定宽 + 名字区固定 15 字母宽（≈90px），位置不随名字长度浮动 */}
+                    <span className="project-owner" title="项目所有者">
+                      <span className="owner-icon">👤</span>
+                      <span className="owner-name">{p.owner || "—"}</span>
+                    </span>
                     <span className="project-link">详情 →</span>
                   </div>
                   <div className="project-card-body">
