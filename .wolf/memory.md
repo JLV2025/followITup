@@ -1311,3 +1311,8 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:00 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: e | ~261 |
 | 10:00 | Edited frontend/src/pages/TaskListView.tsx | CSS: e | ~238 |
 | 02:05 | 日期变更刷新双保险:全局project-refresh事件兜底(不依赖Outlet层级),WS断开也生效 | ProjectDetail.tsx, ProjectGantt.tsx, TaskListView.tsx | 实测通过 | ~5k |
+| 10:03 | Session end: 34 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 15 reads | ~52539 tok |
+| 10:05 | Edited frontend/src/pages/ProjectDetail.tsx | modified catch() | ~123 |
+| 10:06 | Edited frontend/src/pages/ProjectDetail.tsx | 4→2 lines | ~35 |
+| 10:06 | Edited frontend/src/pages/ProjectDetail.tsx | 2→2 lines | ~17 |
+| 02:10 | 项目日期保存后整页自动重载(100%可靠);清理refreshKey依赖;再次踩管道吞退出码坑 | ProjectDetail.tsx | 实测改8/13自动重载+锚定 | ~4k |
