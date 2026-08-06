@@ -481,20 +481,19 @@ export default function Dashboard() {
               </div>
               <div className="form-group">
                 <label htmlFor="project-owner">项目所有者 *</label>
-                <input
+                <select
                   id="project-owner"
-                  type="text"
-                  list="owner-options"
-                  placeholder="选择或输入所有者"
                   value={createForm.owner}
                   onChange={(e) => setCreateForm({ ...createForm, owner: e.target.value })}
-                />
-                <datalist id="owner-options">
+                >
+                  <option value="">{userOptions.length === 0 ? "（暂无用户，请先在用户管理创建）" : "请选择"}</option>
                   {userOptions.map((u) => (
-                    <option key={u.email} value={u.display_name || u.email} />
+                    <option key={u.email} value={u.display_name || u.email}>
+                      {u.display_name || u.email}
+                    </option>
                   ))}
-                </datalist>
-                <span className="form-hint">未开始任务及新增任务默认取该所有者，可单独修改</span>
+                </select>
+                <span className="form-hint">所有者必须是系统用户（发邮件通知用），未开始任务默认取该所有者</span>
               </div>
               <div className="form-group">
                 <label htmlFor="project-direction">排程方向</label>

@@ -146,6 +146,19 @@
   transition: border-color 0.15s ease;
 }
 
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

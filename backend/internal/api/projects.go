@@ -200,6 +200,17 @@ func (h *ProjectHandler) buildTimeFilter(tableAlias string, year, fy string) (st
 	return "", nil
 }
 
+// ownerIsValidUser 校验所有者必须是已存在的活跃用户（display_name 或 email 精确匹配）
+// 项目 owner 用于后续邮件通知，必须是可解析出邮箱的系统用户
+func (h *ProjectHandler) ownerIsValidUser(owner string) bool {
+	if strings.TrimSpace(owner) == "" {
+		return false
+	}
+	var n int
+	err := h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE is_active = 1 AND (display_name = ? OR email = ?)`, owner, owner).Scan(&n)
+	return err == nil && n > 0
+}
+
 // CreateProject 创建项目
 func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var p models.Project
@@ -211,9 +222,9 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "项目名称不能为空")
 		return
 	}
-	// 项目所有者必填（防呆：其下任务默认 owner 来源）
-	if strings.TrimSpace(p.Owner) == "" {
-		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "项目所有者不能为空")
+	// 项目所有者必填且必须是系统已有用户（防呆 + 邮件通知需要邮箱）
+	if !h.ownerIsValidUser(p.Owner) {
+		writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须从现有用户中选择（请先在用户管理创建用户）")
 		return
 	}
 
@@ -289,6 +300,11 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	if p.Owner == "" {
 		p.Owner = oldOwner // 未携带时保留旧值
+	}
+	// 修改所有者时必须指向已有用户（邮件通知需要邮箱）
+	if p.Owner != oldOwner && !h.ownerIsValidUser(p.Owner) {
+		writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须从现有用户中选择")
+		return
 	}
 	_, err := h.db.Exec(
 		`UPDATE projects SET name=?, description=?, owner=?, start_date=?, end_date=?, status=?, is_public=?,

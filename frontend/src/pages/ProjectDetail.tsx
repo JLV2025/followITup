@@ -105,12 +105,10 @@ export default function ProjectDetail() {
             />
           </label>
         )}
-        {/* 项目所有者：修改后未开始任务自动改派（已完成/进行中不变） */}
+        {/* 项目所有者：仅可挑选系统用户（邮件通知用）；修改后未开始任务自动改派 */}
         <label className="direction-date direction-owner">
           项目所有者
-          <input
-            type="text"
-            list="detail-owner-options"
+          <select
             value={project.owner}
             onChange={async (e) => {
               const owner = e.target.value;
@@ -121,12 +119,13 @@ export default function ProjectDetail() {
                 alert(err?.response?.data?.error?.message || "所有者修改失败");
               }
             }}
-          />
-          <datalist id="detail-owner-options">
+          >
             {userOptions.map((u) => (
-              <option key={u.email} value={u.display_name || u.email} />
+              <option key={u.email} value={u.display_name || u.email}>
+                {u.display_name || u.email}
+              </option>
             ))}
-          </datalist>
+          </select>
         </label>
       </div>
 
