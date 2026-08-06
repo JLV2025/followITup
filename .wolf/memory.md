@@ -1417,3 +1417,72 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:59 | Edited frontend/src/styles/components.css | CSS: min-width | ~73 |
 | 15:00 | Edited frontend/src/styles/components.css | CSS: font-weight | ~118 |
 | 07:02 | 总览改版:单排细条+编号+筛选+颜色统一 | Dashboard.tsx, projects.go, components.css | 全功能验证 | ~8k |
+| 15:02 | Session end: 103 writes across 15 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 22 reads | ~82900 tok |
+
+## Session: 2026-08-06 15:03
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:04 | Edited frontend/src/pages/Dashboard.tsx | 8→8 lines | ~91 |
+| 15:10 | 修复看板时间线概览进度条溢出(Dashboard.tsx left:10%+width:100%=110%,改left:0) | frontend/src/pages/Dashboard.tsx | 已验证100%条右端=track右端0px溢出,exe已重启 | ~100 |
+| 15:06 | Session end: 1 writes across 1 files (Dashboard.tsx) | 2 reads | ~91 tok |
+| 15:08 | Session end: 1 writes across 1 files (Dashboard.tsx) | 2 reads | ~91 tok |
+| 15:10 | Edited frontend/src/pages/Dashboard.tsx | added 3 condition(s) | ~598 |
+| 15:10 | Edited frontend/src/pages/Dashboard.tsx | expanded (+32 lines) | ~748 |
+| 15:10 | Edited frontend/src/styles/components.css | expanded (+54 lines) | ~499 |
+| 15:11 | Edited frontend/src/pages/Dashboard.tsx | CSS: T00, 00 | ~120 |
+| 15:11 | Edited frontend/src/pages/Dashboard.tsx | CSS: transform | ~202 |
+| 15:12 | Edited frontend/src/pages/Dashboard.tsx | 5→3 lines | ~37 |
+| 15:15 | 看板时间线概览改为真实日期定位迷你甘特图(月份刻度+项目日期文字+真实今日线+跨度浅蓝/进度深色,无日期项目跳过) | frontend/src/pages/Dashboard.tsx, components.css | 浏览器实测定位精确今日线5| 15:15 | 看板时间线概览改为真实日期定位迷你甘特图(月份刻度+项目日期文字+真实今日线+跨度浅蓝/进度深色,无日期项目跳过) | frontend/src/pages/Dashboard.tsx, components.css | 浏览器实测定位精确今日线5%无溢出,exe已重启 | ~400 |
+| 15:13 | Session end: 7 writes across 2 files (Dashboard.tsx, components.css) | 3 reads | ~2295 tok |
+| 15:30 | Edited backend/internal/models/models.go | 8→9 lines | ~102 |
+| 15:31 | Edited backend/internal/api/projects.go | 5→5 lines | ~94 |
+| 15:31 | Edited backend/internal/api/projects.go | 2→2 lines | ~52 |
+| 15:31 | Edited backend/internal/api/projects.go | 4→9 lines | ~73 |
+| 15:31 | Edited backend/internal/api/projects.go | 5→5 lines | ~67 |
+| 15:31 | Edited backend/internal/api/projects.go | 3→3 lines | ~88 |
+| 15:32 | Edited backend/internal/api/projects.go | expanded (+17 lines) | ~267 |
+| 15:32 | Edited backend/internal/api/projects.go | 4→4 lines | ~80 |
+| 15:32 | Edited backend/internal/api/tasks.go | expanded (+7 lines) | ~103 |
+| 15:33 | Edited backend/internal/api/tasks.go | 8→9 lines | ~26 |
+| 15:34 | Edited frontend/src/pages/Dashboard.tsx | CSS: owner, display_name, email | ~136 |
+| 15:34 | Edited frontend/src/pages/Dashboard.tsx | 3→5 lines | ~71 |
+| 15:34 | Edited frontend/src/pages/Dashboard.tsx | CSS: owner, owner | ~252 |
+| 15:34 | Edited frontend/src/pages/Dashboard.tsx | CSS: owner | ~367 |
+| 15:35 | Edited frontend/src/pages/ProjectDetail.tsx | CSS: owner, display_name, email | ~312 |
+| 15:35 | Edited frontend/src/pages/ProjectDetail.tsx | added error handling | ~425 |
+| 15:36 | Edited frontend/src/pages/Dashboard.tsx | added 1 import(s) | ~95 |
+| 15:36 | Edited frontend/src/pages/Dashboard.tsx | 26→29 lines | ~422 |
+| 15:36 | Edited frontend/src/pages/Dashboard.tsx | 3→3 lines | ~51 |
+| 15:37 | Edited frontend/src/stores/dashboardStore.ts | 6→7 lines | ~40 |
+| 15:39 | Edited frontend/src/utils/date.ts | modified formatDate() | ~96 |
+| 15:45 | 项目所有者功能:projects.owner列(v8迁移)+创建必填+任务assignee默认取owner+变更级联改派open/delayed任务;看板卡片右上角显示owner;进度条恒渲染截止位等宽;全局formatDate改M/D/YYYY无前导零 | sqlite.go, models.go, projects.go, tasks.go, Dashboard.tsx, ProjectDetail.tsx, date.ts, components.css | 全链路验证通过(API级联+真实项目9个open任务改派),commit 7b321b2 | ~1200 |
+| 15:42 | Session end: 28 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~11904 tok |
+| 15:44 | Edited frontend/src/pages/Dashboard.tsx | 17→16 lines | ~221 |
+| 15:44 | Edited frontend/src/pages/ProjectDetail.tsx | modified catch() | ~225 |
+| 15:44 | Edited backend/internal/api/projects.go | modified CreateProject() | ~132 |
+| 15:45 | Edited backend/internal/api/projects.go | TrimSpace() → ownerIsValidUser() | ~46 |
+| 15:45 | Edited backend/internal/api/projects.go | modified ownerIsValidUser() | ~67 |
+| 15:50 | owner强制从系统用户下拉选择(前端select无手输+后端ownerIsValidUser校验INVALID_OWNER),为到期邮件通知铺路;项目6测试残留owner王五清理为Jing Lv | projects.go, Dashboard.tsx, ProjectDetail.tsx, components.css | API验证:无效owner 400/有效201/修改无效400,commit cbaec6d | ~600 |
+| 15:47 | Session end: 33 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~12612 tok |
+| 15:52 | Edited frontend/src/pages/Dashboard.tsx | 22→22 lines | ~304 |
+| 15:55 | 修复:看板today线改回贯穿整列(改造时误改top:26px用户视为偏移;刻度标签移顶部刻度线22px起);owner移第二排进度%之后固定100px宽 | Dashboard.tsx, components.css | 实测today 5% top0-101、owner三卡x=361一致、进度条仍等宽,commit 16cff3c | ~400 |
+| 15:54 | Session end: 34 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~12916 tok |
+| 16:03 | Edited frontend/src/pages/Dashboard.tsx | modified for() | ~539 |
+| 16:03 | Edited frontend/src/pages/Dashboard.tsx | 5→5 lines | ~73 |
+| 16:03 | Edited frontend/src/pages/Dashboard.tsx | 6→8 lines | ~108 |
+| 16:05 | Edited frontend/src/pages/Dashboard.tsx | 27→27 lines | ~389 |
+| 16:07 | Edited frontend/src/pages/Dashboard.tsx | 5→5 lines | ~71 |
+| 16:09 | Edited frontend/src/pages/Dashboard.tsx | 2→4 lines | ~67 |
+| 16:09 | Edited frontend/src/pages/Dashboard.tsx | 3→5 lines | ~99 |
+| 16:09 | Edited frontend/src/pages/Dashboard.tsx | CSS: no | ~76 |
+| 16:09 | Edited frontend/src/pages/Dashboard.tsx | 5→5 lines | ~71 |
+| 16:11 | Edited frontend/src/pages/Dashboard.tsx | 2→2 lines | ~42 |
+| 16:15 | 时间线按所选年度(自然年/财年FY{n}=startMonth起12月)固定范围:全量/dashboard/projects拉取按排期过滤(与总览创建时间口径区分),跨年头尾裁剪(左裁=尾/右裁=头),today仅年度内显示,12月刻度;owner固定第一排右缘对齐第二排百分比右缘(link列与end列同宽100px) | Dashboard.tsx, components.css | FY26/FY27跨年项目裁剪实测精确(59~100%/0~8%),编号与总览一致,commit f3c30f0 | ~1200 |
+| 16:13 | Session end: 44 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~14451 tok |
+| 16:17 | Edited frontend/src/pages/Dashboard.tsx | 2→6 lines | ~101 |
+| 16:20 | owner固定布局:图标18px+名字区90px(15字母,中文1字约2字母),右缘对齐保持;超长名由后端INVALID_OWNER挡住(owner必为系统用户) | Dashboard.tsx, components.css | 实测图标18/名字90/右缘461=461对齐,commit 已提交 | ~300 |
+| 16:19 | Session end: 45 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~14552 tok |
+| 16:20 | Edited frontend/src/styles/components.css | 12→12 lines | ~57 |
+| 16:22 | owner名字区改为12字母72px(icon18+72=90总宽),对齐保持461=461 | components.css | 实测nameW72/diff0,commit 已提交 | ~100 |
+| 16:21 | Session end: 46 writes across 8 files (Dashboard.tsx, components.css, models.go, projects.go, tasks.go) | 6 reads | ~14609 tok |

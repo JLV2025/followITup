@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T05:09:44.281Z
-> Files: 49 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T08:20:35.429Z
+> Files: 51 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -63,9 +63,9 @@
 - `auth.go` — Struct: AuthHandler (~2466 tok)
 - `calendar.go` — Struct: CalendarHandler (~1106 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~303 tok)
-- `projects.go` — Struct: ProjectHandler (~4138 tok)
+- `projects.go` — Struct: ProjectHandler (~4511 tok)
 - `settings.go` — Struct: SettingsHandler (~917 tok)
-- `tasks.go` — Struct: TaskHandler (~5217 tok)
+- `tasks.go` — Struct: TaskHandler (~5281 tok)
 
 ## backend/internal/auth/
 
@@ -84,7 +84,7 @@
 
 ## backend/internal/models/
 
-- `models.go` — Struct: User (~1165 tok)
+- `models.go` — Struct: User (~1182 tok)
 
 ## backend/internal/scheduler/
 
@@ -142,23 +142,25 @@
 ## frontend/src/pages/
 
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
-- `Dashboard.tsx` — Dashboard (~5145 tok)
+- `Dashboard.tsx` — Dashboard (~7168 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
-- `ProjectDetail.tsx` — ProjectDetail (~1015 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~11373 tok)
+- `ProjectDetail.tsx` — ProjectDetail (~1317 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~12250 tok)
 - `SystemSettings.tsx` — SystemSettings — renders table (~2939 tok)
-- `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3522 tok)
+- `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3528 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)
 
 ## frontend/src/stores/
 
 - `authStore.ts` — API routes: POST (1 endpoints) (~460 tok)
+- `dashboardStore.ts` — API routes: GET (2 endpoints) (~568 tok)
 - `ganttStore.ts` — 聚焦信息：某用户正在查看/编辑某任务 (~1653 tok)
 - `settingsStore.ts` — 财年起始月从系统配置读取（管理员在系统设置页修改），不再本地存储 (~716 tok)
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 98 rules (~7475 tok)
+- `components.css` — Styles: 93 rules (~7883 tok)
 
 ## frontend/src/utils/
 
+- `date.ts` — 统一日期格式化 — 数据层始终 YYYY-MM-DD，仅展示层转换 (~336 tok)
