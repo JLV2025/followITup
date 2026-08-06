@@ -504,39 +504,20 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const c = containerRef.current;
       if (!svgLayer || !c || svgLayer.parentElement !== c) return;
       svgLayer.innerHTML = "";
-      // 今日线（自绘，置于连线之下）：纵向范围 = 第一个可见任务条顶部 → 最后一个任务条底部。
-      // posFromDate 返回相对数据区的 x，SVG 层覆盖整个容器（含左侧表格），
-      // 用绝对定位差求数据区在容器内的偏移（offsetLeft 受 offsetParent 影响不可靠）
+      // 今日线（自绘）：画在 .gantt_bars_area 内容层内部（与任务条同坐标系，
+      // 随滚动移动，天然覆盖全部任务纵向范围）。posFromDate 返回内容坐标 x。
+      // 不能用固定 SVG 层——内容是滚动容器，固定层与内容纵向不同步会错位
       try {
         const dataArea = c.querySelector(".gantt_data_area") as HTMLElement;
-        if (dataArea) {
-          const cRect = c.getBoundingClientRect();
-          const dataRect = dataArea.getBoundingClientRect();
-          const dataLeft = dataRect.left - cRect.left;
+        const barsArea = dataArea ? (dataArea.querySelector(".gantt_bars_area") as HTMLElement) : null;
+        if (barsArea) {
           const todayX = (gantt as any).posFromDate(new Date());
-          const x = Number(todayX) + dataLeft;
-          // 第一个/最后一个可见任务条（树顺序 = 显示顺序），确定线的纵向范围
-          let firstTop: number | null = null;
-          let lastBottom: number | null = null;
-          gantt.eachTask((t: any) => {
-            const n = gantt.getTaskNode(t.id);
-            if (!n || n.offsetParent === null) return;
-            const r = n.getBoundingClientRect();
-            const top = r.top - dataRect.top;
-            const bottom = r.bottom - dataRect.top;
-            if (firstTop === null || top < firstTop) firstTop = top;
-            if (lastBottom === null || bottom > lastBottom) lastBottom = bottom;
-          });
-          if (typeof x === "number" && !isNaN(x) && firstTop !== null && lastBottom !== null) {
-            const tl = document.createElementNS(NS, "line");
-            tl.setAttribute("x1", String(x));
-            tl.setAttribute("y1", String(firstTop));
-            tl.setAttribute("x2", String(x));
-            tl.setAttribute("y2", String(lastBottom));
-            tl.setAttribute("class", "today-marker-line");
-            tl.setAttribute("stroke", "var(--primary, #2C6E6A)");
-            tl.setAttribute("stroke-width", "3");
-            svgLayer.appendChild(tl);
+          if (typeof todayX === "number" && !isNaN(todayX)) {
+            barsArea.querySelector(".today-marker-line")?.remove();
+            const tl = document.createElement("div");
+            tl.className = "today-marker-line";
+            tl.style.cssText = `position:absolute;top:0;bottom:0;left:${todayX}px;width:0;border-left:3px solid var(--primary,#2C6E6A);z-index:5;pointer-events:none;`;
+            barsArea.appendChild(tl);
           }
         }
       } catch { /* 位置计算失败时跳过今日线 */ }
