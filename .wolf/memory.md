@@ -1502,3 +1502,22 @@ cd backend && followitup.exe config.yaml   # 启动
 | 16:45 | Edited frontend/src/pages/Dashboard.tsx | 9→11 lines | ~167 |
 | 16:48 | Edited frontend/src/pages/Dashboard.tsx | 8→9 lines | ~126 |
 | 08:50 | 状态灯/进度条三态色统一:未开始灰/进行中蓝/完成绿,风险红覆盖;发现项目status字段恒为active,完成判定改用progress口径 | Dashboard.tsx | 浏览器验证完成=绿,服务器200 | ~250 |
+| 16:50 | Session end: 6 writes across 2 files (Dashboard.tsx, dashboardStore.ts) | 3 reads | ~16582 tok |
+| 16:59 | Edited frontend/src/pages/ProjectGantt.tsx | 4→5 lines | ~97 |
+| 16:59 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~50 |
+| 17:00 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~38 |
+| 17:00 | Edited frontend/src/index.css | CSS: --danger-soft, --success-soft, --accent-soft | ~58 |
+| 17:00 | Edited frontend/src/styles/components.css | inline fix | ~15 |
+| 17:00 | Edited frontend/src/styles/components.css | 2→2 lines | ~48 |
+| 17:01 | Edited frontend/src/styles/components.css | 5→5 lines | ~99 |
+| 17:01 | Edited frontend/src/styles/components.css | 16→16 lines | ~98 |
+| 17:01 | Edited frontend/src/styles/components.css | 10→10 lines | ~60 |
+| 17:01 | Edited frontend/src/pages/Dashboard.tsx | 7→7 lines | ~100 |
+| 17:02 | Edited frontend/src/styles/components.css | inline fix | ~16 |
+| 17:02 | Edited frontend/src/styles/components.css | 4→4 lines | ~22 |
+| 17:02 | Edited frontend/src/styles/components.css | 4→4 lines | ~31 |
+| 17:02 | Edited frontend/src/styles/components.css | 6→6 lines | ~41 |
+| 17:03 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~30 |
+| 17:06 | Edited frontend/src/pages/ProjectGantt.tsx | added 3 condition(s) | ~115 |
+| 17:06 | Edited frontend/src/styles/components.css | 4→9 lines | ~114 |
+| 09:10 | 全站颜色review落地:甘特图状态灯/进度填充按状态三态色(完成绿/进行中蓝/未开始灰),双套红绿统一为--danger/--success+软色变量,--bg-light未定义bug修复,父任务进度条主色,时间线/周末底色变量化 | Dashboard.tsx, ProjectGantt.tsx, index.css, components.css | 浏览器验证甘特图三态色全过,服务器200 | ~400 |

@@ -325,10 +325,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       },
       { name: "text", label: "任务名称", width: 220, tree: true,
         template: function (task: Record<string, any>) {
+          // 状态三态色（与 Dashboard/TaskListView 统一）：未开始灰 / 进行中蓝 / 完成绿 / 延迟红
           const statusColors: Record<string, string> = {
-            open: "#A3B0AE", in_progress: "#2C6E6A", completed: "#22C55E", delayed: "#DC2626",
+            open: "var(--text-muted)", in_progress: "var(--accent)", completed: "var(--success)", delayed: "var(--danger)",
           };
-          const color = statusColors[task.status] || "#A3B0AE";
+          const color = statusColors[task.status] || "var(--text-muted)";
           const isParent = gantt.hasChild(task.id);
           const nameStyle = isParent ? "font-weight:600;color:var(--text-primary);" : "";
           const taskText = task.text || "";
@@ -351,7 +352,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           const pct = Math.round((task.progress || 0) * 100);
           return `<div style="display:flex;align-items:center;gap:6px;padding:0 4px;">
             <div style="flex:1;height:6px;border-radius:3px;background:var(--surface-alt);overflow:hidden;">
-              <div style="height:100%;width:${pct}%;border-radius:3px;background:${pct >= 100 ? '#22C55E' : '#2C6E6A'};"></div>
+              <div style="height:100%;width:${pct}%;border-radius:3px;background:${pct >= 100 ? "var(--success)" : pct > 0 ? "var(--accent)" : "var(--text-muted)"};"></div>
             </div>
             <span style="font-size:11px;color:var(--text-secondary);min-width:28px;text-align:right;">${pct}%</span>
           </div>`;
@@ -371,6 +372,9 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     (gantt.templates as any).task_class = function (_s: Date, _e: Date, task: Record<string, any>) {
       const classes: string[] = [];
       if (task.status === "delayed") classes.push("gantt-task-delayed");
+      if (task.status === "completed") classes.push("gantt-task-completed");
+      if (task.status === "in_progress") classes.push("gantt-task-inprogress");
+      if (task.status === "open") classes.push("gantt-task-open");
       if (gantt.hasChild(task.id)) classes.push("gantt-task-parent");
       // 关键路径：TF=0 的叶子/手动任务红色左缘标记（父任务由子任务汇总，不标记）
       if (task.critical && !gantt.hasChild(task.id) && !task.manual_scheduled) classes.push("gantt-task-critical");
@@ -496,8 +500,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // === 自定义合并连线层（SVG）===
     const NS = "http://www.w3.org/2000/svg";
-    const criticalLinkColor = "#DC2626"; // 关键路径连线（源/目标均 TF=0）
-    const altLinkColor = "#2B6CB0";      // 备选路径连线（有富余）
+    const criticalLinkColor = "var(--danger)"; // 关键路径连线（源/目标均 TF=0）
+    const altLinkColor = "var(--accent)";      // 备选路径连线（有富余）
     const svgLayer = document.createElementNS(NS, "svg");
     svgLayer.setAttribute("class", "gantt-merged-links");
     svgLayer.setAttribute("style", "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;");

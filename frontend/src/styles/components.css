@@ -289,7 +289,7 @@
 /* ===== ghost 按钮 ===== */
 .btn-ghost {
   background: transparent;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--card-border);
   color: var(--text-secondary);
   font-size: 12px;
   padding: 4px 10px;
@@ -299,7 +299,7 @@
 }
 
 .btn-ghost:hover {
-  background: var(--bg-light);
+  background: var(--surface-alt);
   color: var(--text-primary);
   border-color: var(--text-muted);
 }
@@ -619,7 +619,7 @@
   top: 2px;
   height: 16px;
   border-radius: 4px;
-  background: rgba(43, 108, 176, 0.14); /* 项目总跨度底色 */
+  background: var(--accent-soft); /* 项目总跨度底色（与全站蓝系统一） */
   overflow: hidden;
 }
 
@@ -774,7 +774,7 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
-  background: var(--bg-light);
+  background: var(--surface-alt);
   color: var(--text-secondary);
   white-space: nowrap;
 }
@@ -987,7 +987,7 @@
 
 .btn-indent {
   background: none;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--card-border);
   border-radius: 3px;
   color: var(--text-muted);
   font-size: 13px;
@@ -1026,7 +1026,7 @@
 
 /* 周末灰色背景 */
 .weekend-cell {
-  background: #f0f0f0 !important;
+  background: var(--surface-alt) !important;
 }
 
 .gantt-loading {
@@ -1053,6 +1053,11 @@
 .gantt_task_progress {
   background: var(--primary) !important;
 }
+
+/* 任务条进度填充按状态三态色（与状态灯/进度条统一）：完成绿 / 进行中蓝 / 未开始灰 */
+.gantt-task-completed .gantt_task_progress { background: var(--success) !important; }
+.gantt-task-inprogress .gantt_task_progress { background: var(--accent) !important; }
+.gantt-task-open .gantt_task_progress { background: var(--text-muted) !important; }
 
 /* 甘特条文字与任务列表同字号（显式统一，避免 dhtmlx 默认差异） */
 .gantt_task_content {
@@ -1255,7 +1260,7 @@
 
 /* ===== 父任务样式 ===== */
 .gantt-task-parent .gantt_task_progress {
-  background: #374151 !important;
+  background: var(--primary) !important;
 }
 
 .gantt-task-parent .gantt_task_content {
@@ -1469,23 +1474,23 @@
 .baseline-menu-item { display: block; width: 100%; text-align: left; padding: 6px 8px; font-size: 13px;
   background: none; border: none; border-radius: 6px; cursor: pointer; color: #1a1a1a; }
 .baseline-menu-item:hover { background: #f3f4f6; }
-.baseline-menu-item.danger { color: #ef4444; }
+.baseline-menu-item.danger { color: var(--danger); }
 .btn-baseline.has-baseline { background: #2c6e6a; color: #fff; }
 
 /* 基线偏差徽标 */
 .baseline-diff-row { align-items: center; }
 .baseline-diff { font-size: 12px; color: #6b7280; display: flex; align-items: center; gap: 8px; }
 .baseline-diff-badge { font-style: normal; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #f3f4f6; }
-.baseline-diff-badge.neg { color: #ef4444; background: #fef2f2; }
-.baseline-diff-badge.pos { color: #15803d; background: #f0fdf4; }
+.baseline-diff-badge.neg { color: var(--danger); background: var(--danger-soft); }
+.baseline-diff-badge.pos { color: var(--success); background: var(--success-soft); }
 
 /* 统计卡偏差与项目卡偏差徽标 */
 .stat-delta { font-size: 14px; font-weight: 600; margin-top: 2px; }
-.stat-delta.pos { color: #15803d; }
-.stat-delta.neg { color: #ef4444; }
+.stat-delta.pos { color: var(--success); }
+.stat-delta.neg { color: var(--danger); }
 .delay-badge { font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-right: 8px; }
-.delay-badge.pos { color: #15803d; background: #f0fdf4; }
-.delay-badge.neg { color: #ef4444; background: #fef2f2; }
+.delay-badge.pos { color: var(--success); background: var(--success-soft); }
+.delay-badge.neg { color: var(--danger); background: var(--danger-soft); }
 
 /* 基线层/实际执行层条：动态 left/top/width 由 JS 行内设置，此处管静态样式与两端三角
    颜色同步点：#6B7280（灰基线）、#86EFAC（绿实际条）与 ProjectGantt.tsx 注释一致 */

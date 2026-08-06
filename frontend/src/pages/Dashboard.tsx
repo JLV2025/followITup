@@ -163,11 +163,11 @@ export default function Dashboard() {
     if (p.has_risk) return "var(--danger)";
     if (p.status === "archived" || isDone(p)) return "var(--success)";
     if (p.progress > 0) return "var(--accent)";
-    return "var(--text-secondary)";
+    return "var(--text-muted)";
   };
   // 进度条颜色：完成（100%）= 绿，进行中 = 蓝，未开始 = 灰（总览与时间线统一）
   const progressColor = (p: { progress: number }) =>
-    isDone(p) ? "var(--success)" : p.progress > 0 ? "var(--accent)" : "var(--text-secondary)";
+    isDone(p) ? "var(--success)" : p.progress > 0 ? "var(--accent)" : "var(--text-muted)";
 
   const statRiskClass = (stats?.at_risk ?? 0) > 0 ? "text-danger pulse-once" : "text-success";
 
@@ -241,7 +241,7 @@ export default function Dashboard() {
           )}
           <div className="stat-progress-ring">
             <svg width="48" height="48" viewBox="0 0 48 48">
-              <circle cx="24" cy="24" r="20" fill="none" stroke="var(--bg-light)" strokeWidth="4" />
+              <circle cx="24" cy="24" r="20" fill="none" stroke="var(--surface-alt)" strokeWidth="4" />
               <circle
                 cx="24" cy="24" r="20"
                 fill="none"

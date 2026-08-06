@@ -2263,6 +2263,86 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-06T08:35:57.514Z"
+    },
+    {
+      "id": "bug-141",
+      "timestamp": "2026-08-06T08:59:29.863Z",
+      "error_message": "CSS fix: open",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "open: \"#A3B0AE\", in_progress: \"#2C6E6A\", completed: \"#22C55E\", delayed: \"#DC2626\", → \"var(--text-muted)\", in_progress: \"var(--accent)\", completed: \"var(--success)\", delayed: \"var(--danger)\",",
+      "fix": "Changed open: \"#A3B0AE\", in_progress: \"#2C6E6A\", completed: \"#22C55E\", delayed: \"#DC2626\", → \"var(--text-muted)\", in_progress: \"var(--accent)\", completed: \"var(--success)\", delayed: \"var(--danger)\",",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T08:59:29.863Z"
+    },
+    {
+      "id": "bug-142",
+      "timestamp": "2026-08-06T08:59:41.748Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Had \"height:100%;width:${pct}%;border-radius:3px;backg",
+      "fix": "Changed to \"height:100%;width:${pct}%;border-radius:3px;backg",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-06T09:00:04.144Z"
+    },
+    {
+      "id": "bug-143",
+      "timestamp": "2026-08-06T09:00:50.644Z",
+      "error_message": "Wrong reference: ef4444 should be var",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "Used \"ef4444\" instead of \"var\"",
+      "fix": "Changed ef4444 → var",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T09:00:50.644Z"
+    },
+    {
+      "id": "bug-144",
+      "timestamp": "2026-08-06T09:00:55.371Z",
+      "error_message": "CSS fix: color, background",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "color: #15803d → var(--success); background: #f0fdf4 → var(--success-soft)",
+      "fix": "Changed color: #15803d → var(--success); background: #f0fdf4 → var(--success-soft)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 9,
+      "last_seen": "2026-08-06T09:06:13.892Z"
+    },
+    {
+      "id": "bug-145",
+      "timestamp": "2026-08-06T09:03:05.911Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Had \"var(--bg-light)\"",
+      "fix": "Changed to \"var(--surface-alt)\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T09:03:05.911Z"
     }
   ]
 }
