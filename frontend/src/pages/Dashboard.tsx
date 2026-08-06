@@ -25,6 +25,16 @@ export default function Dashboard() {
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [deletedProjects, setDeletedProjects] = useState<any[]>([]);
 
+  // 项目筛选：全部 / 进行中 / 已完成（统一作用于状态总览与时间线概览）
+  const [projectFilter, setProjectFilter] = useState<"all" | "active" | "completed">("all");
+  // 已完成判定：完成度 100%（防呆设计下必然整体完成）
+  const isDone = (p: any) => (p.progress ?? 0) >= 100;
+  // 过滤 + 排序（后端已按创建时间老→新返回）+ 编号
+  const filteredProjects = projects.filter((p) =>
+    projectFilter === "all" ? true : projectFilter === "completed" ? isDone(p) : !isDone(p)
+  );
+  const numberedProjects = filteredProjects.map((p, idx) => ({ ...p, no: idx + 1 }));
+
   useEffect(() => {
     loadFromStorage();
     if (displayMode === "fiscal") {
@@ -93,6 +103,8 @@ export default function Dashboard() {
     if (p.progress >= 30) return "var(--accent)";
     return "var(--text-secondary)";
   };
+  // 进度条颜色：完成（100%）= 绿，进行中 = 蓝（总览与时间线统一）
+  const progressColor = (p: { progress: number }) => (isDone(p) ? "var(--success)" : "var(--accent)");
 
   const statRiskClass = (stats?.at_risk ?? 0) > 0 ? "text-danger pulse-once" : "text-success";
 
@@ -209,10 +221,21 @@ export default function Dashboard() {
       <div className="dashboard-main">
         {/* 左栏：项目卡片列表 */}
         <div className="dashboard-left">
-          <h2 className="section-title">项目状态总览</h2>
+          <div className="section-title-row">
+            <h2 className="section-title">项目状态总览</h2>
+            <select
+              className="project-filter"
+              value={projectFilter}
+              onChange={(e) => setProjectFilter(e.target.value as any)}
+            >
+              <option value="all">全部</option>
+              <option value="active">进行中</option>
+              <option value="completed">已完成</option>
+            </select>
+          </div>
           {loading ? (
             <p className="text-secondary">加载中...</p>
-          ) : projects.length === 0 ? (
+          ) : numberedProjects.length === 0 ? (
             <div className="empty-state-small">
               <p>暂无项目数据</p>
               {isLoggedIn && (
@@ -223,7 +246,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="project-cards">
-              {projects.map((p) => (
+              {numberedProjects.map((p) => (
                 <div className="project-card-wrap" key={p.id}>
                 <Link
                   to={`/project/${p.id}`}
@@ -234,6 +257,7 @@ export default function Dashboard() {
                       className="status-dot"
                       style={{ background: statusColor(p) }}
                     />
+                    <span className="project-no">#{p.no}</span>
                     <span className="project-name">{p.name}</span>
                     {p.baseline_created_at && p.delay_days !== 0 && (
                       <span className={`delay-badge ${p.delay_days > 0 ? "neg" : "pos"}`}>
@@ -242,25 +266,21 @@ export default function Dashboard() {
                     )}
                     <span className="project-link">详情 →</span>
                   </div>
-                  <div className="project-card-progress">
-                    <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        style={{
-                          width: `${p.progress}%`,
-                          background: statusColor(p),
-                        }}
-                      />
+                  <div className="project-card-body">
+                    <div className="project-card-progress">
+                      <div className="progress-bar">
+                        <div
+                          className="progress-fill"
+                          style={{
+                            width: `${p.progress}%`,
+                            background: progressColor(p),
+                          }}
+                        />
+                      </div>
+                      <span className="progress-text">{Math.round(p.progress)}%</span>
                     </div>
-                    <span className="progress-text">{Math.round(p.progress)}%</span>
-                  </div>
-                  <div className="project-card-meta">
-                    {p.next_milestone && (
-                      <span>下个节点: {p.next_milestone}</span>
-                    )}
-                    {p.end_date && <span>截止: {p.end_date}</span>}
-                    {p.has_risk && (
-                      <span style={{ color: "var(--danger)" }}>⚠ {p.risk_count} 项超期</span>
+                    {p.end_date && (
+                      <span className="project-card-end">截止: {p.end_date}</span>
                     )}
                   </div>
                 </Link>
@@ -290,14 +310,17 @@ export default function Dashboard() {
 
         {/* 右栏：迷你甘特图 */}
         <div className="dashboard-right">
-          <h2 className="section-title">时间线概览</h2>
+          <div className="section-title-row">
+            <h2 className="section-title">时间线概览</h2>
+          </div>
           <div className="mini-gantt-placeholder">
-            {projects.length === 0 ? (
+            {numberedProjects.length === 0 ? (
               <p className="text-secondary">创建项目后将在此显示跨项目甘特图</p>
             ) : (
               <div className="mini-gantt-bars">
-                {projects.map((p) => (
+                {numberedProjects.map((p) => (
                   <div key={p.id} className="mini-gantt-row">
+                    <span className="mini-gantt-no">#{p.no}</span>
                     <span className="mini-gantt-name">{p.name}</span>
                     <div className="mini-gantt-track">
                       <div
@@ -305,7 +328,7 @@ export default function Dashboard() {
                         style={{
                           left: "10%",
                           width: `${Math.max(p.progress, 5)}%`,
-                          background: statusColor(p),
+                          background: progressColor(p),
                         }}
                       />
                     </div>

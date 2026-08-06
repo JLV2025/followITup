@@ -113,14 +113,15 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 	fy := r.URL.Query().Get("fy")
 	filter, args := h.buildTimeFilter("p", year, fy)
 
-	baseFilter := "WHERE p.deleted_at IS NULL AND p.status = 'active'" + filter
+	// 返回全部状态（active/completed），前端负责"隐藏已完成"过滤；
+	// 排序：老 → 新（创建时间升序），看板编号按此顺序
+	baseFilter := "WHERE p.deleted_at IS NULL" + filter
 
 	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public,
 		COALESCE(p.baseline_created_at, '') as baseline_created_at,
 		COALESCE(p.baseline_created_by, '') as baseline_created_by,
 			p.schedule_direction
-		FROM projects p ` + baseFilter + ` ORDER BY
-		CASE p.status WHEN 'active' THEN 0 ELSE 1 END, p.created_at DESC`
+		FROM projects p ` + baseFilter + ` ORDER BY p.created_at ASC, p.id ASC`
 
 	rows, err := h.db.Query(query, args...)
 	if err != nil {
