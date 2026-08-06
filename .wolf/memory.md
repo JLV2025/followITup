@@ -1405,3 +1405,15 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:38 | Edited frontend/src/pages/Dashboard.tsx | 26→26 lines | ~352 |
 | 14:39 | Edited frontend/src/styles/components.css | CSS: margin-top | ~63 |
 | 06:40 | 首页卡片等宽+三行布局+边界强化 | Dashboard.tsx, components.css | 288/288/288等宽 | ~4k |
+| 14:40 | Session end: 93 writes across 15 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 21 reads | ~80273 tok |
+| 14:57 | Edited backend/internal/api/projects.go | 8→9 lines | ~119 |
+| 14:57 | Edited frontend/src/pages/Dashboard.tsx | added nullish coalescing | ~182 |
+| 14:58 | Edited frontend/src/pages/Dashboard.tsx | 7→9 lines | ~145 |
+| 14:58 | Edited frontend/src/pages/Dashboard.tsx | expanded (+8 lines) | ~793 |
+| 14:58 | Edited frontend/src/pages/Dashboard.tsx | statusColor() → progressColor() | ~354 |
+| 14:59 | Edited frontend/src/styles/components.css | expanded (+17 lines) | ~122 |
+| 14:59 | Edited frontend/src/styles/components.css | CSS: display | ~107 |
+| 14:59 | Edited frontend/src/styles/components.css | expanded (+22 lines) | ~143 |
+| 14:59 | Edited frontend/src/styles/components.css | CSS: min-width | ~73 |
+| 15:00 | Edited frontend/src/styles/components.css | CSS: font-weight | ~118 |
+| 07:02 | 总览改版:单排细条+编号+筛选+颜色统一 | Dashboard.tsx, projects.go, components.css | 全功能验证 | ~8k |
