@@ -1324,3 +1324,34 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:40 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~278 |
 | 10:40 | Edited frontend/src/pages/ProjectGantt.tsx | 4→6 lines | ~112 |
 | 02:45 | 折叠父任务连线聚合(显示层提升),折叠/展开验证通过 | ProjectGantt.tsx | 12条连线折叠不丢 | ~6k |
+| 10:44 | Session end: 41 writes across 11 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 15 reads | ~54800 tok |
+| 11:13 | Session end: 41 writes across 11 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 15 reads | ~54800 tok |
+| 11:29 | Session end: 41 writes across 11 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 16 reads | ~55483 tok |
+| 12:34 | Created C:/Users/jingl/.claude/plans/inherited-humming-sunset.md | — | ~206 |
+| 12:36 | Session end: 42 writes across 11 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 19 reads | ~59022 tok |
+| 12:49 | Created C:/Users/jingl/.claude/plans/inherited-humming-sunset.md | — | ~892 |
+| 12:51 | Edited C:/Users/jingl/.claude/plans/inherited-humming-sunset.md | 4→4 lines | ~47 |
+| 12:54 | Edited backend/internal/scheduler/scheduler.go | modified ComputeTotalFloat() | ~497 |
+| 12:54 | Edited backend/internal/api/tasks.go | expanded (+11 lines) | ~117 |
+| 12:54 | Edited frontend/src/api/gantt-adapter.ts | 5→6 lines | ~63 |
+| 12:54 | Edited frontend/src/api/gantt-adapter.ts | 5→6 lines | ~33 |
+| 12:55 | Edited frontend/src/stores/ganttStore.ts | 12→13 lines | ~166 |
+| 12:55 | Edited frontend/src/stores/ganttStore.ts | 9→10 lines | ~154 |
+| 12:56 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~208 |
+| 12:56 | Edited frontend/src/styles/components.css | CSS: box-shadow | ~55 |
+| 12:57 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 condition(s) | ~252 |
+| 12:57 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: status | ~198 |
+| 12:58 | Edited frontend/src/components/TaskDetailModal.tsx | 4→4 lines | ~70 |
+| 12:58 | Edited frontend/src/components/TaskDetailModal.tsx | 6→6 lines | ~87 |
+| 12:58 | Edited frontend/src/pages/TaskListView.tsx | 4→5 lines | ~67 |
+| 12:59 | Edited frontend/src/pages/TaskListView.tsx | added nullish coalescing | ~44 |
+| 12:59 | Edited frontend/src/pages/ProjectGantt.tsx | added nullish coalescing | ~309 |
+| 13:02 | Edited backend/internal/scheduler/scheduler.go | 16→19 lines | ~188 |
+| 13:04 | Edited backend/internal/scheduler/scheduler.go | shiftDate() → SubWorkDays() | ~30 |
+| 13:05 | Edited backend/internal/scheduler/scheduler.go | inline fix | ~21 |
+| 13:05 | Edited backend/internal/scheduler/scheduler.go | shiftDate() → SubWorkDays() | ~55 |
+| 13:05 | Edited backend/internal/scheduler/scheduler.go | shiftDate() → SubWorkDays() | ~133 |
+| 13:07 | Edited backend/internal/scheduler/scheduler.go | expanded (+6 lines) | ~116 |
+| 13:08 | Edited frontend/src/pages/ProjectGantt.tsx | 5→1 lines | ~20 |
+| 13:08 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~336 |
+| 13:09 | Edited frontend/src/styles/components.css | 4→4 lines | ~32 |

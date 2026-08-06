@@ -76,3 +76,7 @@
 - **[2026-08-06] 乱码防护(强化 bug-025)**：写入口(Create/UpdateTask、Create/UpdateProject)新增 hasBadEncoding 校验——name/description 含**连续 ≥2 个 U+FFFD** 即 400 INVALID_ENCODING。真实中文文本不会出现连续替换字符(它是 GBK 字节被按 UTF-8 解码失败时产生的指纹),检测到即源头拦截,不再静默入库。我自己插入数据仍须遵循:UTF-8 文件 + --data-binary @file.json,或 python 显式 UTF-8。
 
 - **[2026-08-06] 链头时长变更传播(Do-Not-Repeat 级)**：Recalculate 中 fixTriggerEnd(触发任务自身 end 重算)必须放在 recalc 之前——链头任务无前置不走 applyCandidate,若 end 修正发生在传播后,后继仍按旧 end 排。教训:修正"触发任务自身"的写操作必须在 loadTasks 之前完成,传播阶段才能读到新值。
+
+- **[2026-08-06] 关键路径实现要点**：ComputeTotalFloat 导出函数(复用 forwardPass/rollup/backwardPass,不写库),ListTasks 返回 critical_ids,前端 task_class 红色左缘。倒推必须与正推语义对称(显式前置存在则隐式失效)、必须用工作日语义(SubWorkDays,非 shiftDate)。
+- **[2026-08-06] dhtmlx-gantt GPL 无 marker 插件**：addMarker/plugins({marker:true}) 在 GPL 版不存在(静默 undefined)。今日线用 posFromDate(new Date()) 自绘 SVG 竖线(挂 drawMergedLinks 重绘)。
+- **[2026-08-06] 批次1交付**：关键路径高亮、状态/进度联动防呆(completed↔100%、>0%→进行中、0%→待开始)、时长列(甘特图+列表)、今日线自绘。
