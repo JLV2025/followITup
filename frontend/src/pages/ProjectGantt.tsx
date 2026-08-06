@@ -496,7 +496,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // === 自定义合并连线层（SVG）===
     const NS = "http://www.w3.org/2000/svg";
-    const linkColor = "#8A9AA3";
+    const criticalLinkColor = "#DC2626"; // 关键路径连线（源/目标均 TF=0）
+    const altLinkColor = "#2B6CB0";      // 备选路径连线（有富余）
     const svgLayer = document.createElementNS(NS, "svg");
     svgLayer.setAttribute("class", "gantt-merged-links");
     svgLayer.setAttribute("style", "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;");
@@ -645,7 +646,18 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           }
           return "M " + out.map((p) => p.join(" ")).join(" L ");
         };
-        let ds: string[] = [];
+        // 连线颜色：源和目标都在关键路径（TF=0）→ 红；否则（备选/富余路径）→ 蓝
+        const isCritical = (id: number) => {
+          const t = gantt.getTask(id);
+          return !!(t && (t as any).critical);
+        };
+        const linkColorFor = (link: any) =>
+          isCritical(Number(link.source)) && isCritical(Number(link.target)) ? criticalLinkColor : altLinkColor;
+        const targetCritical = isCritical(Number(targetId));
+        const sharedColor = targetCritical ? criticalLinkColor : altLinkColor;
+
+        // 构建绘制段 [{ d, color, link }]：多前置时每条源线独立画到汇合点，共享段单独画
+        const segs: Array<{ d: string; color: string; link: any }> = [];
         if (srcs.length === 1) {
           // 单条：源右缘 → 右 20 → 下到空隙中央 → 左到目标外 20 → 下到目标中线 → 连入
           const s = srcs[0].rect;
@@ -654,7 +666,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           const v1x = sx + 20;
           const midY = findGapMidY(Math.min(sy, ty), Math.max(sy, ty), Math.min(v1x, txEnd), Math.max(v1x, txEnd), (y) =>
             !segHit(v1x, sy, v1x, y) && !segHit(v1x, y, txEnd, y) && !segHit(txEnd, y, txEnd, ty));
-          ds = [toPath([[sx, sy], [v1x, sy], [v1x, midY], [txEnd, midY], [txEnd, ty], [txFinal, ty]])];
+          segs.push({
+            d: toPath([[sx, sy], [v1x, sy], [v1x, midY], [txEnd, midY], [txEnd, ty], [txFinal, ty]]),
+            color: linkColorFor(srcs[0].link),
+            link: srcs[0].link,
+          });
         } else {
           // 多前置合并：公共右边界（时间最长的条右缘）+20 处汇合下折；
           // 公共下边界（任务列表最下面的源底边）与目标之间的空隙中央水平穿过
@@ -663,34 +679,49 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           const midY = findGapMidY(comBottom, tRect.top, Math.min(comX, txEnd), Math.max(comX, txEnd), (y) =>
             srcs.every((s) => !segHit(comX, s.rect.mid, comX, y)) &&
             !segHit(comX, y, txEnd, y) && !segHit(txEnd, y, txEnd, ty));
-          const shared: Array<[number, number]> = [[comX, midY], [txEnd, midY], [txEnd, ty], [txFinal, ty]];
-          ds = srcs.map((s) => toPath([[s.rect.right, s.rect.mid], [comX, s.rect.mid], [comX, midY], ...shared]));
+          for (const s of srcs) {
+            segs.push({
+              d: toPath([[s.rect.right, s.rect.mid], [comX, s.rect.mid], [comX, midY]]),
+              color: linkColorFor(s.link),
+              link: s.link,
+            });
+          }
+          // 共享段（汇合后 → 目标）：颜色随目标是否关键
+          segs.push({
+            d: toPath([[comX, midY], [txEnd, midY], [txEnd, ty], [txFinal, ty]]),
+            color: sharedColor,
+            link: null,
+          });
         }
-        // 画路径（每条源线一个，共享段自然重叠）
-        for (let i = 0; i < ds.length; i++) {
+        // 画路径
+        for (const seg of segs) {
           const path = document.createElementNS(NS, "path");
-          path.setAttribute("d", ds[i]);
+          path.setAttribute("d", seg.d);
           path.setAttribute("fill", "none");
-          path.setAttribute("stroke", linkColor);
+          path.setAttribute("stroke", seg.color);
           path.setAttribute("stroke-width", "1.5");
           path.setAttribute("stroke-linejoin", "round");
           path.style.pointerEvents = "stroke";
           path.style.cursor = "pointer";
-          const link = srcs[i].link;
           path.addEventListener("dblclick", (e) => {
             e.stopPropagation();
             if (readonlyRef.current) return;
-            if (window.confirm("删除此依赖关系？")) {
-              gantt.deleteLink(link.id);
+            if (seg.link) {
+              if (window.confirm("删除此依赖关系？")) {
+                gantt.deleteLink(seg.link.id);
+                setTimeout(drawMergedLinks, 50);
+              }
+            } else if (window.confirm(`删除这 ${group.length} 条依赖关系？`)) {
+              for (const l of group) gantt.deleteLink(l.id);
               setTimeout(drawMergedLinks, 50);
             }
           });
           svgLayer.appendChild(path);
         }
-        // 共享箭头（尖端 = 条左缘；双击删除整组依赖）
+        // 箭头（尖端 = 条左缘；颜色随目标是否关键；双击删除整组依赖）
         const arrow = document.createElementNS(NS, "polygon");
         arrow.setAttribute("points", `${txFinal},${ty - 4} ${txFinal + 8},${ty} ${txFinal},${ty + 4}`);
-        arrow.setAttribute("fill", linkColor);
+        arrow.setAttribute("fill", sharedColor);
         arrow.addEventListener("dblclick", (e) => {
           e.stopPropagation();
           if (readonlyRef.current) return;
