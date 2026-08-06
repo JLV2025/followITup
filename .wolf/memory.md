@@ -1355,3 +1355,11 @@ cd backend && followitup.exe config.yaml   # 启动
 | 13:08 | Edited frontend/src/pages/ProjectGantt.tsx | 5→1 lines | ~20 |
 | 13:08 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~336 |
 | 13:09 | Edited frontend/src/styles/components.css | 4→4 lines | ~32 |
+| 13:12 | Session end: 68 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~69131 tok |
+| 13:14 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~289 |
+| 13:14 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~121 |
+| 13:15 | Edited frontend/src/pages/TaskListView.tsx | "—" → "${t.duration_days}d" | ~21 |
+| 13:16 | Edited frontend/src/pages/ProjectGantt.tsx | modified if() | ~345 |
+| 13:17 | Session end: 72 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~69907 tok |
+| 13:29 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: firstTop, lastBottom, t | ~509 |
+| 05:30 | 今日线改为任务区间纵向(首任务顶→末任务底),实线加粗绿色 | ProjectGantt.tsx | 实测对齐 | ~2k |
