@@ -504,27 +504,38 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const c = containerRef.current;
       if (!svgLayer || !c || svgLayer.parentElement !== c) return;
       svgLayer.innerHTML = "";
-      // 今日线（自绘，置于连线之下）：posFromDate 返回相对数据区的 x，
-      // SVG 层覆盖整个容器（含左侧表格），用绝对定位差求数据区在容器内的偏移
-      // （offsetLeft 受 offsetParent 影响不可靠——实测 offsetLeft=0 但表格宽 473px）
+      // 今日线（自绘，置于连线之下）：纵向范围 = 第一个可见任务条顶部 → 最后一个任务条底部。
+      // posFromDate 返回相对数据区的 x，SVG 层覆盖整个容器（含左侧表格），
+      // 用绝对定位差求数据区在容器内的偏移（offsetLeft 受 offsetParent 影响不可靠）
       try {
         const dataArea = c.querySelector(".gantt_data_area") as HTMLElement;
         if (dataArea) {
           const cRect = c.getBoundingClientRect();
-          const dataLeft = dataArea.getBoundingClientRect().left - cRect.left;
+          const dataRect = dataArea.getBoundingClientRect();
+          const dataLeft = dataRect.left - cRect.left;
           const todayX = (gantt as any).posFromDate(new Date());
           const x = Number(todayX) + dataLeft;
-          const todayH = dataArea.clientHeight;
-          if (todayH > 0 && typeof x === "number" && !isNaN(x)) {
+          // 第一个/最后一个可见任务条（树顺序 = 显示顺序），确定线的纵向范围
+          let firstTop: number | null = null;
+          let lastBottom: number | null = null;
+          gantt.eachTask((t: any) => {
+            const n = gantt.getTaskNode(t.id);
+            if (!n || n.offsetParent === null) return;
+            const r = n.getBoundingClientRect();
+            const top = r.top - dataRect.top;
+            const bottom = r.bottom - dataRect.top;
+            if (firstTop === null || top < firstTop) firstTop = top;
+            if (lastBottom === null || bottom > lastBottom) lastBottom = bottom;
+          });
+          if (typeof x === "number" && !isNaN(x) && firstTop !== null && lastBottom !== null) {
             const tl = document.createElementNS(NS, "line");
             tl.setAttribute("x1", String(x));
-            tl.setAttribute("y1", "0");
+            tl.setAttribute("y1", String(firstTop));
             tl.setAttribute("x2", String(x));
-            tl.setAttribute("y2", String(todayH));
+            tl.setAttribute("y2", String(lastBottom));
             tl.setAttribute("class", "today-marker-line");
-            tl.setAttribute("stroke", "var(--danger, #DC2626)");
-            tl.setAttribute("stroke-width", "1.5");
-            tl.setAttribute("stroke-dasharray", "4 3");
+            tl.setAttribute("stroke", "var(--primary, #2C6E6A)");
+            tl.setAttribute("stroke-width", "3");
             svgLayer.appendChild(tl);
           }
         }
