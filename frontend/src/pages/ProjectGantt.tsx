@@ -637,14 +637,41 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           }
           return best;
         };
-        // 折线点序列（连续重复点合并）
+        // 折线点序列（连续重复点合并），拐角用圆弧过渡（半径 8px 圆角转弯）
+        const LINK_CORNER_R = 8;
         const toPath = (pts: Array<[number, number]>) => {
           const out: Array<[number, number]> = [];
           for (const p of pts) {
             const last = out[out.length - 1];
             if (!last || last[0] !== p[0] || last[1] !== p[1]) out.push(p);
           }
-          return "M " + out.map((p) => p.join(" ")).join(" L ");
+          if (out.length < 3) return "M " + out.map((p) => p.join(" ")).join(" L ");
+          const r = LINK_CORNER_R;
+          let d = `M ${out[0][0]} ${out[0][1]}`;
+          for (let i = 1; i < out.length - 1; i++) {
+            const p0 = out[i - 1];
+            const p1 = out[i];
+            const p2 = out[i + 1];
+            // 进入/离开方向单位向量
+            const ux = p1[0] - p0[0];
+            const uy = p1[1] - p0[1];
+            const lu = Math.hypot(ux, uy) || 1;
+            const vx = p2[0] - p1[0];
+            const vy = p2[1] - p1[1];
+            const lv = Math.hypot(vx, vy) || 1;
+            // 圆弧起点 = 拐角沿进入方向后退 r；终点 = 沿离开方向前进 r
+            const sx = p1[0] - (ux / lu) * r;
+            const sy = p1[1] - (uy / lu) * r;
+            const ex = p1[0] + (vx / lv) * r;
+            const ey = p1[1] + (vy / lv) * r;
+            // 叉积决定 sweep：右转(顺时针)=1，左转(逆时针)=0
+            const cross = (ux / lu) * (vy / lv) - (uy / lu) * (vx / lv);
+            const sweep = cross > 0 ? 1 : 0;
+            d += ` L ${sx} ${sy} A ${r} ${r} 0 0 ${sweep} ${ex} ${ey}`;
+          }
+          const last = out[out.length - 1];
+          d += ` L ${last[0]} ${last[1]}`;
+          return d;
         };
         // 连线颜色：源和目标都在关键路径（TF=0）→ 红；否则（备选/富余路径）→ 蓝
         const isCritical = (id: number) => {
