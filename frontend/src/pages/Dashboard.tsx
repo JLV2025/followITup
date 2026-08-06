@@ -240,19 +240,19 @@ export default function Dashboard() {
                         Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} 天
                       </span>
                     )}
-                    <div className="project-card-progress">
-                      <div className="progress-bar">
-                        <div
-                          className="progress-fill"
-                          style={{
-                            width: `${p.progress}%`,
-                            background: statusColor(p),
-                          }}
-                        />
-                      </div>
-                      <span className="progress-text">{Math.round(p.progress)}%</span>
-                    </div>
                     <span className="project-link">详情 →</span>
+                  </div>
+                  <div className="project-card-progress">
+                    <div className="progress-bar">
+                      <div
+                        className="progress-fill"
+                        style={{
+                          width: `${p.progress}%`,
+                          background: statusColor(p),
+                        }}
+                      />
+                    </div>
+                    <span className="progress-text">{Math.round(p.progress)}%</span>
                   </div>
                   <div className="project-card-meta">
                     {p.next_milestone && (

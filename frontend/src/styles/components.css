@@ -327,7 +327,8 @@
 /* ===== 项目卡片列表 ===== */
 .project-cards {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* minmax(0,1fr) 禁止内容撑开列宽，保证双列严格等宽 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -361,19 +362,20 @@
 
 .project-card {
   background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 7px;
-  padding: 12px 16px;
+  border: 1px solid #e0dcd6;
+  border-radius: 10px;
+  padding: 12px 14px;
   text-decoration: none;
   color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
   position: relative;
   overflow: hidden;
 }
 
 .project-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-color: #d4cfc8;
   text-decoration: none;
 }
 
@@ -419,10 +421,8 @@
 .project-card-progress {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  flex-shrink: 0;
-  width: 100px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .progress-bar {
