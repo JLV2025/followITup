@@ -564,14 +564,14 @@
 .mini-gantt-chart {
   width: 100%;
   position: relative;
-  /* 左列总宽 = 编号 26 + 名称 120 + 两处 gap 12×2；overlay 用同一变量保证与轨道同基准 */
-  --mini-left: 170px;
+  /* 左列总宽 = 编号 26 + 名称 120 + 两处 gap 6×2；overlay 用同一变量保证与轨道同基准 */
+  --mini-left: 158px;
 }
 
 .mini-gantt-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   margin-bottom: 8px;
 }
 
@@ -588,7 +588,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start; /* 左对齐：与编号紧凑，给画框让出更多空间 */
   gap: 2px;
   line-height: 1.2;
 }
@@ -658,7 +658,7 @@
 .mini-gantt-scale-row {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 6px;
   height: 22px;
   margin-bottom: 4px;
 }

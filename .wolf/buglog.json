@@ -2375,6 +2375,22 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-06T09:48:08.601Z"
+    },
+    {
+      "id": "bug-148",
+      "timestamp": "2026-08-06T09:53:51.634Z",
+      "error_message": "CSS fix: --mini-left",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "--mini-left: 170px → 158px",
+      "fix": "Changed --mini-left: 170px → 158px",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 4,
+      "last_seen": "2026-08-06T09:54:17.131Z"
     }
   ]
 }

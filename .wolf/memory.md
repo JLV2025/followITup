@@ -1530,3 +1530,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:48 | Edited frontend/src/styles/components.css | CSS: --mini-left | ~42 |
 | 17:48 | Edited frontend/src/styles/components.css | expanded (+48 lines) | ~641 |
 | 09:52 | 时间线概览重构:两行刻度(FY/CY+英文月格中心首尾留空)、13条网格线、today线/网格线移入overlay修复基准偏移(像素级0.35px)、条重构(灰轨/深灰底/蓝段/全绿)、跨年裁剪箭头◀▶、风险红三角、左列144px日期去年份 | Dashboard.tsx, components.css | 浏览器像素级验证全过,测试项目已清理 | ~450 |
+| 17:51 | Session end: 27 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~53954 tok |
+| 17:53 | Edited frontend/src/styles/components.css | 6→6 lines | ~42 |
+| 17:53 | Edited frontend/src/styles/components.css | 9→9 lines | ~52 |
+| 17:53 | Edited frontend/src/styles/components.css | 7→7 lines | ~34 |
+| 17:54 | Edited frontend/src/styles/components.css | 6→6 lines | ~27 |
+| 09:56 | 时间线左列紧凑:名称左对齐+gap 12→6,左列170→158px,画框扩大12px,overlay同步 | components.css | 验证:间距6px/贴左0px/画框380/对齐0.36px | ~120 |

@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T09:48:08.550Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T09:54:17.086Z
 > Files: 52 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
@@ -160,7 +160,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 94 rules, 1 vars (~8286 tok)
+- `components.css` — Styles: 94 rules, 1 vars (~8293 tok)
 
 ## frontend/src/utils/
 
