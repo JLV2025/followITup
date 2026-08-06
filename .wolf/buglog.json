@@ -1488,6 +1488,70 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-05T09:59:58.852Z"
+    },
+    {
+      "id": "bug-093",
+      "timestamp": "2026-08-06T01:14:40.270Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/projects.go",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 27→42 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T01:14:40.270Z"
+    },
+    {
+      "id": "bug-094",
+      "timestamp": "2026-08-06T01:16:11.485Z",
+      "error_message": "Missing error handling in ProjectDetail",
+      "file": "frontend/src/pages/ProjectDetail.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T01:16:11.485Z"
+    },
+    {
+      "id": "bug-095",
+      "timestamp": "2026-08-06T01:16:29.107Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T01:16:29.107Z"
+    },
+    {
+      "id": "bug-096",
+      "timestamp": "2026-08-06T01:17:15.006Z",
+      "error_message": "CSS fix: font-size, color",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "font-size: 12px → 13px; color: var(--text-muted) → var(--text-secondary)",
+      "fix": "Changed font-size: 12px → 13px; color: var(--text-muted) → var(--text-secondary)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T01:17:15.006Z"
     }
   ]
 }

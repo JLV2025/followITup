@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-05T10:00:16.150Z
-> Files: 44 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T01:17:14.937Z
+> Files: 45 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -61,7 +61,7 @@
 
 - `auth.go` — Struct: AuthHandler (~2466 tok)
 - `calendar.go` — Struct: CalendarHandler (~1106 tok)
-- `projects.go` — Struct: ProjectHandler (~3784 tok)
+- `projects.go` — Struct: ProjectHandler (~3935 tok)
 - `settings.go` — Struct: SettingsHandler (~917 tok)
 - `tasks.go` — Struct: TaskHandler (~5035 tok)
 
@@ -88,7 +88,7 @@
 
 - `calendar.go` — Struct: CalendarEntry (~935 tok)
 - `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~5291 tok)
-- `scheduler.go` — Struct: Dep (~6169 tok)
+- `scheduler.go` — Struct: Dep (~6447 tok)
 
 ## backend/internal/server/
 
@@ -142,7 +142,8 @@
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
 - `Dashboard.tsx` — Dashboard (~5145 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~10431 tok)
+- `ProjectDetail.tsx` — ProjectDetail (~1042 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~10564 tok)
 - `SystemSettings.tsx` — SystemSettings — renders table (~2939 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)
 
@@ -153,7 +154,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 100 rules (~7317 tok)
+- `components.css` — Styles: 98 rules (~7441 tok)
 
 ## frontend/src/utils/
 

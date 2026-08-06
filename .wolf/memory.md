@@ -1274,3 +1274,18 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:59 | Edited backend/internal/server/server.go | "[Server] FollowITup v0.9." → "[Server] FollowITup v0.8." | ~19 |
 | 18:00 | Edited README.md | 9.0 → 8.5 | ~25 |
 | 18:01 | Session end: 10 writes across 3 files (ProjectGantt.tsx, server.go, README.md) | 4 reads | ~16355 tok |
+| 18:04 | Session end: 10 writes across 3 files (ProjectGantt.tsx, server.go, README.md) | 4 reads | ~16355 tok |
+| 08:24 | Session end: 10 writes across 3 files (ProjectGantt.tsx, server.go, README.md) | 4 reads | ~16355 tok |
+| 08:53 | Session end: 10 writes across 3 files (ProjectGantt.tsx, server.go, README.md) | 4 reads | ~16355 tok |
+| 09:03 | Session end: 10 writes across 3 files (ProjectGantt.tsx, server.go, README.md) | 7 reads | ~34674 tok |
+| 09:12 | Session end: 10 writes across 3 files (ProjectGantt.tsx, server.go, README.md) | 9 reads | ~38458 tok |
+| 09:14 | Edited backend/internal/scheduler/scheduler.go | modified forwardPass() | ~438 |
+| 09:14 | Edited backend/internal/scheduler/scheduler.go | 5→9 lines | ~114 |
+| 09:14 | Edited backend/internal/api/projects.go | expanded (+15 lines) | ~432 |
+| 09:14 | Edited backend/internal/api/projects.go | 14→16 lines | ~71 |
+| 09:16 | Edited frontend/src/pages/ProjectDetail.tsx | added error handling | ~303 |
+| 09:16 | Edited frontend/src/pages/ProjectDetail.tsx | expanded (+20 lines) | ~244 |
+| 09:16 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~148 |
+| 09:16 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~18 |
+| 09:17 | Edited frontend/src/styles/components.css | expanded (+19 lines) | ~138 |
+| 01:20 | 项目锚点日期:页首编辑开始/结束日期+全项目重排,正排链头锚定,切换方向也重排 | scheduler.go, projects.go, ProjectDetail.tsx, ProjectGantt.tsx | 正排/倒排双向实测通过 | ~14k |
