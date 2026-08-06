@@ -1384,3 +1384,6 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:06 | Session end: 82 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~72952 tok |
 | 14:08 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: 1 | ~444 |
 | 06:09 | 连线圆弧转弯(半径8px) | ProjectGantt.tsx | 11条全含圆弧 | ~3k |
+| 14:09 | Session end: 83 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~73396 tok |
+| 14:11 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~528 |
+| 06:12 | 圆弧半径5px+自适应 | ProjectGantt.tsx | 0直角残留 | ~2k |
