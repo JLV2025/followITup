@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T01:17:14.937Z
-> Files: 45 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T01:24:03.898Z
+> Files: 46 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -61,9 +61,10 @@
 
 - `auth.go` — Struct: AuthHandler (~2466 tok)
 - `calendar.go` — Struct: CalendarHandler (~1106 tok)
-- `projects.go` — Struct: ProjectHandler (~3935 tok)
+- `helpers.go` — HTTP handlers: writeJSON, writeError (~303 tok)
+- `projects.go` — Struct: ProjectHandler (~4044 tok)
 - `settings.go` — Struct: SettingsHandler (~917 tok)
-- `tasks.go` — Struct: TaskHandler (~5035 tok)
+- `tasks.go` — Struct: TaskHandler (~5144 tok)
 
 ## backend/internal/auth/
 

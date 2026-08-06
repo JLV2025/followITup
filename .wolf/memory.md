@@ -1289,3 +1289,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:16 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~18 |
 | 09:17 | Edited frontend/src/styles/components.css | expanded (+19 lines) | ~138 |
 | 01:20 | 项目锚点日期:页首编辑开始/结束日期+全项目重排,正排链头锚定,切换方向也重排 | scheduler.go, projects.go, ProjectDetail.tsx, ProjectGantt.tsx | 正排/倒排双向实测通过 | ~14k |
+| 09:20 | Session end: 19 writes across 7 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 10 reads | ~47895 tok |
+| 09:23 | Edited backend/internal/api/helpers.go | modified writeError() | ~172 |
+| 09:23 | Edited backend/internal/api/tasks.go | modified hasBadEncoding() | ~144 |
+| 09:23 | Edited backend/internal/api/tasks.go | modified hasBadEncoding() | ~98 |
+| 09:23 | Edited backend/internal/api/projects.go | modified hasBadEncoding() | ~108 |
+| 09:24 | Edited backend/internal/api/projects.go | modified hasBadEncoding() | ~132 |

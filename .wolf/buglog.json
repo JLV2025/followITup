@@ -1552,6 +1552,25 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-06T01:17:15.006Z"
+    },
+    {
+      "id": "bug-091",
+      "timestamp": "2026-08-06T01:40:00+08:00",
+      "error_message": "代码插入的项目/任务中文乱码(数据库含 11 个乱码任务名)",
+      "file": "backend/internal/api/helpers.go + tasks.go + projects.go",
+      "root_cause": "Windows 终端 GBK 编码经 curl -d 直传中文,GBK 字节被 Go 按 UTF-8 解析成连串 U+FFFD 替换字符入库(bug-025 同源,历史测试数据共 11 个任务+1 个项目名被污染)",
+      "fix": "新增 hasBadEncoding:含连续≥2个 U+FFFD 即 400 INVALID_ENCODING,在 4 个写入口(Create/UpdateTask、Create/UpdateProject)拦截;历史污染:project 7/8 移入回收站,project 6 task 47 重命名「水电施工」",
+      "tags": [
+        "encoding",
+        "gbk",
+        "乱码",
+        "防护"
+      ],
+      "related_bugs": [
+        "bug-025"
+      ],
+      "occurrences": 2,
+      "last_seen": "2026-08-06T01:40:00+08:00"
     }
   ]
 }
