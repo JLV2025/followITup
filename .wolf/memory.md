@@ -1381,3 +1381,6 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:04 | Edited frontend/src/styles/components.css | reduced (-10 lines) | ~17 |
 | 14:05 | Edited frontend/src/pages/ProjectGantt.tsx | 6→5 lines | ~72 |
 | 06:06 | 连线颜色编码(关键红/备选蓝)+移除红点 | ProjectGantt.tsx | 全关键与混合场景均验证 | ~5k |
+| 14:06 | Session end: 82 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~72952 tok |
+| 14:08 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: 1 | ~444 |
+| 06:09 | 连线圆弧转弯(半径8px) | ProjectGantt.tsx | 11条全含圆弧 | ~3k |
