@@ -326,7 +326,7 @@ export default function Dashboard() {
                       <div
                         className="mini-gantt-bar"
                         style={{
-                          left: "10%",
+                          left: 0,
                           width: `${Math.max(p.progress, 5)}%`,
                           background: progressColor(p),
                         }}
