@@ -13,6 +13,7 @@ import (
 	"followitup/internal/scheduler"
 	"followitup/internal/settings"
 	"followitup/internal/util"
+	"followitup/internal/ws"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -21,11 +22,12 @@ import (
 type ProjectHandler struct {
 	db  *sql.DB
 	mid *auth.Middleware
+	hub *ws.Hub
 }
 
 // NewProjectHandler 创建项目端点实例（财年起始月已迁移至 settings 表动态读取）
-func NewProjectHandler(db *sql.DB, mid *auth.Middleware) *ProjectHandler {
-	return &ProjectHandler{db: db, mid: mid}
+func NewProjectHandler(db *sql.DB, mid *auth.Middleware, hub *ws.Hub) *ProjectHandler {
+	return &ProjectHandler{db: db, mid: mid, hub: hub}
 }
 
 // RegisterRoutes 注册路由
@@ -293,8 +295,17 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 
 	// 项目开始/结束日期或排程方向变化 → 全项目重排（正排：链头对齐新开始日期；倒排：链尾对齐新完成日期）
 	if p.StartDate != oldStart || p.EndDate != oldEnd || p.ScheduleDirection != curDirection {
-		if _, err := scheduler.RecalculateAll(h.db, id); err != nil {
+		changes, err := scheduler.RecalculateAll(h.db, id)
+		if err != nil {
 			log.Printf("[Project] 项目 %d 日期/方向变更后重排失败: %v", id, err)
+		} else {
+			log.Printf("[Project] 项目 %d 日期/方向变更,重排 %d 个任务", id, len(changes))
+		}
+		// 广播给项目房间内其他在线用户（其页面自动刷新）
+		if h.hub != nil {
+			userID, _ := auth.GetUserID(r.Context())
+			userName, _ := auth.GetUserEmail(r.Context())
+			h.hub.BroadcastTaskUpdate(id, userID, userName, 0, nil)
 		}
 	}
 

@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useOutletContext, useParams } from "react-router-dom";
 import api from "../api/client";
 import { useAuthStore } from "../stores/authStore"
 import { formatDate } from "../utils/date";
@@ -79,6 +79,16 @@ export default function TaskListView() {
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  // 项目详情页页首修改项目开始/结束日期后,重新拉取任务数据(后端已全项目重排)
+  const outletCtx = useOutletContext<{ refreshKey?: number }>();
+  const prevRefreshKey = useRef(outletCtx?.refreshKey);
+  useEffect(() => {
+    if (outletCtx?.refreshKey !== undefined && outletCtx.refreshKey !== prevRefreshKey.current) {
+      prevRefreshKey.current = outletCtx.refreshKey;
+      fetchTasks();
+    }
+  }, [outletCtx?.refreshKey, fetchTasks]);
 
   const startEdit = (task: Task, field: string) => {
     if (!isLoggedIn) return;
