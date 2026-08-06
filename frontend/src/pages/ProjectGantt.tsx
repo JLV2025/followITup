@@ -337,10 +337,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           </span>`;
         } as any,
       },
-      { name: "duration_col", label: "时长", width: 52, align: "center",
+      { name: "duration_col", label: "时长", width: 56, align: "center",
         template: function (task: Record<string, any>) {
           if (task.type === "milestone") return '<span style="color:var(--text-muted);">◆</span>';
-          return `<span style="font-size:12px;color:var(--text-secondary);">${task.duration_days ?? task.duration ?? ""}</span>`;
+          const d = task.duration_days ?? task.duration;
+          return `<span style="font-size:12px;color:var(--text-secondary);">${d ?? ""}${d ? "d" : ""}</span>`;
         } as any,
       },
       { name: "progress_bar", label: "进度", width: 90, align: "center",
@@ -503,22 +504,29 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const c = containerRef.current;
       if (!svgLayer || !c || svgLayer.parentElement !== c) return;
       svgLayer.innerHTML = "";
-      // 今日线（自绘，置于连线之下）：x = 今天在甘特图中的位置，贯穿数据区全高
+      // 今日线（自绘，置于连线之下）：posFromDate 返回相对数据区的 x，
+      // SVG 层覆盖整个容器（含左侧表格），用绝对定位差求数据区在容器内的偏移
+      // （offsetLeft 受 offsetParent 影响不可靠——实测 offsetLeft=0 但表格宽 473px）
       try {
-        const todayX = (gantt as any).posFromDate(new Date());
         const dataArea = c.querySelector(".gantt_data_area") as HTMLElement;
-        const todayH = dataArea ? dataArea.clientHeight : 0;
-        if (todayH > 0 && typeof todayX === "number") {
-          const tl = document.createElementNS(NS, "line");
-          tl.setAttribute("x1", String(todayX));
-          tl.setAttribute("y1", "0");
-          tl.setAttribute("x2", String(todayX));
-          tl.setAttribute("y2", String(todayH));
-          tl.setAttribute("class", "today-marker-line");
-          tl.setAttribute("stroke", "var(--danger, #DC2626)");
-          tl.setAttribute("stroke-width", "1.5");
-          tl.setAttribute("stroke-dasharray", "4 3");
-          svgLayer.appendChild(tl);
+        if (dataArea) {
+          const cRect = c.getBoundingClientRect();
+          const dataLeft = dataArea.getBoundingClientRect().left - cRect.left;
+          const todayX = (gantt as any).posFromDate(new Date());
+          const x = Number(todayX) + dataLeft;
+          const todayH = dataArea.clientHeight;
+          if (todayH > 0 && typeof x === "number" && !isNaN(x)) {
+            const tl = document.createElementNS(NS, "line");
+            tl.setAttribute("x1", String(x));
+            tl.setAttribute("y1", "0");
+            tl.setAttribute("x2", String(x));
+            tl.setAttribute("y2", String(todayH));
+            tl.setAttribute("class", "today-marker-line");
+            tl.setAttribute("stroke", "var(--danger, #DC2626)");
+            tl.setAttribute("stroke-width", "1.5");
+            tl.setAttribute("stroke-dasharray", "4 3");
+            svgLayer.appendChild(tl);
+          }
         }
       } catch { /* 位置计算失败时跳过今日线 */ }
       const links = gantt.getLinks();

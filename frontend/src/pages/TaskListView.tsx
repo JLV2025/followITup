@@ -338,7 +338,7 @@ export default function TaskListView() {
                     t.assignee || "—"
                   )}
                 </td>
-                <td>{t.duration_days ?? "—"}</td>
+                <td>{t.duration_days ? `${t.duration_days}d` : "—"}</td>
                 <td>{formatDate(t.start_date)}</td>
                 <td>{formatDate(t.end_date)}</td>
                 <td>
