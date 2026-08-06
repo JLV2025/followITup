@@ -122,7 +122,7 @@ func TestForwardPass(t *testing.T) {
 		{ID: 2, PredecessorID: 2, SuccessorID: 3, Type: FS, LagDays: 2},
 	}
 
-	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 	if len(changes) != 2 {
 		t.Fatalf("应影响 2 个后继任务，实际 %d", len(changes))
 	}
@@ -156,7 +156,7 @@ func TestManualScheduledBlocksCascade(t *testing.T) {
 	tasks[0].EndDate = "2026-07-08"
 	tasks[0].DurationDays = 7
 
-	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 	if _, ok := changes[2]; ok {
 		t.Error("手动锁定的任务不应被自动调整")
 	}
@@ -179,7 +179,7 @@ func TestMultiplePredecessorsMaxDate(t *testing.T) {
 	tasks[0].EndDate = "2026-07-08"
 	tasks[0].DurationDays = 7
 
-	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 
 	// B(7/9开始→7/12结束)→D=7/12, C(7/9开始→7/17结束)→D=7/17. D 应取 max = 7/17
 	if start, ok := changes[4]["start_date"]; !ok {
@@ -205,7 +205,7 @@ func TestStartNoEarlierThanConstraint(t *testing.T) {
 	tasks[0].EndDate = "2026-07-03"
 	tasks[0].DurationDays = 2
 
-	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 	if ch, ok := changes[2]; !ok || ch["start_date"] != "2026-07-20" {
 		t.Errorf("A 提前后 B 应跟随提前到约束 floor 7/20，实际 changes=%v", changes[2])
 	}
@@ -213,7 +213,7 @@ func TestStartNoEarlierThanConstraint(t *testing.T) {
 	// 但如果 A 延期到 7/28，候选=7/29 > B 当前 7/25 → 应推送
 	tasks[0].EndDate = "2026-07-28"
 	tasks[0].DurationDays = 27
-	changes2 := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes2 := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 	if _, ok := changes2[2]; !ok {
 		t.Error("A 延期到 7/28，B 应被推后到 7/29")
 	}
@@ -233,7 +233,7 @@ func TestBackwardPassDeadline(t *testing.T) {
 		{ID: 2, PredecessorID: 2, SuccessorID: 3, Type: FS, LagDays: 0},
 	}
 
-	forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{})
+	forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 	backwardPass(tasks, deps, map[int64]bool{}, map[string]string{})
 
 	// 后向传播：C.LF → 7/31, B.LF → 7/28(FS:7/31-3), A.LF → 7/20(FS:7/28-7)
@@ -266,7 +266,7 @@ func TestConstraintConflict(t *testing.T) {
 		{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0},
 	}
 
-	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 	backwardPass(tasks, deps, map[int64]bool{}, map[string]string{})
 
 	// B 的结束日期（前向）应晚于约束日期 → 冲突
@@ -288,7 +288,7 @@ func TestImplicitOrderDependency(t *testing.T) {
 
 	// 1 号任务（前置）改为 7/6 结束 → 2 应跟随提前到 7/6，3 跟随到 2 的结束
 	tasks[0].EndDate = "2026-07-06"
-	changes := forwardPass(tasks, nil, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes := forwardPass(tasks, nil, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 
 	if ch, ok := changes[2]; !ok || ch["start_date"] != "2026-07-06" {
 		t.Errorf("任务2 应跟随前置 1 提前到 7/6，实际 changes=%v", changes[2])
@@ -305,7 +305,7 @@ func TestImplicitOrderSkippedForManual(t *testing.T) {
 		{ID: 2, StartDate: "2026-07-10", EndDate: "2026-07-12", DurationDays: 3, SortOrder: 1, ManualScheduled: true},
 	}
 	tasks[0].EndDate = "2026-07-06"
-	changes := forwardPass(tasks, nil, []int64{1}, map[int64]bool{}, map[string]string{})
+	changes := forwardPass(tasks, nil, []int64{1}, map[int64]bool{}, map[string]string{}, "")
 	if _, ok := changes[2]; ok {
 		t.Error("手动排程任务不应被隐式顺序依赖修改")
 	}

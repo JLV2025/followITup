@@ -151,11 +151,15 @@ func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[stri
 		}
 	}
 
+	// 项目开始日期（正排链头锚点；倒排项目不经过此路径）
+	var projectStart string
+	db.QueryRow(`SELECT COALESCE(start_date, '') FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&projectStart)
+
 	// 迭代收敛：父任务作为前驱时，其汇总值（rollup）参与下一轮传播。
 	// 每轮从起点重新前向传播（内存值已更新），直至无变化（一般 2-3 轮，上限 5 轮）
 	changes := make(map[int64]map[string]string)
 	for round := 0; round < 5; round++ {
-		ch := forwardPass(tasks, deps, startQueue, parentSet, cal)
+		ch := forwardPass(tasks, deps, startQueue, parentSet, cal, projectStart)
 		rollupParentDates(tasks, parentSet, ch, cal)
 		for id, fields := range ch {
 			changes[id] = fields
@@ -281,7 +285,7 @@ func detectCycle(tasks []TaskInfo, deps []Dep) []int64 {
 	return nil
 }
 
-func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map[int64]bool, cal map[string]string) map[int64]map[string]string {
+func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map[int64]bool, cal map[string]string, projectStart string) map[int64]map[string]string {
 	taskMap := make(map[int64]*TaskInfo)
 	for i := range tasks {
 		taskMap[tasks[i].ID] = &tasks[i]
@@ -298,6 +302,38 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 	implicitPred, implicitSucc := buildImplicitPred(tasks)
 
 	changes := make(map[int64]map[string]string)
+
+	// 链头锚定：无任何前置（显式+隐式）的任务，start = max(项目开始日期, 约束日期)。
+	// 项目开始日期是正排的唯一锚点——编辑项目开始日期 → 全项目重排时所有链头对齐。
+	// 每轮迭代幂等：已锚定的链头 start 不再变化。
+	if projectStart != "" {
+		for _, id := range startQueue {
+			t := taskMap[id]
+			if t == nil || t.ManualScheduled || parentSet[t.ID] {
+				continue
+			}
+			if len(predDeps[t.ID]) > 0 {
+				continue
+			}
+			if _, ok := implicitPred[t.ID]; ok {
+				continue
+			}
+			ns := projectStart
+			if t.ConstraintType == ConstraintStartNoEarlierThan && t.ConstraintDate != "" && t.ConstraintDate > ns {
+				ns = t.ConstraintDate
+			}
+			if ns != t.StartDate {
+				t.StartDate = ns
+				t.EndDate = AddWorkDays(cal, ns, t.DurationDays)
+				changes[t.ID] = map[string]string{
+					"start_date":    ns,
+					"end_date":      t.EndDate,
+					"duration_days": fmt.Sprintf("%d", t.DurationDays),
+				}
+			}
+		}
+	}
+
 	queue := startQueue
 	visited := make(map[int64]bool)
 

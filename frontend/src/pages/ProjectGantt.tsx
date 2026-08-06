@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { gantt } from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import { useGanttStore } from "../stores/ganttStore";
@@ -158,6 +158,16 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   useEffect(() => {
     fetchBaselineMeta(projectId);
   }, [projectId, fetchBaselineMeta]);
+
+  // 项目详情页页首修改项目开始/结束日期后，重新拉取任务数据（后端已全项目重排）
+  const outletCtx = useOutletContext<{ refreshKey?: number }>();
+  const prevRefreshKey = useRef(outletCtx?.refreshKey);
+  useEffect(() => {
+    if (outletCtx?.refreshKey !== undefined && outletCtx.refreshKey !== prevRefreshKey.current) {
+      prevRefreshKey.current = outletCtx.refreshKey;
+      fetchData(projectId, readonlyRef.current);
+    }
+  }, [outletCtx?.refreshKey, projectId, fetchData]);
 
   // 加载原始任务列表（用于弹窗）
   useEffect(() => {

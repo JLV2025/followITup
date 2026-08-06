@@ -3,12 +3,14 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"followitup/internal/auth"
 	"followitup/internal/models"
+	"followitup/internal/scheduler"
 	"followitup/internal/settings"
 	"followitup/internal/util"
 
@@ -243,9 +245,11 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 读取旧值：判断日期/方向是否变化（变化才重排），未携带的字段保留旧值
+	var curDirection, oldStart, oldEnd string
+	h.db.QueryRow(`SELECT COALESCE(schedule_direction, 'forward'), COALESCE(start_date, ''), COALESCE(end_date, '') FROM projects WHERE id=? AND deleted_at IS NULL`, id).Scan(&curDirection, &oldStart, &oldEnd)
+
 	// 排程方向锁定：项目内任一任务有进度后不可修改方向
-	var curDirection string
-	h.db.QueryRow(`SELECT COALESCE(schedule_direction, 'forward') FROM projects WHERE id=? AND deleted_at IS NULL`, id).Scan(&curDirection)
 	if p.ScheduleDirection != "" && p.ScheduleDirection != curDirection {
 		var cnt int
 		h.db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE project_id=? AND deleted_at IS NULL AND progress_pct > 0`, id).Scan(&cnt)
@@ -257,6 +261,12 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	if p.ScheduleDirection == "" {
 		p.ScheduleDirection = curDirection // 请求体未携带时保留旧值
 	}
+	if p.StartDate == "" {
+		p.StartDate = oldStart // 未携带时保留旧值（避免空串覆盖）
+	}
+	if p.EndDate == "" {
+		p.EndDate = oldEnd
+	}
 	_, err := h.db.Exec(
 		`UPDATE projects SET name=?, description=?, start_date=?, end_date=?, status=?, is_public=?,
 		       schedule_direction=?, updated_at=datetime('now')
@@ -267,6 +277,13 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "更新项目失败")
 		return
+	}
+
+	// 项目开始/结束日期或排程方向变化 → 全项目重排（正排：链头对齐新开始日期；倒排：链尾对齐新完成日期）
+	if p.StartDate != oldStart || p.EndDate != oldEnd || p.ScheduleDirection != curDirection {
+		if _, err := scheduler.RecalculateAll(h.db, id); err != nil {
+			log.Printf("[Project] 项目 %d 日期/方向变更后重排失败: %v", id, err)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "更新成功"})

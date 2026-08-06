@@ -655,6 +655,25 @@
   color: var(--text-muted);
 }
 
+/* 项目锚点日期（正排开始 / 倒排结束） */
+.direction-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.direction-date input[type="date"] {
+  font-size: 13px;
+  padding: 2px 6px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
 .project-tabs {
   display: flex;
   gap: 4px;

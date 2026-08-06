@@ -16,6 +16,8 @@ export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [hasProgress, setHasProgress] = useState(false);
+  // 项目开始/结束日期变化时递增，通知甘特图等子路由重新拉取任务数据
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     api.get(`/api/projects/${id}`).then((res) => setProject(res.data.data));
@@ -25,6 +27,18 @@ export default function ProjectDetail() {
       setHasProgress(tasks.some((t: any) => (t.progress_pct || 0) > 0));
     });
   }, [id]);
+
+  // 保存项目开始/结束日期（后端会触发全项目重排）
+  const saveDate = async (field: "start_date" | "end_date", value: string) => {
+    if (!project) return;
+    try {
+      await api.put(`/api/projects/${id}`, { ...project, [field]: value });
+      setProject({ ...project, [field]: value });
+      setRefreshKey((k) => k + 1); // 通知子路由刷新（重排已落库）
+    } catch (err: any) {
+      alert(err?.response?.data?.error?.message || "项目日期更新失败");
+    }
+  };
 
   if (!project) return <p className="text-secondary">加载中...</p>;
 
@@ -67,10 +81,30 @@ export default function ProjectDetail() {
         {hasProgress && (
           <span className="direction-hint">项目已有任务进度，排程方向不可修改</span>
         )}
+        {/* 项目锚点日期：正排编辑开始日期，倒排编辑结束日期（保存后全项目重排） */}
+        {project.schedule_direction === "forward" ? (
+          <label className="direction-date">
+            项目开始
+            <input
+              type="date"
+              value={project.start_date || ""}
+              onChange={(e) => saveDate("start_date", e.target.value)}
+            />
+          </label>
+        ) : (
+          <label className="direction-date">
+            项目结束
+            <input
+              type="date"
+              value={project.end_date || ""}
+              onChange={(e) => saveDate("end_date", e.target.value)}
+            />
+          </label>
+        )}
       </div>
 
       {/* 子路由内容 */}
-      <Outlet context={{ project }} />
+      <Outlet context={{ project, refreshKey }} />
     </div>
   );
 }
