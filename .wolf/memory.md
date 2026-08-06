@@ -1374,3 +1374,10 @@ cd backend && followitup.exe config.yaml   # 启动
 | 13:54 | Edited frontend/src/styles/components.css | 4→9 lines | ~67 |
 | 13:55 | Edited frontend/src/styles/components.css | CSS: text-align | ~84 |
 | 05:56 | 关键路径改条内小红点+文字左对齐 | components.css | 验证通过 | ~1k |
+| 13:57 | Session end: 78 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~71530 tok |
+| 14:00 | Session end: 78 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~71530 tok |
+| 14:03 | Edited frontend/src/pages/ProjectGantt.tsx | 4→6 lines | ~81 |
+| 14:04 | Edited frontend/src/pages/ProjectGantt.tsx | added 2 condition(s) | ~1109 |
+| 14:04 | Edited frontend/src/styles/components.css | reduced (-10 lines) | ~17 |
+| 14:05 | Edited frontend/src/pages/ProjectGantt.tsx | 6→5 lines | ~72 |
+| 06:06 | 连线颜色编码(关键红/备选蓝)+移除红点 | ProjectGantt.tsx | 全关键与混合场景均验证 | ~5k |
