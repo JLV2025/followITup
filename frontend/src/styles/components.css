@@ -516,18 +516,19 @@
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 1px;
-  background: var(--danger);
-  opacity: 0.5;
+  width: 2px; /* 加粗一倍 */
+  background: var(--primary);
 }
 
 .mini-gantt-today::after {
-  content: "今天";
+  content: "Today";
   position: absolute;
   top: -18px;
   left: -12px;
   font-size: 10px;
-  color: var(--danger);
+  color: var(--primary);
+  writing-mode: horizontal-tb; /* 文字水平 */
+  white-space: nowrap;
 }
 
 /* ===== 看板底部 ===== */
