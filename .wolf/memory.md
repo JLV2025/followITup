@@ -1366,3 +1366,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 13:30 | Session end: 73 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~70416 tok |
 | 13:34 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~265 |
 | 05:35 | 今日线移入bars_area内容层:解决固定层与滚动内容坐标系错位 | ProjectGantt.tsx | 覆盖全任务验证通过 | ~2k |
+| 13:36 | Session end: 74 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~70681 tok |
+| 13:42 | Edited frontend/src/pages/ProjectGantt.tsx | modified if() | ~346 |
+| 13:45 | Edited frontend/src/pages/ProjectGantt.tsx | 3→5 lines | ~106 |
+| 05:46 | 今日线居中+季档单层化修复 | ProjectGantt.tsx | 均验证通过 | ~3k |
