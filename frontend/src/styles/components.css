@@ -914,9 +914,19 @@
   color: var(--danger) !important;
 }
 
-/* 关键路径任务：左缘红色竖条标记（TF=0） */
-.gantt_task_line.gantt-task-critical {
-  box-shadow: inset 3px 0 0 var(--danger);
+/* 关键路径任务：条内最左侧小红点 + 后跟文字（TF=0） */
+.gantt_task_line.gantt-task-critical .gantt_task_content::before {
+  content: "●";
+  font-size: 9px;
+  color: var(--danger);
+  margin-right: 4px;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* 甘特条内文字左对齐 */
+.gantt_task_content {
+  text-align: left;
 }
 
 /* 只读模式提示 */
