@@ -502,9 +502,25 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const links = gantt.getLinks();
       if (!links || links.length === 0) return;
       const ganttRect = c.getBoundingClientRect();
-      // 收集所有任务条位置（相对 gantt 容器）
+      // 折叠父任务时连线聚合：任务条不可见（在折叠子树内，display:none）时，
+      // 把它参与的连线提升到最近可见祖先（折叠的父任务）的条上绘制——折叠不中断
+      const isVisible = (id: number) => {
+        const n = gantt.getTaskNode(id);
+        return !!n && n.offsetParent !== null; // display:none 的节点 offsetParent 为 null
+      };
+      const resolveVisible = (id: number): number => {
+        let cur: any = gantt.getTask(id);
+        let guard = 0;
+        while (cur && !isVisible(cur.id) && guard < 20) {
+          cur = cur.parent ? gantt.getTask(cur.parent) : null;
+          guard++;
+        }
+        return cur ? Number(cur.id) : id;
+      };
+      // 收集所有可见任务条位置（相对 gantt 容器；折叠子树内任务不参与障碍检测）
       const barRects = new Map<number, { left: number; right: number; top: number; bottom: number; mid: number }>();
       gantt.eachTask((t: any) => {
+        if (!isVisible(Number(t.id))) return;
         const n = gantt.getTaskNode(t.id);
         if (!n) return;
         const r = n.getBoundingClientRect();
@@ -516,10 +532,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           mid: r.top - ganttRect.top + r.height / 2,
         });
       });
-      // 按后继任务分组：多前置合并画法，单前置标准 5 段折线
+      // 按后继任务分组：多前置合并画法，单前置标准 5 段折线。
+      // 折叠时 source/target 提升到最近可见祖先（父任务条）→ 多个子任务依赖自动聚合到父任务
       const groups = new Map<number, any[]>();
       for (const l of links) {
-        const tid = Number(l.target);
+        const tid = resolveVisible(Number(l.target));
+        const sid = resolveVisible(Number(l.source));
+        if (tid === sid) continue; // 提升后自连（同一折叠父任务内部的依赖，折叠时无外部意义）
         const arr = groups.get(tid) || [];
         arr.push(l);
         groups.set(tid, arr);
@@ -528,10 +547,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         const tRect = barRects.get(Number(targetId));
         if (!tRect) continue;
         const srcs = group
-          .map((l) => ({ link: l, rect: barRects.get(Number(l.source)) }))
+          .map((l) => ({ link: l, rect: barRects.get(resolveVisible(Number(l.source))) }))
           .filter((x) => x.rect) as Array<{ link: any; rect: { left: number; right: number; top: number; bottom: number; mid: number } }>;
         if (srcs.length === 0) continue;
-        const srcIdSet = new Set(srcs.map((s) => Number(s.link.source)));
+        const srcIdSet = new Set(srcs.map((s) => resolveVisible(Number(s.link.source))));
         const ty = tRect.mid;
         const txEnd = tRect.left - 20;   // 目标侧垂直段 x（左缘外 20px）
         const txFinal = tRect.left - 8;  // 箭头起点（尖端 = 条左缘，绝不入条）
@@ -656,9 +675,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       }
     };
 
-    // 数据渲染/滚动/缩放后重绘合并连线
+    // 数据渲染/滚动/缩放/折叠展开后重绘合并连线
     gantt.attachEvent("onDataRender", () => setTimeout(drawMergedLinks, 0));
     gantt.attachEvent("onGanttScroll", () => setTimeout(drawMergedLinks, 0));
+    gantt.attachEvent("onCollapse", () => setTimeout(drawMergedLinks, 0));
+    gantt.attachEvent("onExpand", () => setTimeout(drawMergedLinks, 0));
     (window as any).__drawMergedLinks = drawMergedLinks;
 
     setGanttReady(true);
