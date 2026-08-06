@@ -1370,3 +1370,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 13:42 | Edited frontend/src/pages/ProjectGantt.tsx | modified if() | ~346 |
 | 13:45 | Edited frontend/src/pages/ProjectGantt.tsx | 3→5 lines | ~106 |
 | 05:46 | 今日线居中+季档单层化修复 | ProjectGantt.tsx | 均验证通过 | ~3k |
+| 13:46 | Session end: 76 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 20 reads | ~71379 tok |
+| 13:54 | Edited frontend/src/styles/components.css | 4→9 lines | ~67 |
+| 13:55 | Edited frontend/src/styles/components.css | CSS: text-align | ~84 |
+| 05:56 | 关键路径改条内小红点+文字左对齐 | components.css | 验证通过 | ~1k |
