@@ -61,8 +61,10 @@ const ZOOM_LEVELS: dhtmlxZoomLevel[] = [
     scales: [{ unit: "month", step: 1, format: "%M" }, { unit: "day", step: 1, format: "%d" }] },
   { name: "2months", scale_height: 40, min_column_width: 70,
     scales: [{ unit: "month", step: 2, format: "%M-%M" }, { unit: "day", step: 1, format: "%d" }] },
+  // 季度/年级别用单层 scale：每列 = 一个 step 单位（季度=3个月/年=1个月），列宽由 min_column_width 决定。
+  // 双层 scale 时最细层（天）固定每格 1 天宽，月层只合并标签——短项目看不出区别（曾被误报"季档无效"）
   { name: "quarter", scale_height: 40, min_column_width: 80,
-    scales: [{ unit: "month", step: 3, format: "%M" }, { unit: "day", step: 1, format: "%d" }] },
+    scales: [{ unit: "month", step: 3, format: "%M" }] },
   { name: "year", scale_height: 40, min_column_width: 50, scales: [{ unit: "month", step: 1, format: "%m月" }] },
 ];
 
@@ -505,14 +507,18 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       if (!svgLayer || !c || svgLayer.parentElement !== c) return;
       svgLayer.innerHTML = "";
       // 今日线（自绘）：画在 .gantt_bars_area 内容层内部（与任务条同坐标系，
-      // 随滚动移动，天然覆盖全部任务纵向范围）。posFromDate 返回内容坐标 x。
-      // 不能用固定 SVG 层——内容是滚动容器，固定层与内容纵向不同步会错位
+      // 随滚动移动，天然覆盖全部任务纵向范围）。x = 今天日期单元格正中
+      // （posFromDate 返回今天 0 点=格左缘，加日宽一半）。不能用固定 SVG 层——
+      // 内容是滚动容器，固定层与内容纵向不同步会错位
       try {
         const dataArea = c.querySelector(".gantt_data_area") as HTMLElement;
         const barsArea = dataArea ? (dataArea.querySelector(".gantt_bars_area") as HTMLElement) : null;
         if (barsArea) {
-          const todayX = (gantt as any).posFromDate(new Date());
-          if (typeof todayX === "number" && !isNaN(todayX)) {
+          const now = new Date();
+          const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+          const dayWidth = (gantt as any).posFromDate(tomorrow) - (gantt as any).posFromDate(now);
+          const todayX = (gantt as any).posFromDate(now) + dayWidth / 2;
+          if (typeof todayX === "number" && !isNaN(todayX) && dayWidth > 0) {
             barsArea.querySelector(".today-marker-line")?.remove();
             const tl = document.createElement("div");
             tl.className = "today-marker-line";
