@@ -321,8 +321,6 @@ export default function Dashboard() {
                         Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} 天
                       </span>
                     )}
-                    {/* 项目所有者：第一行右上角 */}
-                    <span className="project-owner" title="项目所有者">👤 {p.owner || "—"}</span>
                     <span className="project-link">详情 →</span>
                   </div>
                   <div className="project-card-body">
@@ -338,6 +336,8 @@ export default function Dashboard() {
                       </div>
                       <span className="progress-text">{Math.round(p.progress)}%</span>
                     </div>
+                    {/* 项目所有者：第二排进度百分数之后，固定位置完整显示 */}
+                    <span className="project-owner" title="项目所有者">👤 {p.owner || "—"}</span>
                     {/* 恒渲染占位：保证有无截止日期时进度条长度统一 */}
                     <span className="project-card-end">
                       {p.end_date ? `截止: ${formatDate(p.end_date)}` : ""}
