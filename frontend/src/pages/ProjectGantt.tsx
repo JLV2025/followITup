@@ -637,8 +637,9 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           }
           return best;
         };
-        // 折线点序列（连续重复点合并），拐角用圆弧过渡（半径 8px 圆角转弯）
-        const LINK_CORNER_R = 8;
+        // 折线点序列（连续重复点合并），拐角用圆弧过渡。
+        // 半径 5px，但受相邻段长约束：段长 < 2r 时自动缩小（否则短段两端圆弧重叠成直角）
+        const LINK_CORNER_R = 5;
         const toPath = (pts: Array<[number, number]>) => {
           const out: Array<[number, number]> = [];
           for (const p of pts) {
@@ -652,22 +653,28 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             const p0 = out[i - 1];
             const p1 = out[i];
             const p2 = out[i + 1];
+            const segIn = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+            const segOut = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+            // 有效半径：全局半径受相邻段长一半约束（短段自动缩小，避免圆弧重叠）
+            const rr = Math.min(r, segIn / 2, segOut / 2);
+            if (rr <= 0) {
+              d += ` L ${p1[0]} ${p1[1]}`;
+              continue;
+            }
             // 进入/离开方向单位向量
-            const ux = p1[0] - p0[0];
-            const uy = p1[1] - p0[1];
-            const lu = Math.hypot(ux, uy) || 1;
-            const vx = p2[0] - p1[0];
-            const vy = p2[1] - p1[1];
-            const lv = Math.hypot(vx, vy) || 1;
-            // 圆弧起点 = 拐角沿进入方向后退 r；终点 = 沿离开方向前进 r
-            const sx = p1[0] - (ux / lu) * r;
-            const sy = p1[1] - (uy / lu) * r;
-            const ex = p1[0] + (vx / lv) * r;
-            const ey = p1[1] + (vy / lv) * r;
+            const ux = (p1[0] - p0[0]) / segIn;
+            const uy = (p1[1] - p0[1]) / segIn;
+            const vx = (p2[0] - p1[0]) / segOut;
+            const vy = (p2[1] - p1[1]) / segOut;
+            // 圆弧起点 = 拐角沿进入方向后退 rr；终点 = 沿离开方向前进 rr
+            const sx = p1[0] - ux * rr;
+            const sy = p1[1] - uy * rr;
+            const ex = p1[0] + vx * rr;
+            const ey = p1[1] + vy * rr;
             // 叉积决定 sweep：右转(顺时针)=1，左转(逆时针)=0
-            const cross = (ux / lu) * (vy / lv) - (uy / lu) * (vx / lv);
+            const cross = ux * vy - uy * vx;
             const sweep = cross > 0 ? 1 : 0;
-            d += ` L ${sx} ${sy} A ${r} ${r} 0 0 ${sweep} ${ex} ${ey}`;
+            d += ` L ${sx} ${sy} A ${rr} ${rr} 0 0 ${sweep} ${ex} ${ey}`;
           }
           const last = out[out.length - 1];
           d += ` L ${last[0]} ${last[1]}`;
