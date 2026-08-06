@@ -74,3 +74,5 @@
 - **[2026-08-06] 项目锚点日期(用户定义)**：项目开始(正排)/结束(倒排)日期是**唯一锚点**,放在项目详情页页首方向选择旁编辑,保存后全项目重排。正排链头(无显式+隐式前置、非 manual、非父)start 恒 = max(项目开始日期, 约束日期);倒排链尾 end 恒 = 项目结束日期。任务弹窗日期保持只读。前端联动:ProjectDetail 保存后 refreshKey 递增 → 甘特图 useOutletContext 监听重新 fetchData。UpdateProject 未携带字段保留旧值。
 
 - **[2026-08-06] 乱码防护(强化 bug-025)**：写入口(Create/UpdateTask、Create/UpdateProject)新增 hasBadEncoding 校验——name/description 含**连续 ≥2 个 U+FFFD** 即 400 INVALID_ENCODING。真实中文文本不会出现连续替换字符(它是 GBK 字节被按 UTF-8 解码失败时产生的指纹),检测到即源头拦截,不再静默入库。我自己插入数据仍须遵循:UTF-8 文件 + --data-binary @file.json,或 python 显式 UTF-8。
+
+- **[2026-08-06] 链头时长变更传播(Do-Not-Repeat 级)**：Recalculate 中 fixTriggerEnd(触发任务自身 end 重算)必须放在 recalc 之前——链头任务无前置不走 applyCandidate,若 end 修正发生在传播后,后继仍按旧 end 排。教训:修正"触发任务自身"的写操作必须在 loadTasks 之前完成,传播阶段才能读到新值。

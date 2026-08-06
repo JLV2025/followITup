@@ -1303,3 +1303,6 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:37 | Edited frontend/src/pages/TaskListView.tsx | 2→2 lines | ~37 |
 | 09:37 | Edited frontend/src/pages/TaskListView.tsx | added optional chaining | ~133 |
 | 01:40 | 项目日期变更链路补强:重排日志+WS广播+列表视图联动 | projects.go, server.go, TaskListView.tsx | 单页实测正常,多标签受Playwright环境限制 | ~10k |
+| 09:38 | Session end: 30 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 13 reads | ~50941 tok |
+| 09:49 | Session end: 30 writes across 10 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 13 reads | ~50941 tok |
+| 09:50 | Edited backend/internal/scheduler/scheduler.go | modified Recalculate() | ~190 |

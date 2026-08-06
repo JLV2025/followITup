@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T01:24:03.898Z
-> Files: 46 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T01:50:57.044Z
+> Files: 47 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -62,7 +62,7 @@
 - `auth.go` — Struct: AuthHandler (~2466 tok)
 - `calendar.go` — Struct: CalendarHandler (~1106 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~303 tok)
-- `projects.go` — Struct: ProjectHandler (~4044 tok)
+- `projects.go` — Struct: ProjectHandler (~4138 tok)
 - `settings.go` — Struct: SettingsHandler (~917 tok)
 - `tasks.go` — Struct: TaskHandler (~5144 tok)
 
@@ -89,11 +89,11 @@
 
 - `calendar.go` — Struct: CalendarEntry (~935 tok)
 - `scheduler_test.go` — TestShiftDate, TestCalcDuration, TestDetectCycle, TestCalcDatesFS, TestCalcDatesSS (~5291 tok)
-- `scheduler.go` — Struct: Dep (~6447 tok)
+- `scheduler.go` — Struct: Dep (~6475 tok)
 
 ## backend/internal/server/
 
-- `server.go` — Struct: Options (~1458 tok)
+- `server.go` — Struct: Options (~1460 tok)
 
 ## backend/internal/settings/
 
@@ -146,6 +146,7 @@
 - `ProjectDetail.tsx` — ProjectDetail (~1042 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~10564 tok)
 - `SystemSettings.tsx` — SystemSettings — renders table (~2939 tok)
+- `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3372 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)
 
 ## frontend/src/stores/

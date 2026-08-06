@@ -1571,6 +1571,57 @@
       ],
       "occurrences": 2,
       "last_seen": "2026-08-06T01:40:00+08:00"
+    },
+    {
+      "id": "bug-098",
+      "timestamp": "2026-08-06T01:32:17.620Z",
+      "error_message": "Wrong reference: settings should be wsHub",
+      "file": "backend/internal/server/server.go",
+      "root_cause": "Used \"settings\" instead of \"wsHub\"",
+      "fix": "Changed settings → wsHub",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T01:32:17.620Z"
+    },
+    {
+      "id": "bug-099",
+      "timestamp": "2026-08-06T01:37:21.369Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/pages/TaskListView.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T01:37:21.369Z"
+    },
+    {
+      "id": "bug-092",
+      "timestamp": "2026-08-06T01:55:00+08:00",
+      "error_message": "链头任务改时长后,后续任务不自动排期,刷新也无变化(如 65 改 1 天后 66/67 停在 8/12)",
+      "file": "backend/internal/scheduler/scheduler.go",
+      "root_cause": "Recalculate 中 fixTriggerEnd(触发任务自身 duration 变更时修正 end)在 recalc(forwardPass 传播)之后执行。链头任务无前置,不走 applyCandidate,其 end 重算发生在传播结束后,后继仍按旧 end 排程",
+      "fix": "fixTriggerEnd 移到 recalc 之前:先落库新 end,传播阶段 loadTasks 读到新值沿后继链下推。新增回归测试 TestChainHeadDurationChangePropagates 验证双向传播",
+      "tags": [
+        "排程",
+        "链头",
+        "duration",
+        "传播"
+      ],
+      "related_bugs": [
+        "bug-035"
+      ],
+      "occurrences": 1,
+      "last_seen": "2026-08-06T01:55:00+08:00"
     }
   ]
 }
