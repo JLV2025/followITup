@@ -160,6 +160,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   }, [projectId, fetchBaselineMeta]);
 
   // 项目详情页页首修改项目开始/结束日期后，重新拉取任务数据（后端已全项目重排）
+  // 双保险：Outlet context refreshKey + 全局 project-refresh 事件
   const outletCtx = useOutletContext<{ refreshKey?: number }>();
   const prevRefreshKey = useRef(outletCtx?.refreshKey);
   useEffect(() => {
@@ -168,6 +169,14 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       fetchData(projectId, readonlyRef.current);
     }
   }, [outletCtx?.refreshKey, projectId, fetchData]);
+  useEffect(() => {
+    const onProjectRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { projectId?: number };
+      if (detail?.projectId === projectId) fetchData(projectId, readonlyRef.current);
+    };
+    window.addEventListener("project-refresh", onProjectRefresh);
+    return () => window.removeEventListener("project-refresh", onProjectRefresh);
+  }, [projectId, fetchData]);
 
   // 加载原始任务列表（用于弹窗）
   useEffect(() => {

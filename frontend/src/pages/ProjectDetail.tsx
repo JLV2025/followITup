@@ -35,6 +35,8 @@ export default function ProjectDetail() {
       await api.put(`/api/projects/${id}`, { ...project, [field]: value });
       setProject({ ...project, [field]: value });
       setRefreshKey((k) => k + 1); // 通知子路由刷新（重排已落库）
+      // 双保险：全局事件通知（不依赖 Outlet context 层级，甘特图/列表均监听）
+      window.dispatchEvent(new CustomEvent("project-refresh", { detail: { projectId: id } }));
     } catch (err: any) {
       alert(err?.response?.data?.error?.message || "项目日期更新失败");
     }

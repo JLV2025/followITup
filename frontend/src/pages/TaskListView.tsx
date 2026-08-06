@@ -81,6 +81,7 @@ export default function TaskListView() {
   }, [fetchTasks]);
 
   // 项目详情页页首修改项目开始/结束日期后,重新拉取任务数据(后端已全项目重排)
+  // 双保险:Outlet context refreshKey + 全局 project-refresh 事件
   const outletCtx = useOutletContext<{ refreshKey?: number }>();
   const prevRefreshKey = useRef(outletCtx?.refreshKey);
   useEffect(() => {
@@ -89,6 +90,14 @@ export default function TaskListView() {
       fetchTasks();
     }
   }, [outletCtx?.refreshKey, fetchTasks]);
+  useEffect(() => {
+    const onProjectRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { projectId?: number };
+      if (detail?.projectId === id) fetchTasks();
+    };
+    window.addEventListener("project-refresh", onProjectRefresh);
+    return () => window.removeEventListener("project-refresh", onProjectRefresh);
+  }, [id, fetchTasks]);
 
   const startEdit = (task: Task, field: string) => {
     if (!isLoggedIn) return;
