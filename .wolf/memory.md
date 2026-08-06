@@ -1399,3 +1399,9 @@ cd backend && followitup.exe config.yaml   # 启动
 | 14:34 | Edited frontend/src/styles/components.css | 5→9 lines | ~44 |
 | 14:34 | Edited frontend/src/styles/components.css | CSS: flex-wrap | ~54 |
 | 06:35 | 项目状态总览双列网格 | components.css | 布局验证 | ~1k |
+| 14:35 | Session end: 89 writes across 14 files (ProjectGantt.tsx, server.go, README.md, scheduler.go, projects.go) | 21 reads | ~79452 tok |
+| 14:38 | Edited frontend/src/styles/components.css | 5→6 lines | ~40 |
+| 14:38 | Edited frontend/src/styles/components.css | CSS: border-color | ~136 |
+| 14:38 | Edited frontend/src/pages/Dashboard.tsx | 26→26 lines | ~352 |
+| 14:39 | Edited frontend/src/styles/components.css | CSS: margin-top | ~63 |
+| 06:40 | 首页卡片等宽+三行布局+边界强化 | Dashboard.tsx, components.css | 288/288/288等宽 | ~4k |
