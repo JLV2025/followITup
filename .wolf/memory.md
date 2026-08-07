@@ -1588,3 +1588,10 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:01 | Edited frontend/src/pages/SystemSettings.tsx | added error handling | ~84 |
 | 10:01 | Edited frontend/src/pages/SystemSettings.tsx | expanded (+32 lines) | ~505 |
 | 10:05 | B2-3 到期邮件提醒:每日9:00定时器+按负责人汇总发送(JOIN users解析邮箱)+开关/提前天数设置+手动触发端点;链路实测:扫描→解析→发送尝试全通 | reminder.go(新), mail.go, settings.go, server.go, SystemSettings.tsx | API实测REMINDER_FAILED(SMTP未配置)证明链路通 | ~300 |
+| 10:04 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: id, checked | ~208 |
+| 10:04 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: template, task | ~130 |
+| 10:05 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~108 |
+| 10:05 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~333 |
+| 10:06 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: status, assignee | ~375 |
+| 10:06 | Edited frontend/src/styles/components.css | expanded (+20 lines) | ~116 |
+| 10:10 | B2-4 批量操作:checkbox列+批量条(改状态/改负责人/删除),逐条PUT带乐观锁409冲突提示 | ProjectGantt.tsx, components.css | 实测:勾选2项→改状态in_progress成功 | ~200 |

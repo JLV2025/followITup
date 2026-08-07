@@ -101,10 +101,55 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
+  // 批量选择：checkbox 列多选 → 顶栏批量条
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const selectedIdsRef = useRef<Set<number>>(new Set()); // 模板闭包读取用(ref 保证最新)
+  const toggleSelect = (id: number, checked: boolean) => {
+    const s = new Set(selectedIdsRef.current);
+    if (checked) s.add(id);
+    else s.delete(id);
+    selectedIdsRef.current = s;
+    setSelectedIds(s);
+  };
+  const clearSelection = () => {
+    selectedIdsRef.current = new Set();
+    setSelectedIds(new Set());
+  };
   const [projectName, setProjectName] = useState("");
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [rowNumbers, setRowNumbers] = useState<Record<number, number>>({});
   const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
+
+  /** 批量改状态/负责人：逐条 PUT（全量 + version 乐观锁），409 冲突收集提示 */
+  const batchUpdate = async (patch: Partial<Task>) => {
+    const ids = Array.from(selectedIdsRef.current);
+    let ok = 0;
+    const failed: string[] = [];
+    for (const id of ids) {
+      const t = allTasks.find((x) => x.id === id);
+      if (!t) { failed.push(`#${id}`); continue; }
+      try {
+        await api.put(`/api/projects/${projectId}/tasks/${id}`, { ...t, ...patch });
+        ok++;
+      } catch (err: any) {
+        failed.push(`${t.name}${err?.response?.status === 409 ? "(已被他人修改)" : ""}`);
+      }
+    }
+    if (failed.length) alert(`成功 ${ok} 项，${failed.length} 项失败：\n${failed.join("、")}`);
+    else alert(`已更新 ${ok} 项`);
+    clearSelection();
+    fetchData(projectId, readonly);
+  };
+
+  /** 批量删除：逐条软删（回收站） */
+  const batchDelete = async () => {
+    if (!window.confirm(`确定删除选中的 ${selectedIdsRef.current.size} 个任务？将移至回收站`)) return;
+    for (const id of Array.from(selectedIdsRef.current)) {
+      await api.delete(`/api/projects/${projectId}/tasks/${id}`);
+    }
+    clearSelection();
+    fetchData(projectId, readonly);
+  };
 
   /** 负责人下拉选项（全部任务去重，含空值不列） */
   const ownerOptions = useMemo(
@@ -345,6 +390,12 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // 左侧列
     gantt.config.columns = [
+      { name: "chk", label: "", width: 30, align: "center",
+        template: function (task: Record<string, any>) {
+          // 批量选择复选框（勾选状态读 ref，事件由容器 change 委托处理）
+          return `<input type="checkbox" class="gantt-task-check" data-id="${task.id}" ${selectedIdsRef.current.has(task.id as number) ? "checked" : ""} />`;
+        } as any,
+      },
       { name: "id_col", label: "#", width: 36, align: "center",
         template: function (task: Record<string, any>) {
           // 项目内行号：按当前树展示顺序 1..N 连续编号，与数据库 id 解耦
@@ -525,6 +576,14 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     gantt.config.show_links = false;
 
     gantt.init(containerRef.current);
+
+    // 批量选择复选框事件委托（checkbox 由 dhtmlx 模板渲染，事件统一在容器层处理）
+    containerRef.current?.addEventListener("change", (e) => {
+      const el = e.target as HTMLInputElement;
+      if (el.classList.contains("gantt-task-check") && el.dataset.id) {
+        toggleSelect(Number(el.dataset.id), el.checked);
+      }
+    });
 
     // === 自定义合并连线层（SVG）===
     const NS = "http://www.w3.org/2000/svg";
@@ -1034,6 +1093,36 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           <button className="btn-zoom btn-auto-zoom" onClick={handleAutoZoom} title="自动适应项目时间范围">⊡</button>
         </div>
       </div>
+
+      {/* 批量操作条：多选后出现 */}
+      {selectedIds.size > 0 && (
+        <div className="gantt-batch-bar">
+          <span className="gantt-batch-count">已选 {selectedIds.size} 项</span>
+          <select
+            className="gantt-filter-select"
+            value=""
+            onChange={(e) => { if (e.target.value) { batchUpdate({ status: e.target.value }); e.target.value = ""; } }}
+          >
+            <option value="" disabled>改状态...</option>
+            <option value="open">未开始</option>
+            <option value="in_progress">进行中</option>
+            <option value="completed">已完成</option>
+            <option value="delayed">延迟</option>
+          </select>
+          <select
+            className="gantt-filter-select"
+            value=""
+            onChange={(e) => { if (e.target.value) { batchUpdate({ assignee: e.target.value }); e.target.value = ""; } }}
+          >
+            <option value="" disabled>改负责人...</option>
+            {ownerOptions.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+          <button className="btn btn-delete btn-sm" onClick={batchDelete}>删除</button>
+          <button className="btn btn-ghost btn-sm" onClick={clearSelection}>取消选择</button>
+        </div>
+      )}
 
       {/* 过滤条：名称搜索 + 状态 + 负责人（里程碑过滤在 B2-6） */}
       <div className="gantt-filter-bar">

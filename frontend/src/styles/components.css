@@ -1274,6 +1274,26 @@
   color: var(--danger);
 }
 
+/* 批量操作条 */
+.gantt-batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: var(--accent-soft);
+  border-radius: 6px;
+}
+.gantt-batch-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.gantt-task-check {
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
 .gantt-toolbar {
   display: flex;
   align-items: center;

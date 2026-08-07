@@ -2503,6 +2503,70 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-07T02:01:05.264Z"
+    },
+    {
+      "id": "bug-156",
+      "timestamp": "2026-08-07T02:04:53.340Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation | Also: {/* 批量操作条：多选后出现 */}; {selectedIds.size > 0 && (",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-07T02:06:03.967Z"
+    },
+    {
+      "id": "bug-157",
+      "timestamp": "2026-08-07T02:05:33.108Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:05:33.108Z"
+    },
+    {
+      "id": "bug-158",
+      "timestamp": "2026-08-07T02:05:49.157Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:05:49.157Z"
+    },
+    {
+      "id": "bug-159",
+      "timestamp": "2026-08-07T02:06:10.646Z",
+      "error_message": "CSS fix: color",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "color: var(--danger) → var(--text-primary)",
+      "fix": "Changed color: var(--danger) → var(--text-primary)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:06:10.646Z"
     }
   ]
 }
