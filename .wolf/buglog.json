@@ -2647,6 +2647,22 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-07T02:28:30.048Z"
+    },
+    {
+      "id": "bug-165",
+      "timestamp": "2026-08-07T02:31:12.724Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:31:12.724Z"
     }
   ]
 }

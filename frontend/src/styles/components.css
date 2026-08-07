@@ -1413,6 +1413,41 @@
   flex-shrink: 0;
 }
 
+/* ===== 甘特图打印样式（导出 PDF） ===== */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  /* 隐藏非甘特元素 */
+  .navbar,
+  .project-header,
+  .project-direction-row,
+  .project-tabs,
+  .gantt-toolbar,
+  .gantt-filter-bar,
+  .gantt-batch-bar,
+  .gantt-loading {
+    display: none !important;
+  }
+  .project-detail {
+    padding: 0 !important;
+  }
+  .gantt-wrapper {
+    margin: 0 !important;
+    height: auto !important;
+  }
+  /* 甘特图全宽 + 所有行完整展开（多页打印） */
+  .gantt-container {
+    width: 100% !important;
+  }
+  .gantt_task,
+  .gantt_data_area {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
 .gantt-toolbar {
   display: flex;
   align-items: center;

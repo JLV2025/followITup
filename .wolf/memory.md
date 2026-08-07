@@ -1622,3 +1622,8 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:28 | Edited frontend/src/pages/ProjectDetail.tsx | expanded (+10 lines) | ~124 |
 | 10:28 | Edited frontend/src/styles/components.css | expanded (+90 lines) | ~506 |
 | 10:35 | B3-2 资源视图:/project/:id/resources按负责人分组(叶子任务,父不重复)+每人汇总;tab切换 | Resources.tsx(新), App.tsx, ProjectDetail.tsx, components.css | 实测2卡片分组汇总正确 | ~150 |
+| 10:31 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 import(s) | ~36 |
+| 10:31 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~184 |
+| 10:31 | Edited frontend/src/pages/ProjectGantt.tsx | 2→5 lines | ~98 |
+| 10:31 | Edited frontend/src/styles/components.css | expanded (+35 lines) | ~196 |
+| 10:40 | B3-3 甘特图导出:html2canvas截取PNG(2x高清)+window.print打印样式(A4横向/隐藏控件/全行展开) | ProjectGantt.tsx, components.css, package.json | 实测PNG下载353KB,打印样式就绪 | ~150 |

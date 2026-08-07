@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { gantt } from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
+import html2canvas from "html2canvas";
 import { useGanttStore } from "../stores/ganttStore";
 import { useAuthStore } from "../stores/authStore";
 import { wsClient } from "../api/ws-client";
@@ -189,6 +190,24 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [allTasks]);
+
+  /** 导出 PNG：html2canvas 截取甘特图区域（2x 高清） */
+  const exportPNG = async () => {
+    const el = containerRef.current;
+    if (!el) return;
+    try {
+      const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `${projectName || "项目"}-甘特图.png`;
+      a.click();
+    } catch (err) {
+      alert("导出 PNG 失败: " + String(err));
+    }
+  };
+
+  /** 导出 PDF：打印样式（@media print 隐藏控件，仅保留甘特图区），浏览器另存为 PDF */
+  const exportPDF = () => window.print();
 
   /** 批量删除：逐条软删（回收站） */
   const batchDelete = async () => {
@@ -1135,6 +1154,9 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
               </div>
             )}
           </div>
+          <span className="gantt-toolbar-sep" />
+          <button className="btn-zoom" onClick={exportPNG} title="导出甘特图为 PNG 图片">⬇ PNG</button>
+          <button className="btn-zoom" onClick={exportPDF} title="打印 / 另存为 PDF">🖨 打印</button>
           <span className="gantt-toolbar-sep" />
           <span className="gantt-zoom-label">缩放</span>
           <button className="btn-zoom" onClick={() => handleZoom(-1)} title="缩小">−</button>
