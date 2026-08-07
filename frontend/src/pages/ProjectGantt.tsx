@@ -1175,8 +1175,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             )}
           </div>
           <span className="gantt-toolbar-sep" />
-          <button className="btn-zoom" onClick={exportPNG} title="导出甘特图为 PNG 图片">⬇ PNG</button>
-          <button className="btn-zoom" onClick={exportPDF} title="打印 / 另存为 PDF">🖨 打印</button>
+          <button className="btn-export" onClick={exportPNG} title="导出甘特图为 PNG 图片">⬇ PNG</button>
+          <button className="btn-export" onClick={exportPDF} title="打印 / 另存为 PDF">🖨 打印</button>
           <span className="gantt-toolbar-sep" />
           <span className="gantt-zoom-label">缩放</span>
           <button className="btn-zoom" onClick={() => handleZoom(-1)} title="缩小">−</button>

@@ -1488,6 +1488,26 @@
   text-align: center;
 }
 
+/* 导出/打印按钮：自适应文字宽度（区别于缩放按钮的固定 26px） */
+.btn-export {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s;
+}
+.btn-export:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .btn-zoom {
   width: 26px;
   height: 26px;

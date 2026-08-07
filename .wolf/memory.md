@@ -1631,3 +1631,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:36 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~312 |
 | 10:36 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~130 |
 | 10:45 | B3-4 性能压测+连线层优化:300任务/200依赖压测(滚动60fps);segHit/findGapMidY二分窗口局部化障碍检测,连线绘制88→55ms;踩坑:go build嵌入旧dist(命令链断裂时序) | ProjectGantt.tsx | 压测项目已清理,commit待 | ~250 |
+| 10:40 | Session end: 67 writes across 14 files (projects.go, tasks.go, ImportModal.tsx, ProjectGantt.tsx, components.css) | 15 reads | ~68275 tok |
+| 10:42 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~56 |
+| 10:42 | Edited frontend/src/styles/components.css | expanded (+20 lines) | ~180 |
+| 10:48 | 修复导出按钮溢出:.btn-export自适应宽度(替代缩放按钮的固定26px) | ProjectGantt.tsx, components.css | 实测clientW=scrollW无溢出 | ~80 |
