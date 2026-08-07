@@ -721,6 +721,20 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           mid: r.top - ganttRect.top + r.height / 2,
         });
       });
+      // 障碍检测局部化（大项目提速）：条按 top 排序 + 二分窗口，
+      // segHit/findGapMidY 只测与线段 y 区间重叠的条，不再全量遍历
+      const sortedRects = Array.from(barRects.entries()).sort((a, b) => a[1].top - b[1].top);
+      const tops = sortedRects.map(([, br]) => br.top);
+      // 二分返回最后一个 top < yHigh 的索引
+      const lastTopBelow = (yHigh: number) => {
+        let lo = 0, hi = tops.length;
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1;
+          if (tops[mid] < yHigh) lo = mid + 1;
+          else hi = mid;
+        }
+        return lo - 1;
+      };
       // 按后继任务分组：多前置合并画法，单前置标准 5 段折线。
       // 折叠时 source/target 提升到最近可见祖先（父任务条）→ 多个子任务依赖自动聚合到父任务
       const groups = new Map<number, any[]>();
@@ -744,12 +758,15 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         const txEnd = tRect.left - 20;   // 目标侧垂直段 x（左缘外 20px）
         const txFinal = tRect.left - 8;  // 箭头起点（尖端 = 条左缘，绝不入条）
         // 线段是否穿过任意任务条（组内源/目标除外：端点接触是自然连接；贴边不算）
+        // 二分窗口：只测 y 区间 [yMin2, yMax2] 重叠的条（大项目从 O(n) 降到 O(局部条数)）
         const segHit = (x1: number, y1: number, x2: number, y2: number) => {
           const xMin = Math.min(x1, x2);
           const xMax = Math.max(x1, x2);
           const yMin2 = Math.min(y1, y2);
           const yMax2 = Math.max(y1, y2);
-          for (const [bid, br] of barRects) {
+          for (let i = lastTopBelow(yMax2); i >= 0; i--) {
+            const [bid, br] = sortedRects[i];
+            if (br.bottom <= yMin2) break; // 更靠上的条已完全在线段区间外
             if (srcIdSet.has(bid) || bid === Number(targetId)) continue;
             // 水平段：x 为区间、y 为单点；垂直段：x 为单点、y 为区间（单点需严格在条内）
             const xIn = xMax - xMin > 0.5
@@ -766,7 +783,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         // 选最接近 (lo+hi)/2 且各线段都不穿条的中央（自动避开中间的条）
         const findGapMidY = (lo: number, hi: number, hMin: number, hMax: number, ok: (y: number) => boolean) => {
           const occ: Array<[number, number]> = [];
-          for (const [, br] of barRects) {
+          // 二分窗口：只取纵向 [lo, hi] 与横向 [hMin, hMax] 均重叠的条
+          for (let i = lastTopBelow(hi); i >= 0; i--) {
+            const [, br] = sortedRects[i];
+            if (br.bottom <= lo) break;
             if (br.right > hMin && br.left < hMax) occ.push([br.top, br.bottom]);
           }
           occ.sort((a, b) => a[0] - b[0]);

@@ -2663,6 +2663,38 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-07T02:31:12.724Z"
+    },
+    {
+      "id": "bug-166",
+      "timestamp": "2026-08-07T02:36:18.316Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:36:18.316Z"
+    },
+    {
+      "id": "bug-167",
+      "timestamp": "2026-08-07T02:36:36.080Z",
+      "error_message": "Missing guard clause",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "No early return/throw for edge case: br.bottom <= lo",
+      "fix": "Added guard clause: if (br.bottom <= lo)",
+      "tags": [
+        "auto-detected",
+        "guard-clause",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:36:36.080Z"
     }
   ]
 }

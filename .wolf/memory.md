@@ -1627,3 +1627,7 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:31 | Edited frontend/src/pages/ProjectGantt.tsx | 2→5 lines | ~98 |
 | 10:31 | Edited frontend/src/styles/components.css | expanded (+35 lines) | ~196 |
 | 10:40 | B3-3 甘特图导出:html2canvas截取PNG(2x高清)+window.print打印样式(A4横向/隐藏控件/全行展开) | ProjectGantt.tsx, components.css, package.json | 实测PNG下载353KB,打印样式就绪 | ~150 |
+| 10:36 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: yHigh | ~196 |
+| 10:36 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~312 |
+| 10:36 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~130 |
+| 10:45 | B3-4 性能压测+连线层优化:300任务/200依赖压测(滚动60fps);segHit/findGapMidY二分窗口局部化障碍检测,连线绘制88→55ms;踩坑:go build嵌入旧dist(命令链断裂时序) | ProjectGantt.tsx | 压测项目已清理,commit待 | ~250 |
