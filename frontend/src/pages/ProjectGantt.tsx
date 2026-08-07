@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { gantt } from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
@@ -97,10 +97,36 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
+  // 过滤条：名称搜索 + 状态 + 负责人（条件变化 → filter_task + 重建）
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
   const [projectName, setProjectName] = useState("");
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [rowNumbers, setRowNumbers] = useState<Record<number, number>>({});
   const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
+
+  /** 负责人下拉选项（全部任务去重，含空值不列） */
+  const ownerOptions = useMemo(
+    () => Array.from(new Set(allTasks.map((t) => t.assignee).filter(Boolean))),
+    [allTasks]
+  );
+
+  /** 过滤条生效：onBeforeTaskDisplay 逐行过滤（dhtmlx 10.x API）+ refreshData 重建
+   *（onDataRender 自动重画连线层） */
+  const filterHandlerRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!containerRef.current?.querySelector(".gantt_container")) return; // 甘特图未初始化
+    if (filterHandlerRef.current !== null) gantt.detachEvent(filterHandlerRef.current);
+    const text = searchText.trim().toLowerCase();
+    filterHandlerRef.current = gantt.attachEvent("onBeforeTaskDisplay", (_id: number, task: Record<string, any>) => {
+      if (text && !(task.text || "").toLowerCase().includes(text)) return false;
+      if (statusFilter !== "all" && task.status !== statusFilter) return false;
+      if (ownerFilter !== "all" && (task.assignee || "") !== ownerFilter) return false;
+      return true;
+    });
+    gantt.refreshData();
+  }, [searchText, statusFilter, ownerFilter]);
 
   /** 收集甘特图当前展示顺序的 id → 行号映射（树深度优先，1 基） */
   const buildRowNumbers = () => {
@@ -1007,6 +1033,45 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           <button className="btn-zoom" onClick={() => handleZoom(1)} title="放大">+</button>
           <button className="btn-zoom btn-auto-zoom" onClick={handleAutoZoom} title="自动适应项目时间范围">⊡</button>
         </div>
+      </div>
+
+      {/* 过滤条：名称搜索 + 状态 + 负责人（里程碑过滤在 B2-6） */}
+      <div className="gantt-filter-bar">
+        <input
+          className="gantt-filter-search"
+          placeholder="🔍 搜索任务名..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+        <select
+          className="gantt-filter-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">全部状态</option>
+          <option value="open">未开始</option>
+          <option value="in_progress">进行中</option>
+          <option value="completed">已完成</option>
+          <option value="delayed">延迟</option>
+        </select>
+        <select
+          className="gantt-filter-select"
+          value={ownerFilter}
+          onChange={(e) => setOwnerFilter(e.target.value)}
+        >
+          <option value="all">全部负责人</option>
+          {ownerOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+        {(searchText || statusFilter !== "all" || ownerFilter !== "all") && (
+          <button
+            className="gantt-filter-clear"
+            onClick={() => { setSearchText(""); setStatusFilter("all"); setOwnerFilter("all"); }}
+          >
+            ✕ 清除
+          </button>
+        )}
       </div>
 
       {loading && <div className="gantt-loading">加载甘特图...</div>}

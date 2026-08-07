@@ -1563,3 +1563,13 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:44 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+8 lines) | ~152 |
 | 09:48 | Edited frontend/src/components/ImportModal.tsx | inline fix | ~39 |
 | 09:56+ | B2-1 CSV导入:后端ImportTasks(WBS层级/里程碑/状态映射/owner兜底/排程重算)+前端ImportModal(GBK兜底/模板下载/结果明细) | tasks.go, ImportModal.tsx(新), ProjectGantt.tsx | API实测4行导入全对,UI弹窗OK | ~350 |
+| 09:50 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~18 |
+| 09:50 | Edited frontend/src/pages/ProjectGantt.tsx | 2→6 lines | ~96 |
+| 09:50 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: id, task | ~272 |
+| 09:50 | Edited frontend/src/pages/ProjectGantt.tsx | added optional chaining | ~186 |
+| 09:51 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+39 lines) | ~467 |
+| 09:51 | Edited frontend/src/styles/components.css | expanded (+39 lines) | ~251 |
+| 09:52 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~23 |
+| 09:54 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~247 |
+| 09:55 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~16 |
+| 09:58+ | B2-2 甘特图过滤:搜索+状态+负责人下拉,onBeforeTaskDisplay(dhtmlx10新API,filter_task已废弃),条件变化重建 | ProjectGantt.tsx, components.css | 实测:搜索2行/状态2行/清除14行 | ~200 |
