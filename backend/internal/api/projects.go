@@ -108,22 +108,17 @@ func (h *ProjectHandler) DashboardStats(w http.ResponseWriter, r *http.Request) 
 }
 
 // ProjectList 项目列表（含看板所需摘要信息）
+// 注意：不再支持 year/fy 过滤——状态总览"进行中"需全量跨年显示，"已完成"按结束日期归属年度在前端过滤
 func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
-	year := r.URL.Query().Get("year")
-	fy := r.URL.Query().Get("fy")
-	filter, args := h.buildTimeFilter("p", year, fy)
-
 	// 返回全部状态（active/completed），前端负责"隐藏已完成"过滤；
 	// 排序：老 → 新（创建时间升序），看板编号按此顺序
-	baseFilter := "WHERE p.deleted_at IS NULL" + filter
-
 	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public,
 		COALESCE(p.baseline_created_at, '') as baseline_created_at,
 		COALESCE(p.baseline_created_by, '') as baseline_created_by,
 			p.schedule_direction, COALESCE(p.owner, '') as owner
-		FROM projects p ` + baseFilter + ` ORDER BY p.created_at ASC, p.id ASC`
+		FROM projects p WHERE p.deleted_at IS NULL ORDER BY p.created_at ASC, p.id ASC`
 
-	rows, err := h.db.Query(query, args...)
+	rows, err := h.db.Query(query)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "查询项目失败")
 		return
