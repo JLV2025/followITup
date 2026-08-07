@@ -1635,3 +1635,14 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:42 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~56 |
 | 10:42 | Edited frontend/src/styles/components.css | expanded (+20 lines) | ~180 |
 | 10:48 | 修复导出按钮溢出:.btn-export自适应宽度(替代缩放按钮的固定26px) | ProjectGantt.tsx, components.css | 实测clientW=scrollW无溢出 | ~80 |
+| 10:44 | Session end: 69 writes across 14 files (projects.go, tasks.go, ImportModal.tsx, ProjectGantt.tsx, components.css) | 15 reads | ~68511 tok |
+| 10:51 | Session end: 69 writes across 14 files (projects.go, tasks.go, ImportModal.tsx, ProjectGantt.tsx, components.css) | 15 reads | ~68511 tok |
+| 10:53 | Session end: 69 writes across 14 files (projects.go, tasks.go, ImportModal.tsx, ProjectGantt.tsx, components.css) | 15 reads | ~68763 tok |
+| 10:56 | Edited backend/internal/api/tasks.go | 4→2 lines | ~39 |
+| 10:56 | Edited backend/internal/api/tasks.go | modified fillActualDates() | ~93 |
+| 10:56 | Edited backend/internal/api/tasks.go | 4→7 lines | ~80 |
+| 10:56 | Edited backend/internal/api/tasks.go | 10→10 lines | ~180 |
+| 10:57 | Edited backend/internal/api/baseline_test.go | modified TestFillActualDates() | ~285 |
+| 10:57 | Edited backend/internal/api/tasks.go | 12→11 lines | ~36 |
+| 10:58 | Edited backend/internal/api/tasks.go | 2→7 lines | ~95 |
+| 10:55 | 实际日期新逻辑:默认取计划日期(用户选择>系统默认),CreateTask/UpdateTask统一,超出计划范围允许(提前/延期即偏差),仅拦实际结束<实际开始(INVALID_ACTUAL) | tasks.go, baseline_test.go | 三场景实测:默认跟随/提前允许/乱序400 | ~250 |

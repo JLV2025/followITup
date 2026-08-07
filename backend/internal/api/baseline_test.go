@@ -20,30 +20,29 @@ func testBaselineDB(t *testing.T) *sql.DB {
 	return d.Conn
 }
 
-// 实际日期自动填充：进行中→记实际开始；完成→记实际结束；已有值不覆盖
+// 实际日期默认取计划日期；用户显式值优先（用户选择 > 系统默认）
 func TestFillActualDates(t *testing.T) {
-	today := time.Now().Format("2006-01-02")
-
 	cases := []struct {
-		name         string
-		status       string
-		actualStart  string
-		actualEnd    string
-		wantStart    string
-		wantEnd      string
+		name        string
+		actualStart string
+		actualEnd   string
+		planStart   string
+		planEnd     string
+		wantStart   string
+		wantEnd     string
 	}{
-		{"变为进行中记实际开始", "in_progress", "", "", today, ""},
-		{"变为完成记实际结束", "completed", "", "", "", today},
-		{"已有实际开始不覆盖", "in_progress", "2026-07-01", "", "2026-07-01", ""},
-		{"已有实际结束不覆盖", "completed", "", "2026-07-20", "", "2026-07-20"},
-		{"其他状态不变", "open", "", "", "", ""},
+		{"空实际取计划开始", "", "", "2026-08-01", "2026-08-10", "2026-08-01", "2026-08-10"},
+		{"用户实际开始优先", "2026-07-25", "", "2026-08-01", "2026-08-10", "2026-07-25", "2026-08-10"},
+		{"用户实际结束优先", "", "2026-09-05", "2026-08-01", "2026-08-10", "2026-08-01", "2026-09-05"},
+		{"用户两者都填全用用户值", "2026-07-20", "2026-07-30", "2026-08-01", "2026-08-10", "2026-07-20", "2026-07-30"},
+		{"计划日期为空不填", "", "", "", "", "", ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			gotS, gotE := fillActualDates(c.status, c.actualStart, c.actualEnd)
+			gotS, gotE := fillActualDates(c.actualStart, c.actualEnd, c.planStart, c.planEnd)
 			if gotS != c.wantStart || gotE != c.wantEnd {
-				t.Errorf("fillActualDates(%q,%q,%q) = (%q,%q), want (%q,%q)",
-					c.status, c.actualStart, c.actualEnd, gotS, gotE, c.wantStart, c.wantEnd)
+				t.Errorf("fillActualDates(%q,%q,%q,%q) = (%q,%q), want (%q,%q)",
+					c.actualStart, c.actualEnd, c.planStart, c.planEnd, gotS, gotE, c.wantStart, c.wantEnd)
 			}
 		})
 	}

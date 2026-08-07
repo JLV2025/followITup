@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"followitup/internal/auth"
 	"followitup/internal/models"
@@ -261,6 +260,9 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		t.EndDate = scheduler.AddWorkDays(nil, t.StartDate, t.DurationDays)
 	}
 
+	// 实际日期默认跟随计划（实际开始=开始日，实际结束=结束日）；用户显式值优先
+	t.ActualStart, t.ActualEnd = fillActualDates(t.ActualStart, t.ActualEnd, t.StartDate, t.EndDate)
+
 	// 防呆：未指定负责人时默认取项目 owner
 	if strings.TrimSpace(t.Assignee) == "" {
 		var owner string
@@ -271,13 +273,13 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	// 分配下一个 sort_order（单条 INSERT...SELECT 原子完成，消除并发创建重复序号）
 	result, err := h.db.Exec(
 		`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
-		 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
-		 constraint_type, constraint_date, sort_order)
-		 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+		 assignee, start_date, end_date, duration_days, progress_pct, actual_start, actual_end,
+		 manual_scheduled, constraint_type, constraint_date, sort_order)
+		 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
 		        COALESCE(MAX(sort_order), -1) + 1
 		 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`,
 		projectID, t.ParentID, t.Name, t.Description, t.TaskType, t.Status, t.Priority,
-		t.Assignee, t.StartDate, t.EndDate, t.DurationDays, t.ProgressPct,
+		t.Assignee, t.StartDate, t.EndDate, t.DurationDays, t.ProgressPct, t.ActualStart, t.ActualEnd,
 		boolToInt2(t.ManualScheduled), t.ConstraintType, t.ConstraintDate,
 		projectID,
 	)
@@ -523,10 +525,13 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 实际日期自动填充（需先读旧值，已有值不覆盖）
-	var oldActualStart, oldActualEnd string
-	h.db.QueryRow(`SELECT COALESCE(actual_start, ''), COALESCE(actual_end, '') FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&oldActualStart, &oldActualEnd)
-	t.ActualStart, t.ActualEnd = fillActualDates(t.Status, oldActualStart, oldActualEnd)
+	// 实际日期：用户选择优先；未填则默认取计划日期（实际开始=开始日，实际结束=结束日）
+	t.ActualStart, t.ActualEnd = fillActualDates(t.ActualStart, t.ActualEnd, t.StartDate, t.EndDate)
+	// 逻辑校验：实际结束不能早于实际开始（超出计划范围允许——提前/延期正是偏差可视化要表达的）
+	if t.ActualStart != "" && t.ActualEnd != "" && t.ActualEnd < t.ActualStart {
+		writeError(w, http.StatusBadRequest, "INVALID_ACTUAL", "实际结束不能早于实际开始")
+		return
+	}
 
 	// URL 参数回填（请求体不含 id/project_id，排程级联需要）
 	t.ID = taskID
@@ -624,15 +629,14 @@ func (h *TaskHandler) UpdateTaskSortOrder(w http.ResponseWriter, r *http.Request
 	})
 }
 
-// fillActualDates 实际日期自动填充：
-// status 变为 in_progress 且无实际开始 → 记今天；变为 completed 且无实际结束 → 记今天；已有值不覆盖
-func fillActualDates(status, actualStart, actualEnd string) (string, string) {
-	today := time.Now().Format("2006-01-02")
-	if status == "in_progress" && actualStart == "" {
-		actualStart = today
+// fillActualDates 实际日期默认取计划日期（实际开始=开始日，实际结束=结束日）；
+// 用户显式填写的值优先，留空则用计划日期（用户选择 > 系统默认）
+func fillActualDates(actualStart, actualEnd, planStart, planEnd string) (string, string) {
+	if actualStart == "" && planStart != "" {
+		actualStart = planStart
 	}
-	if status == "completed" && actualEnd == "" {
-		actualEnd = today
+	if actualEnd == "" && planEnd != "" {
+		actualEnd = planEnd
 	}
 	return actualStart, actualEnd
 }
