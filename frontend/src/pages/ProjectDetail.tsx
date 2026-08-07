@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, Outlet } from "react-router-dom";
+import { useParams, Link, NavLink, Outlet } from "react-router-dom";
 import api from "../api/client";
 
 interface Project {
@@ -127,6 +127,16 @@ export default function ProjectDetail() {
             ))}
           </select>
         </label>
+      </div>
+
+      {/* 视图切换 */}
+      <div className="project-tabs">
+        <NavLink to={`/project/${id}`} end className={({ isActive }) => `project-tab${isActive ? " active" : ""}`}>
+          甘特图
+        </NavLink>
+        <NavLink to={`/project/${id}/resources`} className={({ isActive }) => `project-tab${isActive ? " active" : ""}`}>
+          资源视图
+        </NavLink>
       </div>
 
       {/* 子路由内容 */}

@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import ChangePassword from "./pages/ChangePassword";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectGantt from "./pages/ProjectGantt";
+import Resources from "./pages/Resources";
 import UserManagement from "./pages/UserManagement";
 import SystemSettings from "./pages/SystemSettings";
 import Navbar from "./components/Navbar";
@@ -34,6 +35,7 @@ function App() {
               index
               element={<ProjectGantt readonly={!isLoggedIn} />}
             />
+            <Route path="resources" element={<Resources />} />
           </Route>
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/settings" element={<SystemSettings />} />

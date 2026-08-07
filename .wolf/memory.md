@@ -1615,3 +1615,10 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:25 | Edited backend/internal/api/projects.go | 5→7 lines | ~51 |
 | 10:26 | Edited backend/internal/api/projects.go | modified Next() | ~899 |
 | 10:30 | B3-1 项目复制:CopyProject深拷贝(项目+任务+依赖,两阶段读-写规避SQLITE_BUSY)+看板卡片复制按钮;踩坑:SELECT未关rows循环内写库→BUSY | projects.go, Dashboard.tsx, components.css | 实测14任务/3子/14依赖全拷贝,副本已清理 | ~300 |
+| 10:27 | Created frontend/src/pages/Resources.tsx | — | ~1197 |
+| 10:28 | Edited frontend/src/App.tsx | 6→7 lines | ~76 |
+| 10:28 | Edited frontend/src/App.tsx | added 1 import(s) | ~26 |
+| 10:28 | Edited frontend/src/pages/ProjectDetail.tsx | 3→3 lines | ~42 |
+| 10:28 | Edited frontend/src/pages/ProjectDetail.tsx | expanded (+10 lines) | ~124 |
+| 10:28 | Edited frontend/src/styles/components.css | expanded (+90 lines) | ~506 |
+| 10:35 | B3-2 资源视图:/project/:id/resources按负责人分组(叶子任务,父不重复)+每人汇总;tab切换 | Resources.tsx(新), App.tsx, ProjectDetail.tsx, components.css | 实测2卡片分组汇总正确 | ~150 |

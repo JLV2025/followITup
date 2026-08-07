@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-07T02:26:09.930Z
-> Files: 54 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-07T02:28:40.388Z
+> Files: 55 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -127,7 +127,7 @@
 
 ## frontend/src/
 
-- `App.tsx` — App (~454 tok)
+- `App.tsx` — App (~485 tok)
 - `index.css` — Styles: 4 rules, 20 vars (~552 tok)
 
 ## frontend/src/api/
@@ -147,8 +147,9 @@
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
 - `Dashboard.tsx` — Dashboard (~7966 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
-- `ProjectDetail.tsx` — ProjectDetail (~1317 tok)
+- `ProjectDetail.tsx` — ProjectDetail (~1430 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~14873 tok)
+- `Resources.tsx` — 资源视图：按负责人分组汇总任务（叶子任务计入，父任务由子任务汇总不重复） (~1197 tok)
 - `SystemSettings.tsx` — SystemSettings — renders table (~3514 tok)
 - `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3528 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)
@@ -162,7 +163,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 92 rules, 1 vars (~8776 tok)
+- `components.css` — Styles: 92 rules, 1 vars (~9261 tok)
 
 ## frontend/src/utils/
 
