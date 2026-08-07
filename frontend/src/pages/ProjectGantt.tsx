@@ -141,6 +141,54 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     fetchData(projectId, readonly);
   };
 
+  /** 复制粘贴（单任务）：Ctrl+C 复制选中任务 → Ctrl+V 粘贴副本（同层、同属性，名称+（副本）） */
+  const copiedTaskRef = useRef<Partial<Task> | null>(null);
+  const doCopyTask = async (src: Partial<Task>) => {
+    try {
+      await api.post(`/api/projects/${projectId}/tasks`, {
+        name: `${src.name}(副本)`,
+        description: src.description || "",
+        task_type: src.task_type || "task",
+        status: src.status || "open",
+        priority: src.priority || "medium",
+        assignee: src.assignee || "",
+        parent_id: src.parent_id || null,
+        start_date: src.start_date || "",
+        end_date: src.end_date || "",
+        duration_days: src.duration_days ?? 1,
+        progress_pct: src.progress_pct ?? 0,
+        manual_scheduled: false,
+      });
+      fetchData(projectId, readonly);
+    } catch (err: any) {
+      alert(err?.response?.data?.error?.message || "复制任务失败");
+    }
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return; // 编辑控件内不拦截
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const key = e.key.toLowerCase();
+      if (key === "c") {
+        const id = selectedTaskRef.current;
+        const t = allTasks.find((x) => x.id === id);
+        if (t) {
+          copiedTaskRef.current = { ...t };
+          e.preventDefault();
+        }
+      } else if (key === "v") {
+        const src = copiedTaskRef.current;
+        if (src) {
+          e.preventDefault();
+          doCopyTask(src);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [allTasks]);
+
   /** 批量删除：逐条软删（回收站） */
   const batchDelete = async () => {
     if (!window.confirm(`确定删除选中的 ${selectedIdsRef.current.size} 个任务？将移至回收站`)) return;

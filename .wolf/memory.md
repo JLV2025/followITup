@@ -1595,3 +1595,5 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:06 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: status, assignee | ~375 |
 | 10:06 | Edited frontend/src/styles/components.css | expanded (+20 lines) | ~116 |
 | 10:10 | B2-4 批量操作:checkbox列+批量条(改状态/改负责人/删除),逐条PUT带乐观锁409冲突提示 | ProjectGantt.tsx, components.css | 实测:勾选2项→改状态in_progress成功 | ~200 |
+| 10:08 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~502 |
+| 10:15 | B2-5 任务复制粘贴:Ctrl+C/V单任务(内存剪贴板,编辑控件内不拦截),副本同层同属性名称+(副本) | ProjectGantt.tsx | 实测铺地暖(副本)同层属性完整 | ~120 |

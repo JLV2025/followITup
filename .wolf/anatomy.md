@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-07T02:06:10.576Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-07T02:08:37.325Z
 > Files: 54 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
@@ -148,7 +148,7 @@
 - `Dashboard.tsx` — Dashboard (~7755 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~1317 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~14253 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~14737 tok)
 - `SystemSettings.tsx` — SystemSettings — renders table (~3514 tok)
 - `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3528 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)
