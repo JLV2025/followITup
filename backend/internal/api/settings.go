@@ -33,6 +33,7 @@ func (h *SettingsHandler) RegisterRoutes(r chi.Router) {
 		r.Get("/api/settings/admin", h.GetAll)
 		r.Put("/api/settings", h.Put)
 		r.Post("/api/settings/test-email", h.TestEmail)
+		r.Post("/api/settings/reminder/run", h.RunReminder)
 	})
 }
 
@@ -122,4 +123,14 @@ func (h *SettingsHandler) TestEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "测试邮件已发送"})
+}
+
+// RunReminder 手动触发一次到期提醒扫描发送（仅管理员，配置后立即验证用）
+func (h *SettingsHandler) RunReminder(w http.ResponseWriter, r *http.Request) {
+	sent, err := mail.RunDueReminder(h.db)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "REMINDER_FAILED", "提醒扫描失败: "+err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{"sent": sent})
 }

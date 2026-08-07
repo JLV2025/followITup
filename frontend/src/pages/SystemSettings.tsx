@@ -14,6 +14,9 @@ export default function SystemSettings() {
   // 财年 + 密码策略
   const [fiscalStartMonth, setFiscalStartMonth] = useState(4);
   const [passwordMinLength, setPasswordMinLength] = useState(8);
+  // 到期提醒
+  const [dueReminderOn, setDueReminderOn] = useState(false);
+  const [dueReminderDays, setDueReminderDays] = useState(3);
   // 节假日
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [holidayStart, setHolidayStart] = useState("");
@@ -43,6 +46,8 @@ export default function SystemSettings() {
       });
       setFiscalStartMonth(Number(d.fiscal_start_month) || 4);
       setPasswordMinLength(Number(d.password_min_length) || 8);
+      setDueReminderOn(d.due_reminder_enabled === "1");
+      setDueReminderDays(Number(d.due_reminder_days) || 3);
     }).catch(() => setMessage("加载配置失败"));
     fetchHolidays();
   }, []);
@@ -64,6 +69,15 @@ export default function SystemSettings() {
       setMessage("测试邮件已发送");
     } catch (err: any) {
       setMessage("发送失败: " + (err?.response?.data?.error?.message || ""));
+    }
+  };
+
+  const runReminder = async () => {
+    try {
+      await api.post("/api/settings/reminder/run", {});
+      setMessage("到期提醒已扫描并发送（见服务端日志）");
+    } catch (err: any) {
+      setMessage("提醒发送失败: " + (err?.response?.data?.error?.message || ""));
     }
   };
 
@@ -134,6 +148,38 @@ export default function SystemSettings() {
           <div className="form-row">
             <button className="btn btn-primary" onClick={() => saveSettings(smtp, "SMTP 配置已保存")}>保存</button>
             <button className="btn btn-ghost" onClick={testEmail}>测试发送</button>
+          </div>
+          {/* 到期提醒 */}
+          <hr style={{ border: "none", borderTop: "1px solid var(--card-border)", margin: "14px 0" }} />
+          <div style={{ fontSize: 13, marginBottom: 8 }}>任务到期提醒（每日 9:00 扫描，按负责人汇总发送）</div>
+          <div className="form-row" style={{ gap: 10, alignItems: "center" }}>
+            <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+              <input
+                type="checkbox"
+                checked={dueReminderOn}
+                onChange={(e) => {
+                  setDueReminderOn(e.target.checked);
+                  saveSettings({ due_reminder_enabled: e.target.checked ? "1" : "0" }, e.target.checked ? "到期提醒已开启" : "到期提醒已关闭");
+                }}
+              />
+              开启提醒
+            </label>
+            <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+              提前
+              <input
+                type="number"
+                min={1}
+                max={30}
+                style={{ ...inputStyle, width: 56, padding: "4px 6px" }}
+                value={dueReminderDays}
+                onChange={(e) => {
+                  setDueReminderDays(Number(e.target.value) || 3);
+                  saveSettings({ due_reminder_days: String(Number(e.target.value) || 3) }, "提前天数已保存");
+                }}
+              />
+              天
+            </label>
+            <button className="btn btn-ghost btn-sm" onClick={runReminder} title="立即扫描并发送一次(验证用)">立即发送一次</button>
           </div>
         </div>
 

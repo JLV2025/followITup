@@ -12,6 +12,7 @@ import (
 	"followitup/internal/api"
 	"followitup/internal/auth"
 	"followitup/internal/db"
+	"followitup/internal/mail"
 	"followitup/internal/scheduler"
 	"followitup/internal/ws"
 
@@ -135,6 +136,9 @@ func Run(opts Options) error {
 			time.Sleep(2 * time.Second)
 		}
 	}()
+
+	// 到期邮件提醒定时器（每日 9:00；开关与提前天数在系统设置里配置）
+	go mail.StartDueReminderScheduler(database.Conn)
 
 	// 托管前端静态文件
 	if err := mountFrontend(r, opts.FrontendFS); err != nil {

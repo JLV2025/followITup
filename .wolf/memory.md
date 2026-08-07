@@ -1573,3 +1573,18 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:54 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~247 |
 | 09:55 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~16 |
 | 09:58+ | B2-2 甘特图过滤:搜索+状态+负责人下拉,onBeforeTaskDisplay(dhtmlx10新API,filter_task已废弃),条件变化重建 | ProjectGantt.tsx, components.css | 实测:搜索2行/状态2行/清除14行 | ~200 |
+| 09:58 | Edited backend/internal/settings/settings.go | 3→5 lines | ~48 |
+| 09:58 | Edited backend/internal/settings/settings.go | 3→5 lines | ~30 |
+| 09:58 | Edited backend/internal/settings/settings.go | 4→5 lines | ~49 |
+| 09:58 | Created backend/internal/mail/reminder.go | — | ~509 |
+| 09:58 | Edited backend/internal/api/settings.go | 4→5 lines | ~48 |
+| 09:59 | Edited backend/internal/api/settings.go | modified TestEmail() | ~258 |
+| 09:59 | Edited backend/internal/mail/reminder.go | modified StartDueReminderScheduler() | ~130 |
+| 09:59 | Edited backend/internal/server/server.go | 4→7 lines | ~54 |
+| 09:59 | Edited backend/internal/server/server.go | 3→4 lines | ~30 |
+| 10:00 | Edited backend/internal/mail/reminder.go | 3→3 lines | ~23 |
+| 10:00 | Edited frontend/src/pages/SystemSettings.tsx | 3→6 lines | ~79 |
+| 10:00 | Edited frontend/src/pages/SystemSettings.tsx | 3→5 lines | ~81 |
+| 10:01 | Edited frontend/src/pages/SystemSettings.tsx | added error handling | ~84 |
+| 10:01 | Edited frontend/src/pages/SystemSettings.tsx | expanded (+32 lines) | ~505 |
+| 10:05 | B2-3 到期邮件提醒:每日9:00定时器+按负责人汇总发送(JOIN users解析邮箱)+开关/提前天数设置+手动触发端点;链路实测:扫描→解析→发送尝试全通 | reminder.go(新), mail.go, settings.go, server.go, SystemSettings.tsx | API实测REMINDER_FAILED(SMTP未配置)证明链路通 | ~300 |

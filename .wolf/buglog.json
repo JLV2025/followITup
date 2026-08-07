@@ -2487,6 +2487,22 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-07T01:55:05.766Z"
+    },
+    {
+      "id": "bug-155",
+      "timestamp": "2026-08-07T02:01:05.264Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/pages/SystemSettings.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:01:05.264Z"
     }
   ]
 }

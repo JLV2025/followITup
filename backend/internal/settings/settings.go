@@ -15,6 +15,8 @@ const (
 	KeySMTPSender       = "smtp_sender"
 	KeyPasswordMinLen   = "password_min_length"
 	KeyFiscalStartMonth = "fiscal_start_month"
+	KeyDueReminderOn    = "due_reminder_enabled"
+	KeyDueReminderDays  = "due_reminder_days"
 )
 
 // Defaults 默认值（首次使用时写入）
@@ -26,12 +28,15 @@ var Defaults = map[string]string{
 	KeySMTPSender:       "FollowITup@qorvo.com",
 	KeyPasswordMinLen:   "8",
 	KeyFiscalStartMonth: "4",
+	KeyDueReminderOn:    "0",
+	KeyDueReminderDays:  "3",
 }
 
 // AllKeys 所有合法 key（PUT 白名单）
 var AllKeys = []string{
 	KeySMTPHost, KeySMTPPort, KeySMTPUsername, KeySMTPPassword,
 	KeySMTPSender, KeyPasswordMinLen, KeyFiscalStartMonth,
+	KeyDueReminderOn, KeyDueReminderDays,
 }
 
 // ensureDefaults 首次访问时写入默认值
