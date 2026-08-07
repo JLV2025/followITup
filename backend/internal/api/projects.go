@@ -41,6 +41,7 @@ func (h *ProjectHandler) RegisterRoutes(r chi.Router) {
 		r.Use(h.mid.RequireAuth)
 		r.Get("/api/projects", h.ListProjects)               // ?deleted=1 已删项目
 		r.Post("/api/projects", h.CreateProject)
+		r.Post("/api/projects/{id}/copy", h.CopyProject) // 深拷贝项目
 		r.Post("/api/projects/{id}/restore", h.RestoreProject)
 		r.Put("/api/projects/{id}", h.UpdateProject)
 		r.Delete("/api/projects/{id}", h.DeleteProject)
@@ -253,6 +254,151 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, p)
+}
+
+// CopyProject 深拷贝项目：项目 + 全部任务（含层级）+ 依赖关系
+// 新 id、名称+"(副本)"、日期/负责人/进度保留、状态重置为 active，副本排程重算
+func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
+	srcID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	var src models.Project
+	err := h.db.QueryRow(
+		`SELECT name, description, start_date, end_date, schedule_direction, owner
+		 FROM projects WHERE id=? AND deleted_at IS NULL`, srcID).
+		Scan(&src.Name, &src.Description, &src.StartDate, &src.EndDate, &src.ScheduleDirection, &src.Owner)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "项目不存在")
+		return
+	}
+
+	// 新项目（状态重置为 active）
+	res, err := h.db.Exec(
+		`INSERT INTO projects (name, description, owner, start_date, end_date, status, schedule_direction)
+		 VALUES (?, ?, ?, ?, ?, 'active', ?)`,
+		src.Name+"(副本)", src.Description, src.Owner, src.StartDate, src.EndDate, src.ScheduleDirection)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "DB_ERROR", "创建副本项目失败")
+		return
+	}
+	newID, _ := res.LastInsertId()
+
+	// 任务复制（SQLITE_BUSY 防护：所有 SELECT 先读入内存并关闭 rows，再执行写入，
+	// 避免读连接持锁时 INSERT/UPDATE 被拒——与启动重排 goroutine 的已知坑同理）
+	type srcTask struct {
+		t      models.Task
+		manual int
+	}
+	var srcTasks []srcTask
+	rows, err := h.db.Query(
+		`SELECT id, name, description, task_type, status, priority, assignee,
+		 start_date, end_date, duration_days, progress_pct, manual_scheduled,
+		 constraint_type, constraint_date, sort_order
+		 FROM tasks WHERE project_id=? AND deleted_at IS NULL`, srcID)
+	if err == nil {
+		for rows.Next() {
+			var st srcTask
+			if err := rows.Scan(&st.t.ID, &st.t.Name, &st.t.Description, &st.t.TaskType, &st.t.Status, &st.t.Priority,
+				&st.t.Assignee, &st.t.StartDate, &st.t.EndDate, &st.t.DurationDays, &st.t.ProgressPct, &st.manual,
+				&st.t.ConstraintType, &st.t.ConstraintDate, &st.t.SortOrder); err == nil {
+				srcTasks = append(srcTasks, st)
+			}
+		}
+		rows.Close()
+	}
+
+	oldToNew := map[int64]int64{}
+	var oldIDs []int64
+	for _, st := range srcTasks {
+		r2, err := h.db.Exec(
+			`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
+			 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
+			 constraint_type, constraint_date, sort_order)
+			 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			newID, st.t.Name, st.t.Description, st.t.TaskType, st.t.Status, st.t.Priority, st.t.Assignee,
+			st.t.StartDate, st.t.EndDate, st.t.DurationDays, st.t.ProgressPct, st.manual,
+			st.t.ConstraintType, st.t.ConstraintDate, st.t.SortOrder)
+		if err != nil {
+			log.Printf("[Copy] 任务[%d %s]插入失败: %v", st.t.ID, st.t.Name, err)
+			continue
+		}
+		nid, _ := r2.LastInsertId()
+		oldToNew[st.t.ID] = nid
+		oldIDs = append(oldIDs, st.t.ID)
+	}
+
+	// 回填 parent_id（新旧映射）
+	type srcParent struct {
+		id     int64
+		parent int64
+		valid  bool
+	}
+	var parents []srcParent
+	prows, err := h.db.Query(`SELECT id, parent_id FROM tasks WHERE project_id=? AND deleted_at IS NULL`, srcID)
+	if err == nil {
+		for prows.Next() {
+			var p srcParent
+			var parent sql.NullInt64
+			if prows.Scan(&p.id, &parent) == nil {
+				p.parent, p.valid = parent.Int64, parent.Valid
+				parents = append(parents, p)
+			}
+		}
+		prows.Close()
+	}
+	for _, p := range parents {
+		if p.valid {
+			if np, ok := oldToNew[p.parent]; ok {
+				if nid, ok2 := oldToNew[p.id]; ok2 {
+					h.db.Exec(`UPDATE tasks SET parent_id=? WHERE id=?`, np, nid)
+				}
+			}
+		}
+	}
+
+	// 复制依赖（映射新旧任务 id；dependencies 无 project_id 列，按源任务 id 集合过滤）
+	if len(oldIDs) > 0 {
+		type srcDep struct {
+			pred, succ, lag int64
+			dtype           string
+		}
+		var deps []srcDep
+		placeholders := strings.TrimSuffix(strings.Repeat("?,", len(oldIDs)), ",")
+		args := make([]interface{}, len(oldIDs))
+		for i, id := range oldIDs {
+			args[i] = id
+		}
+		drows, err := h.db.Query(
+			`SELECT predecessor_id, successor_id, dep_type, lag_days FROM dependencies
+			 WHERE predecessor_id IN (`+placeholders+`)`, args...)
+		if err == nil {
+			for drows.Next() {
+				var d srcDep
+				if drows.Scan(&d.pred, &d.succ, &d.dtype, &d.lag) == nil {
+					deps = append(deps, d)
+				}
+			}
+			drows.Close()
+		}
+		for _, d := range deps {
+			if np, ok1 := oldToNew[d.pred]; ok1 {
+				if ns, ok2 := oldToNew[d.succ]; ok2 {
+					h.db.Exec(`INSERT INTO dependencies (predecessor_id, successor_id, dep_type, lag_days)
+						VALUES (?, ?, ?, ?)`, np, ns, d.dtype, d.lag)
+				}
+			}
+		}
+	}
+
+	// 副本排程重算
+	if _, err := scheduler.RecalculateAll(h.db, newID); err != nil {
+		log.Printf("[Scheduler] 复制项目 %d 重算失败: %v", newID, err)
+	}
+	// 创建者加入副本成员
+	if userID, ok := auth.GetUserID(r.Context()); ok {
+		h.db.Exec("INSERT OR IGNORE INTO project_members (project_id, user_id, role) VALUES (?, ?, 'owner')", newID, userID)
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]interface{}{"id": newID, "name": src.Name + "(副本)"})
 }
 
 // UpdateProject 更新项目

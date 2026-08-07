@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-07T02:14:06.791Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-07T02:26:09.930Z
 > Files: 54 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
@@ -63,7 +63,7 @@
 - `auth.go` — Struct: AuthHandler (~2466 tok)
 - `calendar.go` — Struct: CalendarHandler (~1106 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~303 tok)
-- `projects.go` — Struct: ProjectHandler (~4481 tok)
+- `projects.go` — Struct: ProjectHandler (~5784 tok)
 - `settings.go` — Struct: SettingsHandler (~1026 tok)
 - `tasks.go` — Struct: TaskHandler (~6741 tok)
 
@@ -145,7 +145,7 @@
 ## frontend/src/pages/
 
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
-- `Dashboard.tsx` — Dashboard (~7755 tok)
+- `Dashboard.tsx` — Dashboard (~7966 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~1317 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~14873 tok)
@@ -162,7 +162,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 94 rules, 1 vars (~8685 tok)
+- `components.css` — Styles: 92 rules, 1 vars (~8776 tok)
 
 ## frontend/src/utils/
 

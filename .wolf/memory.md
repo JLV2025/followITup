@@ -1605,3 +1605,13 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:13 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~25 |
 | 10:14 | Edited frontend/src/api/gantt-adapter.ts | 2→3 lines | ~44 |
 | 10:20 | B2-6 里程碑过滤:过滤条加"仅里程碑"开关;修复toGanttTask未透传task_type导致过滤失效 | ProjectGantt.tsx, gantt-adapter.ts, components.css | 实测仅剩竣工验收1行 | ~150 |
+| 10:16 | Session end: 47 writes across 10 files (projects.go, tasks.go, ImportModal.tsx, ProjectGantt.tsx, components.css) | 12 reads | ~51041 tok |
+| 10:18 | Session end: 47 writes across 10 files (projects.go, tasks.go, ImportModal.tsx, ProjectGantt.tsx, components.css) | 12 reads | ~51041 tok |
+| 10:20 | Edited backend/internal/api/projects.go | 3→4 lines | ~63 |
+| 10:20 | Edited backend/internal/api/projects.go | modified CopyProject() | ~1150 |
+| 10:21 | Edited frontend/src/pages/Dashboard.tsx | added error handling | ~107 |
+| 10:21 | Edited frontend/src/pages/Dashboard.tsx | expanded (+11 lines) | ~199 |
+| 10:21 | Edited frontend/src/styles/components.css | expanded (+16 lines) | ~164 |
+| 10:25 | Edited backend/internal/api/projects.go | 5→7 lines | ~51 |
+| 10:26 | Edited backend/internal/api/projects.go | modified Next() | ~899 |
+| 10:30 | B3-1 项目复制:CopyProject深拷贝(项目+任务+依赖,两阶段读-写规避SQLITE_BUSY)+看板卡片复制按钮;踩坑:SELECT未关rows循环内写库→BUSY | projects.go, Dashboard.tsx, components.css | 实测14任务/3子/14依赖全拷贝,副本已清理 | ~300 |

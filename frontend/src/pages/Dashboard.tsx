@@ -143,6 +143,18 @@ export default function Dashboard() {
     }
   };
 
+  // 复制项目：深拷贝项目+任务+依赖，刷新列表
+  const handleCopyProject = async (id: number) => {
+    try {
+      const res = await api.post(`/api/projects/${id}/copy`);
+      const np = res.data.data;
+      alert(`已复制项目：${np.name}`);
+      fetchProjects();
+    } catch (err: any) {
+      alert(err?.response?.data?.error?.message || "复制项目失败");
+    }
+  };
+
   const handleOpenCreate = () => {
     setCreateForm({ name: "", owner: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
     setCreateError("");
@@ -356,6 +368,17 @@ export default function Dashboard() {
                       <span className="owner-icon">👤</span>
                       <span className="owner-name">{p.owner || "—"}</span>
                     </span>
+                    <button
+                      className="project-copy-btn"
+                      title="复制项目（含任务与依赖）"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCopyProject(p.id);
+                      }}
+                    >
+                      ⧉
+                    </button>
                     <span className="project-link">详情 →</span>
                   </div>
                   <div className="project-card-body">
