@@ -1273,6 +1273,19 @@
 .gantt-filter-clear:hover {
   color: var(--danger);
 }
+.gantt-filter-milestone {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gantt-filter-milestone input {
+  cursor: pointer;
+  accent-color: var(--primary);
+}
 
 /* 批量操作条 */
 .gantt-batch-bar {

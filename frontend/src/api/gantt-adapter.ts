@@ -13,6 +13,7 @@ export interface GanttTask {
   duration: number;      // 天数
   progress: number;      // 0.0 ~ 1.0
   type?: string;         // "task" | "milestone" | "project"
+  task_type?: string;    // 原始 task_type（task | milestone）
   $open?: boolean;       // 初始展开状态
   // 自定义扩展
   status?: string;
@@ -83,6 +84,7 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     duration: duration,
     duration_days: t.duration_days || 1,
     progress: (t.progress_pct || 0) / 100,
+    task_type: t.task_type || "task",
     type: t.task_type === "milestone" ? "milestone" : undefined,
     $open: true,  // 数据加载时默认展开所有分支
     status: t.status,

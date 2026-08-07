@@ -2565,8 +2565,56 @@
         "css"
       ],
       "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-07T02:10:43.864Z"
+    },
+    {
+      "id": "bug-160",
+      "timestamp": "2026-08-07T02:10:39.961Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 18→26 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
       "occurrences": 1,
-      "last_seen": "2026-08-07T02:06:10.646Z"
+      "last_seen": "2026-08-07T02:10:39.961Z"
+    },
+    {
+      "id": "bug-161",
+      "timestamp": "2026-08-07T02:13:14.528Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/api/gantt-adapter.ts",
+      "root_cause": "Had \"milestone\"",
+      "fix": "Changed to \"task\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:13:14.528Z"
+    },
+    {
+      "id": "bug-162",
+      "timestamp": "2026-08-07T02:13:19.279Z",
+      "error_message": "Wrong condition in logic",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Condition was: if (milestoneOnly && task.task_type !== \"milestone\")",
+      "fix": "Changed to: if (milestoneOnly && (task.task_type || task.type)",
+      "tags": [
+        "auto-detected",
+        "logic-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-07T02:13:19.279Z"
     }
   ]
 }

@@ -97,10 +97,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
-  // 过滤条：名称搜索 + 状态 + 负责人（条件变化 → filter_task + 重建）
+  // 过滤条：名称搜索 + 状态 + 负责人 + 仅里程碑（条件变化 → filter_task + 重建）
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
+  const [milestoneOnly, setMilestoneOnly] = useState(false);
   // 批量选择：checkbox 列多选 → 顶栏批量条
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const selectedIdsRef = useRef<Set<number>>(new Set()); // 模板闭包读取用(ref 保证最新)
@@ -216,10 +217,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       if (text && !(task.text || "").toLowerCase().includes(text)) return false;
       if (statusFilter !== "all" && task.status !== statusFilter) return false;
       if (ownerFilter !== "all" && (task.assignee || "") !== ownerFilter) return false;
+      if (milestoneOnly && (task.task_type || task.type) !== "milestone") return false;
       return true;
     });
     gantt.refreshData();
-  }, [searchText, statusFilter, ownerFilter]);
+  }, [searchText, statusFilter, ownerFilter, milestoneOnly]);
 
   /** 收集甘特图当前展示顺序的 id → 行号映射（树深度优先，1 基） */
   const buildRowNumbers = () => {
@@ -1201,10 +1203,18 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             <option key={o} value={o}>{o}</option>
           ))}
         </select>
-        {(searchText || statusFilter !== "all" || ownerFilter !== "all") && (
+        <label className="gantt-filter-milestone" title="仅显示里程碑任务">
+          <input
+            type="checkbox"
+            checked={milestoneOnly}
+            onChange={(e) => setMilestoneOnly(e.target.checked)}
+          />
+          ◇ 仅里程碑
+        </label>
+        {(searchText || statusFilter !== "all" || ownerFilter !== "all" || milestoneOnly) && (
           <button
             className="gantt-filter-clear"
-            onClick={() => { setSearchText(""); setStatusFilter("all"); setOwnerFilter("all"); }}
+            onClick={() => { setSearchText(""); setStatusFilter("all"); setOwnerFilter("all"); setMilestoneOnly(false); }}
           >
             ✕ 清除
           </button>

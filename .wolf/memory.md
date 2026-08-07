@@ -1597,3 +1597,11 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:10 | B2-4 批量操作:checkbox列+批量条(改状态/改负责人/删除),逐条PUT带乐观锁409冲突提示 | ProjectGantt.tsx, components.css | 实测:勾选2项→改状态in_progress成功 | ~200 |
 | 10:08 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~502 |
 | 10:15 | B2-5 任务复制粘贴:Ctrl+C/V单任务(内存剪贴板,编辑控件内不拦截),副本同层同属性名称+(副本) | ProjectGantt.tsx | 实测铺地暖(副本)同层属性完整 | ~120 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | 4→5 lines | ~82 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~173 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+8 lines) | ~264 |
+| 10:10 | Edited frontend/src/styles/components.css | expanded (+13 lines) | ~89 |
+| 10:13 | Edited frontend/src/api/gantt-adapter.ts | 2→3 lines | ~42 |
+| 10:13 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~25 |
+| 10:14 | Edited frontend/src/api/gantt-adapter.ts | 2→3 lines | ~44 |
+| 10:20 | B2-6 里程碑过滤:过滤条加"仅里程碑"开关;修复toGanttTask未透传task_type导致过滤失效 | ProjectGantt.tsx, gantt-adapter.ts, components.css | 实测仅剩竣工验收1行 | ~150 |
