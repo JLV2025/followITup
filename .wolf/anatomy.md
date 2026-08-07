@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-06T09:57:16.426Z
-> Files: 52 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-07T01:48:18.833Z
+> Files: 53 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -63,9 +63,9 @@
 - `auth.go` — Struct: AuthHandler (~2466 tok)
 - `calendar.go` — Struct: CalendarHandler (~1106 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~303 tok)
-- `projects.go` — Struct: ProjectHandler (~4511 tok)
+- `projects.go` — Struct: ProjectHandler (~4481 tok)
 - `settings.go` — Struct: SettingsHandler (~917 tok)
-- `tasks.go` — Struct: TaskHandler (~5281 tok)
+- `tasks.go` — Struct: TaskHandler (~6741 tok)
 
 ## backend/internal/auth/
 
@@ -136,6 +136,7 @@
 
 ## frontend/src/components/
 
+- `ImportModal.tsx` — CSV 任务批量导入弹窗 (~1608 tok)
 - `Navbar.tsx` — Navbar (~374 tok)
 - `RecycleBinModal.tsx` — RecycleBinModal (~955 tok)
 - `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~6707 tok)
@@ -146,7 +147,7 @@
 - `Dashboard.tsx` — Dashboard (~7755 tok)
 - `Login.tsx` — Login — renders form (~609 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~1317 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~12362 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~12505 tok)
 - `SystemSettings.tsx` — SystemSettings — renders table (~2939 tok)
 - `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3528 tok)
 - `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)

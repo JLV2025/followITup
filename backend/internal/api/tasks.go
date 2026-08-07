@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -41,6 +42,7 @@ func (h *TaskHandler) RegisterRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(h.mid.RequireAuth)
 		r.Post("/api/projects/{id}/tasks", h.CreateTask)
+		r.Post("/api/projects/{id}/tasks/import", h.ImportTasks) // 必须注册在 /{taskID} 之前
 		r.Post("/api/projects/{id}/tasks/{taskID}/restore", h.RestoreTask)
 		r.Put("/api/projects/{id}/tasks/{taskID}", h.UpdateTask)
 		r.Patch("/api/projects/{id}/tasks/{taskID}/sort_order", h.UpdateTaskSortOrder)
@@ -301,6 +303,202 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, t)
+}
+
+// ImportTasks 批量导入任务（CSV，UTF-8 无 BOM；前端负责读文件并做 GBK 兜底解码）
+// 表头：任务名, WBS编号, 工期(天), 开始日期, 负责人, 进度(%), 状态
+// 层级由 WBS 编号推导（1 / 1.1 / 1.2.1 …），父必须在子之前出现；工期 0 或空 = 里程碑
+func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
+	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	var req struct {
+		CSV string `json:"csv"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+
+	reader := csv.NewReader(strings.NewReader(req.CSV))
+	reader.TrimLeadingSpace = true
+	records, err := reader.ReadAll()
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_CSV", "CSV 解析失败: "+err.Error())
+		return
+	}
+	if len(records) < 2 {
+		writeError(w, http.StatusBadRequest, "EMPTY_CSV", "CSV 至少需要表头 + 一行数据")
+		return
+	}
+	records = records[1:] // 跳过表头
+
+	// 状态映射：兼容中文与英文值
+	statusMap := map[string]string{
+		"未开始": "open", "open": "open",
+		"进行中": "in_progress", "in_progress": "in_progress", "进行": "in_progress",
+		"完成": "completed", "已完成": "completed", "completed": "completed",
+		"延迟": "delayed", "delayed": "delayed", "超期": "delayed",
+	}
+
+	type importRow struct {
+		wbs        string
+		name       string
+		duration   int
+		startDate  string
+		assignee   string
+		progress   float64
+		status     string
+		taskType   string
+		parentWBS  string
+	}
+
+	rows := make([]importRow, 0, len(records))
+	skipped := 0
+	skipReasons := []string{}
+	for i, rec := range records {
+		if len(rec) < 2 {
+			skipped++
+			skipReasons = append(skipReasons, fmt.Sprintf("第%d行:列数不足", i+2))
+			continue
+		}
+		row := importRow{
+			wbs:       strings.TrimSpace(rec[1]),
+			name:      strings.TrimSpace(rec[0]),
+			startDate: strings.TrimSpace(getCol(rec, 3)),
+			assignee:  strings.TrimSpace(getCol(rec, 4)),
+		}
+		if row.name == "" {
+			skipped++
+			skipReasons = append(skipReasons, fmt.Sprintf("第%d行:任务名为空", i+2))
+			continue
+		}
+		if hasBadEncoding(row.name) {
+			skipped++
+			skipReasons = append(skipReasons, fmt.Sprintf("第%d行:名称含非法字符(编码错误),请使用 UTF-8", i+2))
+			continue
+		}
+		// 工期：0/空 = 里程碑
+		if d := strings.TrimSpace(getCol(rec, 2)); d != "" && d != "0" {
+			days, err := strconv.Atoi(d)
+			if err != nil || days < 1 {
+				skipped++
+				skipReasons = append(skipReasons, fmt.Sprintf("第%d行:工期必须是正整数", i+2))
+				continue
+			}
+			row.duration = days
+			row.taskType = "task"
+		} else {
+			row.taskType = "milestone"
+		}
+		// 进度（%）
+		if p := strings.TrimSpace(getCol(rec, 5)); p != "" {
+			if v, err := strconv.ParseFloat(p, 64); err == nil {
+				row.progress = clampFloat(v, 0, 100)
+			}
+		}
+		// 状态（进度 100 兜底为已完成）
+		row.status = statusMap[strings.ToLower(strings.TrimSpace(getCol(rec, 6)))]
+		if row.status == "" {
+			if row.progress >= 100 {
+				row.status = "completed"
+			} else {
+				row.status = "open"
+			}
+		}
+		// 父级 WBS：去掉最后一段（1.2.1 → 1.2；1 → 无父）
+		if idx := strings.LastIndex(row.wbs, "."); idx > 0 {
+			row.parentWBS = row.wbs[:idx]
+		}
+		rows = append(rows, row)
+	}
+
+	if len(rows) == 0 {
+		writeError(w, http.StatusBadRequest, "EMPTY_CSV", "没有可导入的任务行")
+		return
+	}
+
+	// 逐行插入（父必须在子之前出现，父 WBS 查 map）
+	wbsToID := map[string]int64{}
+	imported := 0
+	for _, row := range rows {
+		var parentID *int64
+		if row.parentWBS != "" {
+			pid, ok := wbsToID[row.parentWBS]
+			if !ok {
+				skipped++
+				skipReasons = append(skipReasons, fmt.Sprintf("行[%s %s]:父级 WBS[%s] 不存在(需在子之前出现)", row.wbs, row.name, row.parentWBS))
+				continue
+			}
+			parentID = &pid
+		}
+		// 排程:有开始日期+工期 → 算工作日 end_date;否则留空交给 RecalculateAll 自动排
+		endDate := ""
+		if row.startDate != "" && row.duration > 0 {
+			endDate = scheduler.AddWorkDays(nil, row.startDate, row.duration)
+		}
+		// 防呆:负责人空 → 项目 owner
+		assignee := row.assignee
+		if strings.TrimSpace(assignee) == "" {
+			var owner string
+			h.db.QueryRow(`SELECT COALESCE(owner, '') FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&owner)
+			assignee = owner
+		}
+
+		result, err := h.db.Exec(
+			`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
+			 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
+			 constraint_type, constraint_date, sort_order)
+			 SELECT ?, ?, ?, '', ?, ?, 'medium', ?, ?, ?, ?, ?, 0, '', '', COALESCE(MAX(sort_order), -1) + 1
+			 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`,
+			projectID, parentID, row.name, row.taskType, row.status,
+			assignee, row.startDate, endDate, row.duration, row.progress,
+			projectID,
+		)
+		if err != nil {
+			skipped++
+			skipReasons = append(skipReasons, fmt.Sprintf("行[%s %s]:插入失败 %v", row.wbs, row.name, err))
+			continue
+		}
+		id, _ := result.LastInsertId()
+		wbsToID[row.wbs] = id
+		imported++
+	}
+
+	// 排程 + 父进度重算 + 广播
+	if imported > 0 {
+		if _, err := scheduler.RecalculateAll(h.db, projectID); err != nil {
+			log.Printf("[Scheduler] 导入后项目 %d 重算失败: %v", projectID, err)
+		}
+		for _, id := range wbsToID {
+			h.recalcParentProgress(id)
+		}
+		h.broadcastChange(r, projectID, 0)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"imported": imported,
+		"skipped":  skipped,
+		"errors":   skipReasons,
+	})
+}
+
+// getCol 取 CSV 行中第 idx 列（越界返回空串）
+func getCol(rec []string, idx int) string {
+	if idx < len(rec) {
+		return rec[idx]
+	}
+	return ""
+}
+
+// clampFloat 将 v 限制在 [min, max]
+func clampFloat(v, min, max float64) float64 {
+	if v < min {
+		return min
+	}
+	if v > max {
+		return max
+	}
+	return v
 }
 
 // UpdateTask 更新任务（含乐观锁）

@@ -7,6 +7,7 @@ import { useAuthStore } from "../stores/authStore";
 import { wsClient } from "../api/ws-client";
 import api from "../api/client";
 import TaskDetailModal from "../components/TaskDetailModal";
+import ImportModal from "../components/ImportModal";
 import RecycleBinModal from "../components/RecycleBinModal";
 
 interface Task {
@@ -94,6 +95,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
   const [modalTask, setModalTask] = useState<Task | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [allTasks, setAllTasks] = useState<Task[]>([]);
@@ -923,6 +925,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
               + 添加任务
             </button>
           )}
+          {!readonly && (
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowImport(true)} title="批量导入任务(CSV)">
+              ⬆ 导入
+            </button>
+          )}
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => fetchData(projectId, readonly)}
@@ -1017,6 +1024,14 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           rowNumbers={rowNumbers}
           onClose={() => { setShowModal(false); setModalTask(null); }}
           onSaved={handleModalSaved}
+        />
+      )}
+
+      {showImport && (
+        <ImportModal
+          projectId={projectId}
+          onClose={() => setShowImport(false)}
+          onImported={() => fetchData(projectId, readonly)}
         />
       )}
 

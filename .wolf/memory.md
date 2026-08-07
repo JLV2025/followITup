@@ -1541,3 +1541,25 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:58 | 修复财年月份标签错位:MONTHS_EN[i]→MONTHS_EN[s.getUTCMonth()](财年第一格应为4月非1月) | Dashboard.tsx | 验证APR~MAR序列+today 0.36px | ~150 |
 | 17:59 | Session end: 32 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~54451 tok |
 | 10:00 | 收工:今日变更全部提交(状态两态化/颜色统一/时间线重构/财年标签修复),版本v0.8.6(当日规则不变号) | - | 服务器200运行中 | ~0 |
+| 18:00 | Session end: 32 writes across 5 files (Dashboard.tsx, dashboardStore.ts, ProjectGantt.tsx, index.css, components.css) | 14 reads | ~54451 tok |
+
+## Session: 2026-08-07 09:31
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-08-07 09:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 09:38 | Edited backend/internal/api/projects.go | modified ProjectList() | ~170 |
+| 09:41 | Edited backend/internal/api/tasks.go | modified Group() | ~72 |
+| 09:42 | Edited backend/internal/api/tasks.go | 9→10 lines | ~31 |
+| 09:42 | Edited backend/internal/api/tasks.go | modified getCol() | ~1475 |
+| 09:43 | Created frontend/src/components/ImportModal.tsx | — | ~1603 |
+| 09:44 | Edited frontend/src/pages/ProjectGantt.tsx | 3→4 lines | ~68 |
+| 09:44 | Edited frontend/src/pages/ProjectGantt.tsx | 5→10 lines | ~101 |
+| 09:44 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 import(s) | ~33 |
+| 09:44 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+8 lines) | ~152 |
+| 09:48 | Edited frontend/src/components/ImportModal.tsx | inline fix | ~39 |
+| 09:56+ | B2-1 CSV导入:后端ImportTasks(WBS层级/里程碑/状态映射/owner兜底/排程重算)+前端ImportModal(GBK兜底/模板下载/结果明细) | tasks.go, ImportModal.tsx(新), ProjectGantt.tsx | API实测4行导入全对,UI弹窗OK | ~350 |
