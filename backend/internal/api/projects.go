@@ -292,14 +292,14 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.db.Query(
 		`SELECT id, name, description, task_type, status, priority, assignee,
 		 start_date, end_date, duration_days, progress_pct, manual_scheduled,
-		 constraint_type, constraint_date, sort_order
+		 constraint_type, constraint_date, sort_order, actual_start, actual_end
 		 FROM tasks WHERE project_id=? AND deleted_at IS NULL`, srcID)
 	if err == nil {
 		for rows.Next() {
 			var st srcTask
 			if err := rows.Scan(&st.t.ID, &st.t.Name, &st.t.Description, &st.t.TaskType, &st.t.Status, &st.t.Priority,
 				&st.t.Assignee, &st.t.StartDate, &st.t.EndDate, &st.t.DurationDays, &st.t.ProgressPct, &st.manual,
-				&st.t.ConstraintType, &st.t.ConstraintDate, &st.t.SortOrder); err == nil {
+				&st.t.ConstraintType, &st.t.ConstraintDate, &st.t.SortOrder, &st.t.ActualStart, &st.t.ActualEnd); err == nil {
 				srcTasks = append(srcTasks, st)
 			}
 		}
@@ -312,11 +312,11 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 		r2, err := h.db.Exec(
 			`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
 			 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
-			 constraint_type, constraint_date, sort_order)
-			 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			 constraint_type, constraint_date, sort_order, actual_start, actual_end)
+			 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			newID, st.t.Name, st.t.Description, st.t.TaskType, st.t.Status, st.t.Priority, st.t.Assignee,
 			st.t.StartDate, st.t.EndDate, st.t.DurationDays, st.t.ProgressPct, st.manual,
-			st.t.ConstraintType, st.t.ConstraintDate, st.t.SortOrder)
+			st.t.ConstraintType, st.t.ConstraintDate, st.t.SortOrder, st.t.ActualStart, st.t.ActualEnd)
 		if err != nil {
 			log.Printf("[Copy] 任务[%d %s]插入失败: %v", st.t.ID, st.t.Name, err)
 			continue
