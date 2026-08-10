@@ -434,6 +434,117 @@ func TestGetMyTasksViews(t *testing.T) {
 	}
 }
 
+// 创建项目:owner_ids 数组 + 文本兼容 + 校验失败 400
+func TestCreateProjectWithOwnerIDs(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	ph := &ProjectHandler{db: conn}
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
+	var uid1 int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='a@x.com'`).Scan(&uid1)
+
+	r := chi.NewRouter()
+	r.Post("/api/projects", ph.CreateProject)
+
+	// 正常:owner_ids 双值(含无效 999 → 400)
+	body, _ := json.Marshal(map[string]interface{}{
+		"name": "项目A", "start_date": "2026-08-01", "end_date": "2026-08-31",
+		"owner_ids": []int64{uid1, 999},
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/projects", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("无效 owner_ids 状态码 = %d, want 400", w.Code)
+	}
+	// 文本兼容
+	body2, _ := json.Marshal(map[string]interface{}{
+		"name": "项目A", "start_date": "2026-08-01", "end_date": "2026-08-31",
+		"owner": "张三;李四",
+	})
+	req2 := httptest.NewRequest(http.MethodPost, "/api/projects", bytes.NewReader(body2))
+	w2 := httptest.NewRecorder()
+	r.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("文本创建状态码 = %d, body=%s", w2.Code, w2.Body.String())
+	}
+	var pid int64
+	conn.QueryRow(`SELECT id FROM projects WHERE name='项目A'`).Scan(&pid)
+	var n int
+	conn.QueryRow(`SELECT COUNT(*) FROM project_owners WHERE project_id=?`, pid).Scan(&n)
+	if n != 2 {
+		t.Errorf("project_owners 行数 = %d, want 2", n)
+	}
+}
+
+// 项目列表返回 owner_ids;CopyProject 复制两套关联表
+func TestProjectListAndCopyWithOwners(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	ph := &ProjectHandler{db: conn}
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
+	ids, _ := resolveUserIDs(conn, []string{"张三", "李四"})
+	r1, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, owner) VALUES ('源项目','2026-08-01','2026-08-31','active','张三; 李四')`)
+	pid, _ := r1.LastInsertId()
+	saveProjectOwners(conn, pid, ids)
+	// 任务+负责人
+	r2, _ := conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '任务A','task','open','2026-08-03','2026-08-10',5,0,0)`, pid)
+	tid, _ := r2.LastInsertId()
+	saveTaskAssignees(conn, tid, ids)
+
+	// 项目列表含 owner_ids
+	r := chi.NewRouter()
+	r.Get("/api/projects", ph.ProjectList)
+	req := httptest.NewRequest(http.MethodGet, "/api/projects", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("列表状态码 = %d", w.Code)
+	}
+	var resp struct {
+		Data []struct {
+			ID       int64   `json:"id"`
+			Owner    string  `json:"owner"`
+			OwnerIDs []int64 `json:"owner_ids"`
+		} `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	list := resp.Data
+	found := false
+	for _, p := range list {
+		if p.ID == pid {
+			found = true
+			if len(p.OwnerIDs) != 2 || p.Owner != "张三; 李四" {
+				t.Errorf("项目 owner = (%q, %v)", p.Owner, p.OwnerIDs)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("列表中找不到源项目")
+	}
+
+	// 复制项目
+	r2r := chi.NewRouter()
+	r2r.Post("/api/projects/{id}/copy", ph.CopyProject)
+	req2 := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/projects/%d/copy", pid), nil)
+	ctx := context.WithValue(req2.Context(), auth.UserIDKey, int64(1))
+	req2 = req2.WithContext(ctx)
+	w2 := httptest.NewRecorder()
+	r2r.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("复制状态码 = %d, body=%s", w2.Code, w2.Body.String())
+	}
+	var newID int64
+	conn.QueryRow(`SELECT id FROM projects WHERE name='源项目(副本)'`).Scan(&newID)
+	var n int
+	conn.QueryRow(`SELECT COUNT(*) FROM project_owners WHERE project_id=?`, newID).Scan(&n)
+	if n != 2 {
+		t.Errorf("副本 project_owners = %d, want 2", n)
+	}
+	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees ta JOIN tasks t ON t.id = ta.task_id WHERE t.project_id=?`, newID).Scan(&n)
+	if n != 2 {
+		t.Errorf("副本 task_assignees = %d, want 2", n)
+	}
+}
+
 // CSV 导入:负责人列分号多值,解析失败归未分配+提示
 func TestImportTasksMultiAssignee(t *testing.T) {
 	conn, h := testTaskHandler(t)

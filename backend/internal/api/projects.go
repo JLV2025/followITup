@@ -116,7 +116,8 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public,
 		COALESCE(p.baseline_created_at, '') as baseline_created_at,
 		COALESCE(p.baseline_created_by, '') as baseline_created_by,
-			p.schedule_direction, COALESCE(p.owner, '') as owner
+			p.schedule_direction, COALESCE(p.owner, '') as owner,
+		(SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = p.id) as owner_ids
 		FROM projects p WHERE p.deleted_at IS NULL ORDER BY p.created_at ASC, p.id ASC`
 
 	rows, err := h.db.Query(query)
@@ -142,9 +143,15 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var p ProjectSummary
 		var isPublic int
+		var ownerIDsStr string
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.StartDate, &p.EndDate,
-			&p.Status, &isPublic, &p.BaselineCreatedAt, &p.BaselineCreatedBy, &p.ScheduleDirection, &p.Owner); err != nil {
+			&p.Status, &isPublic, &p.BaselineCreatedAt, &p.BaselineCreatedBy, &p.ScheduleDirection, &p.Owner, &ownerIDsStr); err != nil {
 			continue
+		}
+		for _, s := range splitOwnerNames(ownerIDsStr) {
+			if v, err := strconv.ParseInt(s, 10, 64); err == nil {
+				p.OwnerIDs = append(p.OwnerIDs, v)
+		}
 		}
 		p.IsPublic = isPublic != 0
 		// 补充任务统计
@@ -218,11 +225,27 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "项目名称不能为空")
 		return
 	}
-	// 项目所有者必填且必须是系统已有用户（防呆 + 邮件通知需要邮箱）
-	if !h.ownerIsValidUser(p.Owner) {
-		writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须从现有用户中选择（请先在用户管理创建用户）")
-		return
+	// 负责人解析与校验:owner_ids 优先,其次 owner 文本(分号/逗号分隔);每项必须是活跃系统用户
+	var ownerIDs []int64
+	if len(p.OwnerIDs) > 0 {
+		for _, uid := range p.OwnerIDs {
+			var n int
+			h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE id=? AND is_active=1`, uid).Scan(&n)
+			if n > 0 {
+				ownerIDs = append(ownerIDs, uid)
+			} else {
+				writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须是现有活跃用户(含无效ID)")
+				return
+		}
+		}
+	} else if strings.TrimSpace(p.Owner) != "" {
+		ownerIDs, _ = resolveUserIDs(h.db, splitOwnerNames(p.Owner))
+		if len(splitOwnerNames(p.Owner)) != len(ownerIDs) {
+			writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须从现有用户中选择")
+			return
+		}
 	}
+	ownerSnapshot := strings.Join(ownerNamesOf(h.db, ownerIDs), "; ")
 
 	// 坏编码防护：连续替换字符（GBK 终端误传中文的指纹）直接拒绝
 	if hasBadEncoding(p.Name) || hasBadEncoding(p.Description) {
@@ -236,7 +259,7 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	result, err := h.db.Exec(
 		`INSERT INTO projects (name, description, owner, start_date, end_date, status, schedule_direction)
 		 VALUES (?, ?, ?, ?, ?, 'active', ?)`,
-		p.Name, p.Description, p.Owner, p.StartDate, p.EndDate, p.ScheduleDirection,
+		p.Name, p.Description, ownerSnapshot, p.StartDate, p.EndDate, p.ScheduleDirection,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DB_ERROR", "创建项目失败")
@@ -246,11 +269,21 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	id, _ := result.LastInsertId()
 	p.ID = id
 	p.Status = "active"
+	p.Owner = ownerSnapshot
+	p.OwnerIDs = ownerIDs
+	if len(ownerIDs) > 0 {
+		saveProjectOwners(h.db, id, ownerIDs)
+	}
 
 	// 自动将创建者添加为项目成员
 	userID, ok := auth.GetUserID(r.Context())
 	if ok {
 		h.db.Exec("INSERT OR IGNORE INTO project_members (project_id, user_id, role) VALUES (?, ?, 'owner')", id, userID)
+	}
+
+	// 项目负责人自动加入成员(role=owner),为将来权限留口子
+	for _, uid := range ownerIDs {
+		h.db.Exec("INSERT OR IGNORE INTO project_members (project_id, user_id, role) VALUES (?, ?, 'owner')", id, uid)
 	}
 
 	writeJSON(w, http.StatusCreated, p)
@@ -282,6 +315,10 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 	}
 	newID, _ := res.LastInsertId()
 
+	// 复制项目负责人(关联表)
+	srcOwnerIDs, _ := loadProjectOwners(h.db, srcID)
+	saveProjectOwners(h.db, newID, srcOwnerIDs)
+
 	// 任务复制（SQLITE_BUSY 防护：所有 SELECT 先读入内存并关闭 rows，再执行写入，
 	// 避免读连接持锁时 INSERT/UPDATE 被拒——与启动重排 goroutine 的已知坑同理）
 	type srcTask struct {
@@ -301,7 +338,7 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 				&st.t.Assignee, &st.t.StartDate, &st.t.EndDate, &st.t.DurationDays, &st.t.ProgressPct, &st.manual,
 				&st.t.ConstraintType, &st.t.ConstraintDate, &st.t.SortOrder, &st.t.ActualStart, &st.t.ActualEnd); err == nil {
 				srcTasks = append(srcTasks, st)
-			}
+		}
 		}
 		rows.Close()
 	}
@@ -324,6 +361,9 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 		nid, _ := r2.LastInsertId()
 		oldToNew[st.t.ID] = nid
 		oldIDs = append(oldIDs, st.t.ID)
+		if taIDs, _ := loadTaskAssignees(h.db, st.t.ID); len(taIDs) > 0 {
+			saveTaskAssignees(h.db, nid, taIDs)
+		}
 	}
 
 	// 回填 parent_id（新旧映射）
@@ -341,7 +381,7 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 			if prows.Scan(&p.id, &parent) == nil {
 				p.parent, p.valid = parent.Int64, parent.Valid
 				parents = append(parents, p)
-			}
+		}
 		}
 		prows.Close()
 	}
@@ -351,7 +391,7 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 				if nid, ok2 := oldToNew[p.id]; ok2 {
 					h.db.Exec(`UPDATE tasks SET parent_id=? WHERE id=?`, np, nid)
 				}
-			}
+		}
 		}
 	}
 
@@ -376,7 +416,7 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 				if drows.Scan(&d.pred, &d.succ, &d.dtype, &d.lag) == nil {
 					deps = append(deps, d)
 				}
-			}
+		}
 			drows.Close()
 		}
 		for _, d := range deps {
@@ -385,7 +425,7 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 					h.db.Exec(`INSERT INTO dependencies (predecessor_id, successor_id, dep_type, lag_days)
 						VALUES (?, ?, ?, ?)`, np, ns, d.dtype, d.lag)
 				}
-			}
+		}
 		}
 	}
 
@@ -439,19 +479,36 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	if p.EndDate == "" {
 		p.EndDate = oldEnd
 	}
-	if p.Owner == "" {
-		p.Owner = oldOwner // 未携带时保留旧值
+	// 负责人:owner_ids/owner 未携带 → 保留旧关联;携带 → 校验并覆盖
+	var ownerIDs []int64
+	ownerChanged := false
+	if len(p.OwnerIDs) > 0 {
+		ownerChanged = true
+		for _, uid := range p.OwnerIDs {
+			var n int
+			h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE id=? AND is_active=1`, uid).Scan(&n)
+			if n == 0 {
+				writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须是现有活跃用户")
+				return
+		}
+		}
+		ownerIDs = p.OwnerIDs
+	} else if strings.TrimSpace(p.Owner) != "" && p.Owner != oldOwner {
+		ownerChanged = true
+		ownerIDs, _ = resolveUserIDs(h.db, splitOwnerNames(p.Owner))
+		if len(splitOwnerNames(p.Owner)) != len(ownerIDs) {
+			writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须从现有用户中选择")
+			return
+		}
+	} else {
+		ownerIDs, _ = loadProjectOwners(h.db, id) // 未携带:保留旧值
 	}
-	// 修改所有者时必须指向已有用户（邮件通知需要邮箱）
-	if p.Owner != oldOwner && !h.ownerIsValidUser(p.Owner) {
-		writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须从现有用户中选择")
-		return
-	}
+	ownerSnapshot := strings.Join(ownerNamesOf(h.db, ownerIDs), "; ")
 	_, err := h.db.Exec(
 		`UPDATE projects SET name=?, description=?, owner=?, start_date=?, end_date=?, status=?, is_public=?,
 		       schedule_direction=?, updated_at=datetime('now')
 		 WHERE id=? AND deleted_at IS NULL`,
-		p.Name, p.Description, p.Owner, p.StartDate, p.EndDate, p.Status, boolToInt(p.IsPublic),
+		p.Name, p.Description, ownerSnapshot, p.StartDate, p.EndDate, p.Status, boolToInt(p.IsPublic),
 		p.ScheduleDirection, id,
 	)
 	if err != nil {
@@ -459,17 +516,27 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 项目所有者变更 → 未开始（待开始/已延期）任务自动改派给新 owner；已完成/进行中保持不变
-	if p.Owner != oldOwner {
-		res, err := h.db.Exec(
-			`UPDATE tasks SET assignee=?, version=version+1
-			 WHERE project_id=? AND deleted_at IS NULL AND status IN ('open', 'delayed')`,
-			p.Owner, id,
-		)
-		if err != nil {
-			log.Printf("[Project] 项目 %d owner 变更后改派任务失败: %v", id, err)
-		} else if n, _ := res.RowsAffected(); n > 0 {
-			log.Printf("[Project] 项目 %d owner 变更,改派 %d 个未开始任务", id, n)
+	// 写关联表(权威)
+	saveProjectOwners(h.db, id, ownerIDs)
+	// 项目负责人变更 → 未开始(待开始/已延期)任务自动改派给新全部负责人;已完成/进行中保持不变
+	if ownerChanged {
+		rows, err := h.db.Query(`SELECT id FROM tasks WHERE project_id=? AND deleted_at IS NULL AND status IN ('open', 'delayed')`, id)
+		if err == nil {
+			var taskIDs []int64
+			for rows.Next() {
+				var tid int64
+				if rows.Scan(&tid) == nil {
+					taskIDs = append(taskIDs, tid)
+				}
+		}
+			rows.Close()
+			for _, tid := range taskIDs {
+			saveTaskAssignees(h.db, tid, ownerIDs)
+		}
+		}
+		// 新负责人加入项目成员(role=owner)
+		for _, uid := range ownerIDs {
+			h.db.Exec("INSERT OR IGNORE INTO project_members (project_id, user_id, role) VALUES (?, ?, 'owner')", id, uid)
 		}
 	}
 
@@ -509,14 +576,22 @@ func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 
 	var p models.Project
 	var isPublic int
+	var ownerIDsStr string
 	err := h.db.QueryRow(
-		"SELECT id, name, description, owner, start_date, end_date, status, is_public, schedule_direction FROM projects WHERE id = ? AND deleted_at IS NULL",
+		`SELECT id, name, description, owner, start_date, end_date, status, is_public, schedule_direction,
+		(SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = projects.id) as owner_ids
+		FROM projects WHERE id = ? AND deleted_at IS NULL`,
 		id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.Owner, &p.StartDate, &p.EndDate, &p.Status, &isPublic, &p.ScheduleDirection)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.Owner, &p.StartDate, &p.EndDate, &p.Status, &isPublic, &p.ScheduleDirection, &ownerIDsStr)
 	p.IsPublic = isPublic != 0
 	if err != nil {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "项目不存在")
 		return
+	}
+	for _, s := range splitOwnerNames(ownerIDsStr) {
+		if v, err := strconv.ParseInt(s, 10, 64); err == nil {
+			p.OwnerIDs = append(p.OwnerIDs, v)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, p)
