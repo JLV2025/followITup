@@ -47,7 +47,7 @@ export default function MultiUserSelect({ users, selectedIds, onChange, placehol
                 toggle(u.id);
               }}
             >
-              x
+              ×
             </button>
           </span>
         ))}
