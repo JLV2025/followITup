@@ -526,6 +526,123 @@ func TestUpdateProjectReassignsTasks(t *testing.T) {
 	}
 }
 
+// UpdateProject 清空 owner_ids:空数组清空项目负责人 + open 任务改派为空
+func TestUpdateProjectClearOwnerIDs(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	ph := &ProjectHandler{db: conn}
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
+	var uid1, uid2 int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='a@x.com'`).Scan(&uid1)
+	conn.QueryRow(`SELECT id FROM users WHERE email='b@x.com'`).Scan(&uid2)
+
+	// 建项目:owner=张三
+	r1, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, owner) VALUES ('清空测试','2026-08-01','2026-08-31','active','张三')`)
+	pid, _ := r1.LastInsertId()
+	saveProjectOwners(conn, pid, []int64{uid1})
+	// 建 open 任务:assignee=张三
+	r2, _ := conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order, version) VALUES (?, 'open任务','task','open','2026-08-03','2026-08-10',5,0,0,1)`, pid)
+	tid, _ := r2.LastInsertId()
+	saveTaskAssignees(conn, tid, []int64{uid1})
+
+	// 已有一行 project_owners
+	var n int
+	conn.QueryRow(`SELECT COUNT(*) FROM project_owners WHERE project_id=?`, pid).Scan(&n)
+	if n != 1 {
+		t.Fatalf("初始 project_owners = %d, want 1", n)
+	}
+
+	r := chi.NewRouter()
+	r.Put("/api/projects/{id}", ph.UpdateProject)
+	// 清空:传 owner_ids 空数组
+	body, _ := json.Marshal(map[string]interface{}{
+		"name": "清空测试", "start_date": "2026-08-01", "end_date": "2026-08-31",
+		"owner_ids": []int64{}, "status": "active",
+	})
+	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/projects/%d", pid), bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("清空状态码 = %d, body=%s", w.Code, w.Body.String())
+	}
+
+	// project_owners 已清空
+	conn.QueryRow(`SELECT COUNT(*) FROM project_owners WHERE project_id=?`, pid).Scan(&n)
+	if n != 0 {
+		t.Errorf("清空后 project_owners = %d, want 0", n)
+	}
+	// open 任务 assignee 改派为空(快照列清空)
+	var snap string
+	conn.QueryRow(`SELECT assignee FROM tasks WHERE id=?`, tid).Scan(&snap)
+	if snap != "" {
+		t.Errorf("清空后任务快照 = %q, want 空", snap)
+	}
+	// 关联表清空
+	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees WHERE task_id=?`, tid).Scan(&n)
+	if n != 0 {
+		t.Errorf("清空后 task_assignees = %d, want 0", n)
+	}
+}
+
+// UpdateProject 复合场景:owner_ids 为空数组但 owner 文本与旧值不同 → 以 owner_ids 为准,不回退文本
+func TestUpdateProjectClearOwnerIDsCompound(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	ph := &ProjectHandler{db: conn}
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
+	var uid1, uid2 int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='a@x.com'`).Scan(&uid1)
+	conn.QueryRow(`SELECT id FROM users WHERE email='b@x.com'`).Scan(&uid2)
+
+	// 建项目:owner=张三
+	r1, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, owner) VALUES ('复合测试','2026-08-01','2026-08-31','active','张三')`)
+	pid, _ := r1.LastInsertId()
+	saveProjectOwners(conn, pid, []int64{uid1})
+
+	// 先改为李四(第一次 PUT)
+	r := chi.NewRouter()
+	r.Put("/api/projects/{id}", ph.UpdateProject)
+	body1, _ := json.Marshal(map[string]interface{}{
+		"name": "复合测试", "start_date": "2026-08-01", "end_date": "2026-08-31",
+		"owner_ids": []int64{uid2}, "status": "active",
+	})
+	req1 := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/projects/%d", pid), bytes.NewReader(body1))
+	w1 := httptest.NewRecorder()
+	r.ServeHTTP(w1, req1)
+	if w1.Code != http.StatusOK {
+		t.Fatalf("第一次改派状态码 = %d", w1.Code)
+	}
+	// 确认已改为李四
+	got, _ := loadProjectOwners(conn, pid)
+	if len(got) != 1 || got[0] != uid2 {
+		t.Fatalf("第一次改派后 owners = %v, want [%d]", got, uid2)
+	}
+
+	// 复合场景:owner_ids 空数组,但 owner 文本是旧值"张三"≠ DB 旧值"李四"
+	// → 必须以 owner_ids 为准(清空),不能因为文本不同就回退到文本"张三"
+	body2, _ := json.Marshal(map[string]interface{}{
+		"name": "复合测试", "start_date": "2026-08-01", "end_date": "2026-08-31",
+		"owner_ids": []int64{}, "owner": "张三", "status": "active",
+	})
+	req2 := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/projects/%d", pid), bytes.NewReader(body2))
+	w2 := httptest.NewRecorder()
+	r.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusOK {
+		t.Fatalf("复合清空状态码 = %d, body=%s", w2.Code, w2.Body.String())
+	}
+
+	// 检查:project_owners 必须为空(以 owner_ids 空数组为准,不回退)
+	var n int
+	conn.QueryRow(`SELECT COUNT(*) FROM project_owners WHERE project_id=?`, pid).Scan(&n)
+	if n != 0 {
+		t.Errorf("复合清空后 project_owners = %d, want 0(以 owner_ids 为准,不回退)", n)
+	}
+	// 快照列也必须为空
+	var snap string
+	conn.QueryRow(`SELECT owner FROM projects WHERE id=?`, pid).Scan(&snap)
+	if snap != "" {
+		t.Errorf("复合清空后快照列 = %q, want 空", snap)
+	}
+}
+
 // 项目列表返回 owner_ids;CopyProject 复制两套关联表
 func TestProjectListAndCopyWithOwners(t *testing.T) {
 	conn, _ := testTaskHandler(t)

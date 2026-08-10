@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -435,11 +436,18 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 
-	var p models.Project
-	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+	raw, err := io.ReadAll(r.Body)
+	if err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
 		return
 	}
+	var p models.Project
+	if err := json.Unmarshal(raw, &p); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+	var fieldCheck map[string]json.RawMessage
+	json.Unmarshal(raw, &fieldCheck)
 
 	// 坏编码防护：连续替换字符（GBK 终端误传中文的指纹）直接拒绝
 	if hasBadEncoding(p.Name) || hasBadEncoding(p.Description) {
@@ -469,21 +477,25 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	if p.EndDate == "" {
 		p.EndDate = oldEnd
 	}
-	// 负责人:owner_ids/owner 未携带 → 保留旧关联;携带 → 校验并覆盖
+	// 负责人:owner_ids/owner 都未携带 → 保留 DB 旧关联(与 UpdateTask fieldCheck 同策略)
 	var ownerIDs []int64
 	ownerChanged := false
-	if len(p.OwnerIDs) > 0 {
-		ownerChanged = true
-		for _, uid := range p.OwnerIDs {
+	if _, provided := fieldCheck["owner_ids"]; provided {
+		// owner_ids 键存在(含空数组=清空)
+		var ids []int64
+		json.Unmarshal(fieldCheck["owner_ids"], &ids)
+		for _, uid := range ids {
 			var n int
 			h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE id=? AND is_active=1`, uid).Scan(&n)
 			if n == 0 {
 				writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须是现有活跃用户")
 				return
+			}
 		}
-		}
-		ownerIDs = p.OwnerIDs
-	} else if strings.TrimSpace(p.Owner) != "" && p.Owner != oldOwner {
+		ownerChanged = true
+		ownerIDs = ids
+	} else if _, provided := fieldCheck["owner"]; provided {
+		// owner 文本键存在
 		ownerChanged = true
 		ownerIDs, _ = resolveUserIDs(h.db, splitOwnerNames(p.Owner))
 		if len(splitOwnerNames(p.Owner)) != len(ownerIDs) {
@@ -491,10 +503,10 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		ownerIDs, _ = loadProjectOwners(h.db, id) // 未携带:保留旧值
+		ownerIDs, _ = loadProjectOwners(h.db, id) // 都未携带:保留旧值
 	}
 	ownerSnapshot := strings.Join(ownerNamesOf(h.db, ownerIDs), "; ")
-	_, err := h.db.Exec(
+	_, err = h.db.Exec(
 		`UPDATE projects SET name=?, description=?, owner=?, start_date=?, end_date=?, status=?, is_public=?,
 		       schedule_direction=?, updated_at=datetime('now')
 		 WHERE id=? AND deleted_at IS NULL`,
