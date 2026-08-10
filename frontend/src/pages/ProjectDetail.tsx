@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link, NavLink, Outlet } from "react-router-dom";
 import api from "../api/client";
-import i18n from "../i18n";
 
 interface Project {
   id: number;
