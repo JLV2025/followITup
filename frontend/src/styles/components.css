@@ -1823,3 +1823,29 @@
   font-size: 11px; padding: 1px 4px; border: 1px solid var(--card-border);
   border-radius: 4px; background: var(--card-bg); color: var(--text-secondary);
 }
+
+/* 多选负责人(下拉+标签) */
+.multi-user-select { position: relative; min-height: 36px; }
+.mus-tags {
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+  min-height: 36px; padding: 4px 8px; border: 1px solid var(--border);
+  border-radius: 6px; cursor: pointer; background: #fff;
+}
+.mus-tags:hover { border-color: var(--accent); }
+.mus-placeholder { color: var(--text-muted); font-size: 13px; }
+.mus-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--accent-soft, rgba(64, 128, 128, 0.12)); color: var(--accent);
+  border-radius: 4px; padding: 2px 6px; font-size: 12px;
+}
+.mus-tag-x { border: none; background: none; cursor: pointer; color: inherit; font-size: 13px; line-height: 1; padding: 0 2px; }
+.mus-tag-x:hover { color: var(--danger); }
+.mus-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20;
+  background: #fff; border: 1px solid var(--border); border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); max-height: 220px; overflow-y: auto;
+}
+.mus-option { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; font-size: 13px; }
+.mus-option:hover { background: var(--bg-soft, #f5f5f4); }
+.mus-option input { accent-color: var(--accent); }
+.mus-empty { padding: 10px; color: var(--text-muted); font-size: 13px; }

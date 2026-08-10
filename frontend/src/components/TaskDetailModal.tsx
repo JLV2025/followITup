@@ -5,6 +5,7 @@ import api from "../api/client";
 import { formatDateShort } from "../utils/date";
 import { statusLabel, priorityLabel } from "../utils/labels";
 import i18n from "../i18n";
+import MultiUserSelect from "./MultiUserSelect";
 
 interface Task {
   id: number;
@@ -16,6 +17,7 @@ interface Task {
   status: string;
   priority: string;
   assignee: string;
+  assignee_ids?: number[];
   start_date: string;
   end_date: string;
   duration_days: number;
@@ -77,7 +79,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("open");
   const [priority, setPriority] = useState("medium");
-  const [assignee, setAssignee] = useState("");
+  const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
   const [manualScheduled, setManualScheduled] = useState(false);
   const [constraintType, setConstraintType] = useState("");
   const [constraintDate, setConstraintDate] = useState("");
@@ -129,7 +131,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
       setProgress(task.progress_pct);
       setStatus(task.status);
       setPriority(task.priority);
-      setAssignee(task.assignee || "");
+      setAssigneeIds(task.assignee_ids || []);
       setManualScheduled(task.manual_scheduled);
       setConstraintType(task.constraint_type || "");
       setConstraintDate(task.constraint_date || "");
@@ -254,7 +256,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         progress_pct: finalProgress,
         status: finalStatus,
         priority,
-        assignee: assignee.trim(),
+        assignee_ids: assigneeIds,
         manual_scheduled: manualScheduled,
         constraint_type: constraintType || "",
         constraint_date: constraintDate || "",
@@ -503,15 +505,11 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         </div>
         <div className="form-group">
           <label>{t("taskDetail.assignee")}</label>
-          <select
-            value={assignee}
-            onChange={(e) => setAssignee(e.target.value)}
-          >
-            <option value="">{t("taskDetail.unassigned")}</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.display_name}>{u.display_name}</option>
-            ))}
-          </select>
+          <MultiUserSelect
+            users={users}
+            selectedIds={assigneeIds}
+            onChange={setAssigneeIds}
+          />
         </div>
         </div>{/* 左栏结束 */}
 

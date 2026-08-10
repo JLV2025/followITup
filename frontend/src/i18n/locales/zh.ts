@@ -11,6 +11,8 @@ export default {
     close: "关闭",
     none: "无",
     project: "项目",
+    remove: "移除",
+    noData: "暂无数据",
   },
   nav: { login: "登录", logout: "退出", users: "用户管理", settings: "系统设置" },
   date: { shortFormat: "{{month}}{{day}}日" },
@@ -205,6 +207,7 @@ export default {
     add: "添加",
     noPreds: "暂无前置任务",
     manualScheduled: "手动排程（不受依赖关系影响）",
+    assigneePlaceholder: "选择负责人…",
   },
   taskList: {
     errConflict: "任务已被他人修改，请刷新后重试",

@@ -11,6 +11,8 @@ export default {
     close: "Close",
     none: "None",
     project: "Project",
+    remove: "Remove",
+    noData: "No data",
   },
   nav: { login: "Sign in", logout: "Sign out", users: "User Management", settings: "System Settings" },
   date: { shortFormat: "{{month}} {{day}}" },
@@ -205,6 +207,7 @@ export default {
     add: "Add",
     noPreds: "No predecessors",
     manualScheduled: "Manual scheduling (not affected by dependencies)",
+    assigneePlaceholder: "Select assignee(s)…",
   },
   taskList: {
     errConflict: "Modified by someone else. Refresh and retry",
