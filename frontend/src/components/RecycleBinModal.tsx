@@ -76,24 +76,24 @@ export default function RecycleBinModal({ projectId, projectName, onClose, onRes
             <p className="text-secondary">{t("recycleBin.empty")}</p>
           ) : (
             <div className="dep-list">
-              {tasks.map((t) => (
-                <div className="dep-item" key={t.id}>
+              {tasks.map((dt) => (
+                <div className="dep-item" key={dt.id}>
                   <div className="dep-item-main">
                     <span className="dep-item-name">
-                      {t.name}
-                      {t.task_type === "milestone" && <em className="tag">{t("recycleBin.milestoneTag")}</em>}
+                      {dt.name}
+                      {dt.task_type === "milestone" && <em className="tag">{t("recycleBin.milestoneTag")}</em>}
                     </span>
                     <span className="dep-item-detail">
-                      {t.start_date || "—"} ~ {t.end_date || "—"} · {t.duration_days}天 · 进度 {t.progress_pct}% · 原排序 #{t.sort_order + 1}
+                      {dt.start_date || "—"} ~ {dt.end_date || "—"} · {dt.duration_days}{t("recycleBin.days")} · {t("recycleBin.progress")} {dt.progress_pct}% · {t("recycleBin.origOrder")} #{dt.sort_order + 1}
                     </span>
-                    <span className="dep-item-detail">{t("recycleBin.deletedAt", { date: t.deleted_at?.slice(0, 10) })}</span>
+                    <span className="dep-item-detail">{t("recycleBin.deletedAt", { date: dt.deleted_at?.slice(0, 10) })}</span>
                   </div>
                   <button
                     className="btn btn-primary btn-sm"
-                    disabled={restoringId === t.id}
-                    onClick={() => handleRestore(t)}
+                    disabled={restoringId === dt.id}
+                    onClick={() => handleRestore(dt)}
                   >
-                    {restoringId === t.id ? t("recycleBin.restoring") : t("recycleBin.restore")}
+                    {restoringId === dt.id ? t("recycleBin.restoring") : t("recycleBin.restore")}
                   </button>
                 </div>
               ))}
