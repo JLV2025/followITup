@@ -1646,3 +1646,281 @@ cd backend && followitup.exe config.yaml   # 启动
 | 10:57 | Edited backend/internal/api/tasks.go | 12→11 lines | ~36 |
 | 10:58 | Edited backend/internal/api/tasks.go | 2→7 lines | ~95 |
 | 10:55 | 实际日期新逻辑:默认取计划日期(用户选择>系统默认),CreateTask/UpdateTask统一,超出计划范围允许(提前/延期即偏差),仅拦实际结束<实际开始(INVALID_ACTUAL) | tasks.go, baseline_test.go | 三场景实测:默认跟随/提前允许/乱序400 | ~250 |
+| 11:00 | Session end: 76 writes across 15 files (projects.go, tasks.go, ImportModal.tsx, ProjectGantt.tsx, components.css) | 16 reads | ~69619 tok |
+
+## Session: 2026-08-10 08:25
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-08-10 08:29
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-08-10 08:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:48 | Edited backend/internal/api/tasks.go | 7→7 lines | ~98 |
+| 08:48 | Edited backend/internal/api/tasks.go | expanded (+11 lines) | ~233 |
+| 08:48 | Edited backend/internal/api/tasks.go | expanded (+9 lines) | ~477 |
+| 08:49 | Edited backend/internal/api/tasks.go | modified hasBadEncoding() | ~421 |
+| 08:49 | Edited backend/internal/api/tasks.go | 9→10 lines | ~30 |
+| 08:49 | Edited backend/internal/api/projects.go | modified Next() | ~389 |
+| 08:49 | Edited backend/internal/mail/reminder.go | modified StartDueReminderScheduler() | ~139 |
+| 08:49 | Edited backend/internal/mail/reminder.go | 8→9 lines | ~25 |
+| 08:49 | Edited backend/internal/mail/reminder.go | expanded (+9 lines) | ~247 |
+| 08:50 | Edited backend/internal/server/server.go | 2→4 lines | ~58 |
+| 08:50 | Edited backend/internal/server/server.go | 8→9 lines | ~23 |
+| 08:50 | Edited backend/internal/settings/settings.go | 5→6 lines | ~14 |
+| 08:50 | Edited backend/internal/settings/settings.go | modified ensureDefaults() | ~78 |
+| 08:50 | Edited backend/internal/settings/settings.go | func() → LoadOrStore() | ~97 |
+| 08:51 | Created backend/internal/api/import_test.go | — | ~1601 |
+| 08:52 | Edited backend/internal/api/import_test.go | 6→6 lines | ~53 |
+| 08:53 | Edited backend/internal/api/import_test.go | modified Next() | ~204 |
+| 08:54 | Edited backend/internal/api/tasks.go | 4→9 lines | ~103 |
+| 08:54 | Edited backend/internal/api/tasks.go | 19→18 lines | ~200 |
+| 08:55 | Edited backend/internal/api/import_test.go | modified Next() | ~120 |
+| 08:56 | Edited backend/internal/api/import_test.go | 4→6 lines | ~82 |
+| 08:56 | Edited backend/internal/api/import_test.go | — | ~0 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~66 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~116 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~25 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | added 1 condition(s) | ~69 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~215 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | 2→5 lines | ~72 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~26 |
+| 08:59 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~21 |
+| 09:00 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: map, t | ~444 |
+| 09:00 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~108 |
+| 09:00 | Edited frontend/src/pages/Resources.tsx | CSS: id, t | ~126 |
+| 09:00 | Edited frontend/src/pages/Resources.tsx | 3→3 lines | ~44 |
+| 09:10 | 代码审查报告(0严重/5重要/10次要)汇总给用户,用户拍板全部修复 | - | 交付 | ~200 |
+| 09:40 | 后端4项修复+测试3个handler级用例(词表/部分更新/INVALID_ACTUAL)全部通过 | tasks.go/projects.go/reminder.go/server.go/settings.go/import_test.go | commit 56a4f5b/de3d347/7eb89bd | ~3200 |
+| 09:55 | 测试暴露真实bug:INSERT...SELECT空项目0行插入不报错→导入静默全丢,改VALUES直插(bug-173) | tasks.go | 已修+记buglog | ~300 |
+| 10:05 | 前端5项修复(readonly守卫/批量删除/行号连续/二分注释/资源叶子)浏览器实测通过,提交ac53872 | ProjectGantt.tsx/Resources.tsx | 已提交 | ~1500 |
+| 09:07 | Session end: 34 writes across 8 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 8 reads | ~45586 tok |
+| 09:09 | Edited backend/internal/api/projects.go | modified Group() | ~190 |
+| 10:15 | 用户拍板:未登录可访问项目详情;GET /api/projects/{id} 移出认证组,浏览器实测未登录只读完整(甘特图渲染/无勾选框/无添加导入/过滤可用) | projects.go | commit 2324acc | ~600 |
+| 09:11 | Session end: 35 writes across 8 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 8 reads | ~45824 tok |
+| 10:25 | 会话收工:审查修复15项+项目详情公开全部完成(5 commit),服务器运行中,工作区仅余 OpenWolf 元数据 | - | 收工 | ~100 |
+| 09:12 | Session end: 35 writes across 8 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 8 reads | ~45824 tok |
+| 09:40 | Created C:/Users/jingl/.claude/plans/inherited-humming-sunset.md | — | ~1220 |
+| 09:52 | Created frontend/src/i18n/locales/zh.ts | — | ~503 |
+| 09:52 | Created frontend/src/i18n/locales/en.ts | — | ~698 |
+| 09:52 | Created frontend/src/i18n/index.ts | — | ~386 |
+| 09:52 | Edited frontend/src/main.tsx | added 1 import(s) | ~69 |
+| 09:52 | Edited frontend/index.html | 8→8 lines | ~69 |
+| 09:53 | Created frontend/src/components/Navbar.tsx | — | ~616 |
+| 09:53 | Edited frontend/src/index.css | expanded (+22 lines) | ~108 |
+| 09:53 | Edited frontend/src/utils/date.ts | added 1 import(s) | ~251 |
+| 09:53 | Edited frontend/src/pages/Dashboard.tsx | modified for() | ~218 |
+| 09:54 | Edited frontend/src/pages/Dashboard.tsx | added 1 import(s) | ~30 |
+| 09:55 | Created frontend/src/utils/labels.ts | — | ~100 |
+| 09:55 | Edited frontend/src/components/TaskDetailModal.tsx | reduced (-6 lines) | ~48 |
+| 09:55 | Edited frontend/src/pages/TaskListView.tsx | — | ~0 |
+| 09:56 | Edited frontend/src/components/TaskDetailModal.tsx | inline fix | ~10 |
+| 09:56 | Edited frontend/src/components/TaskDetailModal.tsx | inline fix | ~11 |
+| 09:56 | Edited frontend/src/pages/TaskListView.tsx | inline fix | ~13 |
+| 09:56 | Edited frontend/src/pages/TaskListView.tsx | inline fix | ~15 |
+| 09:56 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 import(s) | ~54 |
+| 09:56 | Edited frontend/src/pages/TaskListView.tsx | added 1 import(s) | ~45 |
+| 09:56 | Edited frontend/src/pages/Resources.tsx | added 2 import(s) | ~70 |
+| 09:56 | Edited frontend/src/pages/Resources.tsx | 3→3 lines | ~45 |
+| 09:57 | Edited frontend/src/pages/ProjectGantt.tsx | modified function() | ~204 |
+| 09:57 | Edited frontend/src/i18n/locales/zh.ts | 1→2 lines | ~57 |
+| 09:57 | Edited frontend/src/i18n/locales/en.ts | 1→2 lines | ~70 |
+| 09:57 | Edited frontend/src/pages/ProjectGantt.tsx | added 3 import(s) | ~160 |
+| 09:58 | Edited frontend/src/pages/ProjectGantt.tsx | 5→5 lines | ~94 |
+| 09:58 | Edited frontend/src/pages/ProjectGantt.tsx | 5→5 lines | ~89 |
+| 09:58 | Edited frontend/src/pages/ProjectGantt.tsx | modified ProjectGantt() | ~54 |
+| 09:59 | Created frontend/src/utils/errorMsg.ts | — | ~279 |
+| 10:00 | Edited frontend/src/pages/Login.tsx | modified catch() | ~25 |
+| 10:00 | Edited frontend/src/stores/ganttStore.ts | modified catch() | ~61 |
+| 10:02 | Edited frontend/src/i18n/locales/zh.ts | expanded (+63 lines) | ~559 |
+| 10:02 | Edited frontend/src/i18n/locales/en.ts | expanded (+63 lines) | ~797 |
+| 10:03 | Edited frontend/src/pages/Dashboard.tsx | CSS: name | ~124 |
+| 10:03 | Edited frontend/src/pages/Dashboard.tsx | 3→3 lines | ~43 |
+| 10:03 | Edited frontend/src/pages/Dashboard.tsx | 2→2 lines | ~20 |
+| 10:03 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~21 |
+| 10:03 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~21 |
+| 10:03 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~22 |
+| 10:03 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~22 |
+| 10:04 | Edited frontend/src/pages/Dashboard.tsx | modified t() | ~65 |
+| 10:04 | Edited frontend/src/pages/Dashboard.tsx | 21→21 lines | ~263 |
+| 10:04 | Edited frontend/src/pages/Dashboard.tsx | 14→14 lines | ~237 |
+| 10:04 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~24 |
+| 10:04 | Edited frontend/src/pages/Dashboard.tsx | CSS: date | ~52 |
+| 10:04 | Edited frontend/src/pages/Dashboard.tsx | CSS: name, name | ~213 |
+| 10:05 | Edited frontend/src/pages/Dashboard.tsx | 8→8 lines | ~121 |
+| 10:05 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~33 |
+| 10:05 | Edited frontend/src/pages/Dashboard.tsx | 3→3 lines | ~52 |
+| 10:05 | Edited frontend/src/pages/Dashboard.tsx | 11→11 lines | ~146 |
+| 10:05 | Edited frontend/src/pages/Dashboard.tsx | modified t() | ~656 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | modified t() | ~303 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | CSS: date, name | ~561 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | CSS: name | ~51 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | 8→8 lines | ~64 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | "创建失败，请重试" → "dashboard.errCreate" | ~19 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~24 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~34 |
+| 10:06 | Edited frontend/src/pages/Dashboard.tsx | added 1 import(s) | ~53 |
+| 10:07 | Edited frontend/src/pages/Dashboard.tsx | modified Dashboard() | ~33 |
+| 10:07 | Edited frontend/src/pages/Dashboard.tsx | CSS: year | ~38 |
+| 10:07 | Edited frontend/src/i18n/locales/zh.ts | 2→3 lines | ~15 |
+| 10:07 | Edited frontend/src/i18n/locales/en.ts | 2→3 lines | ~16 |
+| 10:08 | Edited frontend/src/i18n/locales/zh.ts | expanded (+46 lines) | ~447 |
+| 10:08 | Edited frontend/src/i18n/locales/en.ts | expanded (+46 lines) | ~606 |
+| 10:08 | Edited frontend/src/pages/ProjectGantt.tsx | 2→1 lines | ~12 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~29 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~32 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | "未知" → "gantt.unknownUser" | ~30 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: failed, detail | ~110 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | "${src.name}(副本)" → "${src.name}${i18n.t(" | ~17 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: name, err | ~59 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: n, detail | ~198 |
+| 10:09 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: n | ~123 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: n | ~59 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | modified if() | ~48 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | "删除此依赖关系？" → "gantt.confirmDeleteLink" | ~20 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | "父任务不接受依赖连线，请对子任务建立依赖关系" → "gantt.parentNoLink" | ~13 |
+| 10:10 | Edited frontend/src/pages/ProjectGantt.tsx | 27→27 lines | ~271 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | 9→9 lines | ~241 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~29 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~22 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~21 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~62 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | "🔍 搜索任务名..." → "🔍 ${t(" | ~16 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~20 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~19 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | 8→8 lines | ~88 |
+| 10:11 | Edited frontend/src/pages/ProjectGantt.tsx | modified t() | ~67 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: n | ~572 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~21 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~26 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~26 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~26 |
+| 10:12 | Edited frontend/src/i18n/locales/zh.ts | expanded (+9 lines) | ~104 |
+| 10:12 | Edited frontend/src/i18n/locales/en.ts | expanded (+9 lines) | ~136 |
+| 10:12 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~16 |
+| 10:13 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+9 lines) | ~162 |
+| 10:13 | Edited frontend/src/pages/ProjectGantt.tsx | 3→3 lines | ~35 |
+| 10:13 | Edited frontend/src/i18n/locales/zh.ts | 3→4 lines | ~16 |
+| 10:13 | Edited frontend/src/i18n/locales/en.ts | 3→4 lines | ~19 |
+| 10:15 | Edited frontend/src/i18n/locales/zh.ts | expanded (+105 lines) | ~805 |
+| 10:15 | Edited frontend/src/i18n/locales/en.ts | expanded (+105 lines) | ~1102 |
+| 10:17 | Edited frontend/src/pages/TaskListView.tsx | 6→6 lines | ~73 |
+| 10:17 | Edited frontend/src/pages/TaskListView.tsx | added 2 import(s) | ~113 |
+| 10:17 | Edited frontend/src/pages/TaskListView.tsx | modified TaskListView() | ~51 |
+| 10:17 | Edited frontend/src/i18n/locales/zh.ts | 3→4 lines | ~32 |
+| 10:17 | Edited frontend/src/i18n/locales/en.ts | 3→4 lines | ~49 |
+| 10:17 | Edited frontend/src/components/TaskDetailModal.tsx | added 2 import(s) | ~76 |
+| 10:17 | Edited frontend/src/components/RecycleBinModal.tsx | added 2 import(s) | ~59 |
+| 10:17 | Edited frontend/src/components/ImportModal.tsx | added 2 import(s) | ~58 |
+| 10:18 | Edited frontend/src/components/TaskDetailModal.tsx | modified TaskDetailModal() | ~48 |
+| 10:18 | Edited frontend/src/components/RecycleBinModal.tsx | modified RecycleBinModal() | ~38 |
+| 10:18 | Edited frontend/src/components/ImportModal.tsx | modified join() | ~283 |
+| 10:18 | Edited frontend/src/components/ImportModal.tsx | 3→3 lines | ~50 |
+| 10:19 | Edited frontend/src/components/ImportModal.tsx | modified t() | ~743 |
+| 10:19 | Edited frontend/src/components/ImportModal.tsx | CSS: n, n | ~55 |
+| 10:19 | Edited frontend/src/i18n/locales/zh.ts | 2→3 lines | ~22 |
+| 10:19 | Edited frontend/src/i18n/locales/en.ts | 2→3 lines | ~28 |
+| 10:19 | Edited frontend/src/components/ImportModal.tsx | CSS: projectId, onClose, onImported | ~54 |
+| 10:19 | Edited frontend/src/components/ImportModal.tsx | 6→2 lines | ~24 |
+| 10:20 | Edited frontend/src/components/TaskDetailModal.tsx | inline fix | ~32 |
+| 10:20 | Edited frontend/src/components/RecycleBinModal.tsx | inline fix | ~20 |
+| 10:20 | Edited frontend/src/components/RecycleBinModal.tsx | inline fix | ~26 |
+| 10:21 | Edited frontend/src/components/RecycleBinModal.tsx | modified t() | ~339 |
+| 10:21 | Edited frontend/src/i18n/locales/zh.ts | 3→6 lines | ~30 |
+| 10:21 | Edited frontend/src/i18n/locales/en.ts | 3→6 lines | ~38 |
+| 10:22 | Edited frontend/src/pages/TaskListView.tsx | CSS: t | ~34 |
+| 10:24 | Edited frontend/src/i18n/locales/zh.ts | expanded (+104 lines) | ~757 |
+| 10:24 | Edited frontend/src/i18n/locales/en.ts | expanded (+104 lines) | ~1065 |
+| 10:25 | Created frontend/i18n-replace.py | — | ~3456 |
+| 10:25 | Edited frontend/src/i18n/locales/zh.ts | 5→6 lines | ~43 |
+| 10:26 | Edited frontend/src/i18n/locales/en.ts | 5→6 lines | ~53 |
+| 10:26 | Edited frontend/src/pages/Resources.tsx | added 1 import(s) | ~83 |
+| 10:26 | Edited frontend/src/pages/Resources.tsx | modified Resources() | ~34 |
+| 10:26 | Edited frontend/src/pages/Resources.tsx | CSS: owners, leaves | ~52 |
+| 10:26 | Created frontend/i18n-imports.py | — | ~519 |
+| 10:27 | Edited frontend/src/i18n/locales/zh.ts | expanded (+12 lines) | ~110 |
+| 10:27 | Edited frontend/src/i18n/locales/en.ts | expanded (+12 lines) | ~142 |
+| 10:27 | Edited frontend/src/pages/SystemSettings.tsx | modified t() | ~846 |
+| 10:28 | Edited frontend/src/pages/ProjectDetail.tsx | 6→5 lines | ~71 |
+| 10:29 | Edited backend/internal/mail/mail.go | modified SendPasswordReset() | ~247 |
+| 10:29 | Edited backend/internal/mail/reminder.go | 10→10 lines | ~115 |
+| 10:31 | Edited frontend/src/i18n/index.ts | 15→17 lines | ~136 |
+| 10:32 | Edited frontend/src/i18n/locales/zh.ts | 1→2 lines | ~34 |
+| 10:33 | Edited frontend/src/i18n/locales/en.ts | 1→2 lines | ~40 |
+| 10:33 | Edited frontend/src/pages/ProjectGantt.tsx | inline fix | ~24 |
+| 10:34 | Edited frontend/src/i18n/locales/zh.ts | 3→5 lines | ~50 |
+| 10:35 | Edited frontend/src/i18n/locales/zh.ts | 4→2 lines | ~22 |
+| 10:35 | Edited frontend/src/i18n/locales/en.ts | 3→5 lines | ~58 |
+| 10:35 | Edited frontend/src/i18n/locales/en.ts | removed 2 lines | ~4 |
+| 10:37 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~45 |
+| 10:39 | Edited frontend/src/i18n/locales/zh.ts | expanded (+7 lines) | ~96 |
+| 10:39 | Edited frontend/src/i18n/locales/en.ts | expanded (+7 lines) | ~142 |
+| 10:40 | Edited frontend/src/components/TaskDetailModal.tsx | 3→3 lines | ~63 |
+| 10:40 | Edited frontend/src/components/TaskDetailModal.tsx | 3→3 lines | ~43 |
+| 10:40 | Edited frontend/src/components/TaskDetailModal.tsx | 2→2 lines | ~20 |
+| 10:40 | Edited frontend/src/components/TaskDetailModal.tsx | 2→2 lines | ~20 |
+| 10:40 | Edited frontend/src/components/TaskDetailModal.tsx | 2→2 lines | ~19 |
+| 10:40 | Edited frontend/src/components/TaskDetailModal.tsx | 2→2 lines | ~18 |
+| 10:40 | Edited frontend/src/components/TaskDetailModal.tsx | 2→2 lines | ~19 |
+| 10:41 | Edited frontend/src/components/TaskDetailModal.tsx | 3→3 lines | ~35 |
+| 10:43 | Edited README.md | 3→7 lines | ~101 |
+| 10:45 | 英文版i18n交付:9批全部完成(基础设施/标签收敛/错误映射/6页面文案/邮件英文化/实测),11 commit,双语浏览器实测全通过 | frontend/src/i18n + 14文件 + mail | 交付 | ~8000 |
+| 10:50 | i18n实测踩坑3个:html lang init不触发languageChanged需手动同步;数字开头对象键(3days)i18next解析失败改数组;%a是am/pm标记非星期改%D | i18n/index.ts + locales + ProjectGantt | 已修 | ~300 |
+| 10:44 | Session end: 199 writes across 32 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~114824 tok |
+| 11:00 | 数据清理:用户拍板只留项目#1新房装修/#2UCD COPS;物理删除20个测试项目+336任务+全部依赖/成员/日志,回收站清空;看板三口径(活跃2/状态2/时间线1)现已一致 | data/followitup.db | 完成 | ~400 |
+| 10:52 | Session end: 199 writes across 32 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~114824 tok |
+| 11:16 | Edited backend/internal/scheduler/scheduler.go | modified Recalculate() | ~322 |
+| 11:16 | Edited backend/internal/scheduler/scheduler.go | modified loadTasks() | ~76 |
+| 11:17 | Edited backend/internal/scheduler/scheduler_test.go | 5→7 lines | ~18 |
+| 11:18 | Edited backend/internal/scheduler/scheduler_test.go | 8→9 lines | ~108 |
+| 11:18 | Edited backend/internal/scheduler/scheduler.go | 11→13 lines | ~82 |
+| 11:18 | Edited backend/internal/scheduler/scheduler.go | modified rollupProjectEnd() | ~381 |
+| 11:19 | Edited backend/internal/scheduler/scheduler_test.go | expanded (+7 lines) | ~324 |
+| 11:21 | Edited backend/internal/scheduler/scheduler.go | 13→15 lines | ~135 |
+| 11:21 | Edited backend/internal/scheduler/scheduler.go | 14→16 lines | ~132 |
+| 11:21 | Edited backend/internal/scheduler/scheduler.go | modified loadTasks() | ~61 |
+| 11:22 | Edited backend/internal/scheduler/scheduler.go | 13→11 lines | ~61 |
+| 11:23 | Edited backend/internal/scheduler/scheduler.go | modified loadTasks() | ~82 |
+| 11:23 | Edited backend/internal/scheduler/scheduler.go | 11→13 lines | ~83 |
+| 11:30 | 项目日期推导逻辑:正排end=最晚任务结束/倒排start=最早任务开始(用户定义),rollupProjectEnd/Start在Recalculate/All/backward三处写库后+提前分支调用;项目10 end自动补08-27,时间线与状态总览/统计一致(均2);commit d21a0c8 | scheduler.go | 完成 | ~700 |
+| 11:25 | Session end: 212 writes across 34 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~116821 tok |
+| 11:34 | Edited frontend/src/pages/Dashboard.tsx | 2→2 lines | ~20 |
+| 12:08 | Edited frontend/src/pages/Dashboard.tsx | 3→8 lines | ~125 |
+| 12:08 | Edited frontend/src/i18n/locales/zh.ts | 1→2 lines | ~16 |
+| 12:08 | Edited frontend/src/i18n/locales/en.ts | 1→2 lines | ~16 |
+| 12:11 | Edited frontend/src/stores/dashboardStore.ts | 4→5 lines | ~32 |
+| 12:13 | Session end: 217 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~117030 tok |
+| 12:21 | Edited backend/internal/api/tasks.go | modified Group() | ~51 |
+| 12:21 | Edited backend/internal/api/tasks.go | modified GetMyTasks() | ~668 |
+| 12:22 | Edited backend/internal/api/tasks.go | 10→11 lines | ~32 |
+| 12:22 | Edited frontend/src/pages/Dashboard.tsx | 2→4 lines | ~71 |
+| 12:23 | Edited frontend/src/pages/Dashboard.tsx | added optional chaining | ~120 |
+| 12:23 | Edited frontend/src/pages/Dashboard.tsx | CSS: color | ~844 |
+| 12:24 | Edited frontend/src/pages/Dashboard.tsx | CSS: s | ~134 |
+| 12:24 | Edited frontend/src/pages/Dashboard.tsx | added 1 import(s) | ~34 |
+| 12:24 | Edited frontend/src/i18n/locales/zh.ts | expanded (+9 lines) | ~81 |
+| 12:24 | Edited frontend/src/i18n/locales/en.ts | expanded (+9 lines) | ~104 |
+| 12:25 | Edited backend/internal/api/import_test.go | 9→8 lines | ~84 |
+| 12:25 | Edited backend/internal/api/import_test.go | 14→16 lines | ~56 |
+| 12:25 | Edited backend/internal/api/import_test.go | — | ~0 |
+| 12:26 | Edited backend/internal/api/import_test.go | 2→2 lines | ~78 |
+| 12:30 | 我的待办功能交付:后端GET /api/tasks/mine(负责任务+未来7天)+前端看板双分区表格,浏览器实测17+6条;commit f4daf77 | tasks.go/Dashboard/import_test | 完成 | ~600 |
+| 12:28 | Session end: 231 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~120520 tok |
+| 12:30 | Edited backend/internal/api/tasks.go | modified GetMyTasks() | ~608 |
+| 12:31 | Edited frontend/src/pages/Dashboard.tsx | 2→3 lines | ~57 |
+| 12:31 | Edited frontend/src/pages/Dashboard.tsx | modified if() | ~89 |
+| 12:31 | Edited frontend/src/pages/Dashboard.tsx | expanded (+12 lines) | ~204 |
+| 12:31 | Edited frontend/src/i18n/locales/zh.ts | 2→3 lines | ~26 |
+| 12:31 | Edited frontend/src/i18n/locales/en.ts | 2→3 lines | ~37 |
+| 12:31 | Edited frontend/src/pages/Dashboard.tsx | CSS: days | ~45 |
+| 12:31 | Edited backend/internal/api/import_test.go | 2→4 lines | ~138 |
+| 12:50 | 待办精简:我的任务仅in_progress(17→1条),即将开始窗口可选7/14/30天;commit 437a5fc | tasks.go/Dashboard | 完成 | ~300 |
+| 12:34 | Session end: 239 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~121778 tok |
+| 12:38 | Session end: 239 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~121778 tok |
+| 13:00 | 版本号 v1.8.10(用户拍板,进入用户测试阶段;原0+月+日规则作废) | server.go/README | commit | ~50 |
