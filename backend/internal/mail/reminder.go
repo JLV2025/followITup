@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -9,17 +10,22 @@ import (
 	"followitup/internal/settings"
 )
 
-// StartDueReminderScheduler 每日 09:00 触发一次到期提醒扫描发送
-func StartDueReminderScheduler(db *sql.DB) {
+// StartDueReminderScheduler 每日 09:00 触发一次到期提醒扫描发送。
+// ctx 取消（服务关闭）时立即退出，不泄漏 goroutine。
+func StartDueReminderScheduler(ctx context.Context, db *sql.DB) {
 	for {
 		now := time.Now()
 		next := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Location())
 		if !now.Before(next) {
 			next = next.Add(24 * time.Hour)
 		}
-		time.Sleep(time.Until(next))
-		if _, err := RunDueReminder(db); err != nil {
-			log.Printf("[Reminder] 每日到期提醒失败: %v", err)
+		select {
+		case <-time.After(time.Until(next)):
+			if _, err := RunDueReminder(db); err != nil {
+				log.Printf("[Reminder] 每日到期提醒失败: %v", err)
+			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }
@@ -42,19 +48,28 @@ func RunDueReminder(db *sql.DB) (int, error) {
 		days = 1
 	}
 
-	// 未来 N 天内到期、未完成、有负责人(且能解析出邮箱)的任务
+	// 窗口边界用 Go 侧本地日期（服务器时区，与 9:00 触发一致），
+	// 不用 SQLite 的 date('now')（UTC，对中国时区服务器会整体偏移一天）
+	today := time.Now().Format("2006-01-02")
+	deadline := time.Now().AddDate(0, 0, days).Format("2006-01-02")
+
+	// 未来 N 天内到期、未完成、有负责人(且能解析出邮箱)的任务。
+	// 负责人优先按 email 精确匹配；仅当该值不是任何用户 email 时才按 display_name 匹配，
+	// 避免 assignee 字符串同时命中另一用户的 email 导致重复发信。
 	rows, err := db.Query(`
 		SELECT p.name, t.name, t.end_date, u.email
 		FROM tasks t
 		JOIN projects p ON p.id = t.project_id
-		JOIN users u ON (u.email = t.assignee OR u.display_name = t.assignee)
+		JOIN users u ON u.email = t.assignee
+			OR (u.display_name = t.assignee
+				AND NOT EXISTS (SELECT 1 FROM users u2 WHERE u2.email = t.assignee AND u2.is_active = 1))
 		WHERE t.deleted_at IS NULL AND p.deleted_at IS NULL
 		  AND u.is_active = 1
 		  AND t.status != 'completed'
 		  AND t.end_date != ''
-		  AND t.end_date >= date('now')
-		  AND t.end_date <= date('now', '+' || ? || ' days')
-		ORDER BY u.email, t.end_date`, days)
+		  AND t.end_date >= ?
+		  AND t.end_date <= ?
+		ORDER BY u.email, t.end_date`, today, deadline)
 	if err != nil {
 		return 0, fmt.Errorf("扫描到期任务失败: %w", err)
 	}

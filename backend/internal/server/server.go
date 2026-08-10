@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"log"
@@ -137,8 +138,10 @@ func Run(opts Options) error {
 		}
 	}()
 
-	// 到期邮件提醒定时器（每日 9:00；开关与提前天数在系统设置里配置）
-	go mail.StartDueReminderScheduler(database.Conn)
+	// 到期邮件提醒定时器（每日 9:00；开关与提前天数在系统设置里配置；Run 退出时 ctx 取消即停）
+	reminderCtx, cancelReminder := context.WithCancel(context.Background())
+	defer cancelReminder()
+	go mail.StartDueReminderScheduler(reminderCtx, database.Conn)
 
 	// 托管前端静态文件
 	if err := mountFrontend(r, opts.FrontendFS); err != nil {

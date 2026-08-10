@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"sync"
 )
 
 // 预置配置 key（白名单）
@@ -39,8 +40,14 @@ var AllKeys = []string{
 	KeyDueReminderOn, KeyDueReminderDays,
 }
 
+// 每个 db 实例的默认值只写入一次，避免每次 Get/GetAll 都发一遍 INSERT OR IGNORE
+var defaultsDone sync.Map // *sql.DB → struct{}
+
 // ensureDefaults 首次访问时写入默认值
 func ensureDefaults(db *sql.DB) {
+	if _, loaded := defaultsDone.LoadOrStore(db, struct{}{}); loaded {
+		return
+	}
 	for k, v := range Defaults {
 		db.Exec(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`, k, v)
 	}
