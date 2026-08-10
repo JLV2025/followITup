@@ -759,6 +759,142 @@ func fillActualDates(actualStart, actualEnd, planStart, planEnd string) (string,
 	return actualStart, actualEnd
 }
 
+// splitOwnerNames 拆分负责人文本(分号/逗号/空白分隔),去重保序
+func splitOwnerNames(s string) []string {
+	raw := strings.FieldsFunc(s, func(r rune) bool { return r == ';' || r == ',' || r == '\n' })
+	var out []string
+	seen := map[string]bool{}
+	for _, p := range raw {
+		p = strings.TrimSpace(p)
+		if p == "" || seen[p] {
+			continue
+		}
+		seen[p] = true
+		out = append(out, p)
+	}
+	return out
+}
+
+// resolveUserIDs 逐名解析活跃用户(id 精确优先:email 命中才算;其次 display_name),返回成功 ids 与失败名
+func resolveUserIDs(db *sql.DB, names []string) ([]int64, []string) {
+	var ids []int64
+	var missing []string
+	seen := map[int64]bool{}
+	for _, name := range names {
+		var uid int64
+		err := db.QueryRow(`SELECT id FROM users WHERE is_active = 1 AND (email = ? OR display_name = ?) ORDER BY id LIMIT 1`, name, name).Scan(&uid)
+		if err != nil || seen[uid] {
+			if err != nil {
+				missing = append(missing, name)
+			}
+			continue
+		}
+		seen[uid] = true
+		ids = append(ids, uid)
+	}
+	return ids, missing
+}
+
+// saveTaskAssignees 覆盖写任务负责人:事务删旧插新(去重),返回分号分隔显示名快照
+func saveTaskAssignees(db *sql.DB, taskID int64, ids []int64) string {
+	if len(ids) > 0 {
+		seen := map[int64]bool{}
+		var uniq []int64
+		for _, id := range ids {
+			if !seen[id] {
+				seen[id] = true
+				uniq = append(uniq, id)
+			}
+		}
+		ids = uniq
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return ""
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`DELETE FROM task_assignees WHERE task_id = ?`, taskID); err != nil {
+		return ""
+	}
+	for _, id := range ids {
+		tx.Exec(`INSERT OR IGNORE INTO task_assignees (task_id, user_id) VALUES (?, ?)`, taskID, id)
+	}
+	var snap string
+	tx.QueryRow(`SELECT GROUP_CONCAT(u.display_name, '; ') FROM task_assignees ta JOIN users u ON u.id = ta.user_id WHERE ta.task_id = ?`, taskID).Scan(&snap)
+	tx.Commit()
+	return snap
+}
+
+// saveProjectOwners 项目负责人覆盖写(同上)
+func saveProjectOwners(db *sql.DB, projectID int64, ids []int64) string {
+	if len(ids) > 0 {
+		seen := map[int64]bool{}
+		var uniq []int64
+		for _, id := range ids {
+			if !seen[id] {
+				seen[id] = true
+				uniq = append(uniq, id)
+			}
+		}
+		ids = uniq
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return ""
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`DELETE FROM project_owners WHERE project_id = ?`, projectID); err != nil {
+		return ""
+	}
+	for _, id := range ids {
+		tx.Exec(`INSERT OR IGNORE INTO project_owners (project_id, user_id) VALUES (?, ?)`, projectID, id)
+	}
+	var snap string
+	tx.QueryRow(`SELECT GROUP_CONCAT(u.display_name, '; ') FROM project_owners po JOIN users u ON u.id = po.user_id WHERE po.project_id = ?`, projectID).Scan(&snap)
+	tx.Commit()
+	return snap
+}
+
+// loadTaskAssignees 读取任务负责人:ids + 分号分隔显示名快照
+func loadTaskAssignees(db *sql.DB, taskID int64) ([]int64, string) {
+	rows, err := db.Query(`SELECT ta.user_id, u.display_name FROM task_assignees ta JOIN users u ON u.id = ta.user_id WHERE ta.task_id = ? ORDER BY ta.user_id`, taskID)
+	if err != nil {
+		return nil, ""
+	}
+	defer rows.Close()
+	var ids []int64
+	var names []string
+	for rows.Next() {
+		var id int64
+		var name string
+		if rows.Scan(&id, &name) == nil {
+			ids = append(ids, id)
+			names = append(names, name)
+		}
+	}
+	return ids, strings.Join(names, "; ")
+}
+
+// loadProjectOwners 项目负责人(同上)
+func loadProjectOwners(db *sql.DB, projectID int64) ([]int64, string) {
+	rows, err := db.Query(`SELECT po.user_id, u.display_name FROM project_owners po JOIN users u ON u.id = po.user_id WHERE po.project_id = ? ORDER BY po.user_id`, projectID)
+	if err != nil {
+		return nil, ""
+	}
+	defer rows.Close()
+	var ids []int64
+	var names []string
+	for rows.Next() {
+		var id int64
+		var name string
+		if rows.Scan(&id, &name) == nil {
+			ids = append(ids, id)
+			names = append(names, name)
+		}
+	}
+	return ids, strings.Join(names, "; ")
+}
+
 // DeleteTask 软删除任务，同时清理关联的依赖关系
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID, _ := strconv.ParseInt(chi.URLParam(r, "taskID"), 10, 64)

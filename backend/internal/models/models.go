@@ -18,7 +18,8 @@ type Project struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	Owner       string    `json:"owner"` // 项目所有者：创建必填，未开始任务默认取该值
+	Owner       string    `json:"owner"` // 项目所有者:分号分隔显示名快照(权威在 project_owners 表)
+	OwnerIDs    []int64   `json:"owner_ids"`
 	StartDate   string    `json:"start_date"`
 	EndDate     string    `json:"end_date"`
 	ScheduleDirection string `json:"schedule_direction"` // forward=正推 backward=倒推
@@ -42,6 +43,7 @@ type Task struct {
 	Status          string    `json:"status"`           // open | in_progress | completed | delayed
 	Priority        string    `json:"priority"`         // low | medium | high | critical
 	Assignee        string    `json:"assignee"`
+	AssigneeIDs     []int64   `json:"assignee_ids"` // 多负责人:user_id 数组(权威在 task_assignees 表)
 	StartDate       string    `json:"start_date"`
 	EndDate         string    `json:"end_date"`
 	DurationDays    int       `json:"duration_days"`
