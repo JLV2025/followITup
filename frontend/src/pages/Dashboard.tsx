@@ -7,6 +7,7 @@ import { useDashboardStore } from "../stores/dashboardStore";
 import { useSettingsStore, availableCalendarYears, availableFiscalYears, fiscalYearLabel, currentFiscalYear } from "../stores/settingsStore";
 import api from "../api/client";
 import { formatDate } from "../utils/date";
+import { statusLabel } from "../utils/labels";
 import i18n from "../i18n";
 
 export default function Dashboard() {
@@ -29,6 +30,8 @@ export default function Dashboard() {
   const [userOptions, setUserOptions] = useState<{ display_name: string; email: string }[]>([]);
   // 时间线用全量项目（按排期日期过滤所选年度）；状态总览仍按创建时间过滤
   const [timelineProjects, setTimelineProjects] = useState<any[]>([]);
+  // 我的待办：登录用户负责的任务 + 未来 7 天内开始的任务
+  const [myTodo, setMyTodo] = useState<{ mine: any[]; starting: any[] }>({ mine: [], starting: [] });
 
   // 回收站模态框状态
   const [showRecycleBin, setShowRecycleBin] = useState(false);
@@ -127,7 +130,11 @@ export default function Dashboard() {
     api.get("/api/users").then((res) => setUserOptions(res.data.data || [])).catch(() => {});
     // 全量项目（不带年度参数）：时间线按排期日期过滤所选年度
     api.get("/api/dashboard/projects").then((res) => setTimelineProjects(res.data.data || [])).catch(() => {});
-  }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod]);
+    // 我的待办（需登录）
+    if (isLoggedIn) {
+      api.get("/api/tasks/mine").then((res) => setMyTodo(res.data?.data || { mine: [], starting: [] })).catch(() => {});
+    }
+  }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod, isLoggedIn]);
 
   const periods = displayMode === "fiscal"
     ? availableFiscalYears(fiscalStartMonth)
@@ -207,6 +214,9 @@ export default function Dashboard() {
   // 进度条颜色：完成（100%）= 绿，进行中 = 蓝，未开始 = 灰（总览与时间线统一）
   const progressColor = (p: { progress: number }) =>
     isDone(p) ? "var(--success)" : p.progress > 0 ? "var(--accent)" : "var(--text-muted)";
+  // 待办任务状态文本色（三态：未开始灰 / 进行中蓝 / 已延期红）
+  const todoStatusColor = (s: string) =>
+    s === "delayed" ? "var(--danger)" : s === "in_progress" ? "var(--accent)" : "var(--text-muted)";
 
   const statRiskClass = (stats?.at_risk ?? 0) > 0 ? "text-danger pulse-once" : "text-success";
 
@@ -527,10 +537,67 @@ export default function Dashboard() {
         </div>
         <div className="dashboard-bottom-col">
           <h3 className="section-title">{t("dashboard.sectionTodo")}</h3>
-          {isLoggedIn ? (
+          {!isLoggedIn ? (
+            <p className="text-secondary">{t("dashboard.todoLogin")}</p>
+          ) : myTodo.mine.length === 0 && myTodo.starting.length === 0 ? (
             <p className="text-secondary">{t("dashboard.todoEmpty")}</p>
           ) : (
-            <p className="text-secondary">{t("dashboard.todoLogin")}</p>
+            <>
+              {myTodo.mine.length > 0 && (
+                <div className="todo-block">
+                  <div className="todo-block-title">{t("dashboard.todoMine")}</div>
+                  <table className="todo-table">
+                    <thead>
+                      <tr>
+                        <th>{t("dashboard.colTask")}</th>
+                        <th>{t("dashboard.colProject")}</th>
+                        <th>{t("dashboard.colStatus")}</th>
+                        <th>{t("dashboard.colStart")}</th>
+                        <th>{t("dashboard.colEnd")}</th>
+                        <th>{t("dashboard.colProgress")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {myTodo.mine.map((x) => (
+                        <tr key={x.id}>
+                          <td className="todo-task" title={x.name}>{x.name}</td>
+                          <td>{x.project_name}</td>
+                          <td><span style={{ color: todoStatusColor(x.status) }}>{statusLabel(x.status)}</span></td>
+                          <td>{formatDate(x.start_date)}</td>
+                          <td>{formatDate(x.end_date)}</td>
+                          <td>{Math.round(x.progress_pct)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {myTodo.starting.length > 0 && (
+                <div className="todo-block">
+                  <div className="todo-block-title">{t("dashboard.todoStarting")}</div>
+                  <table className="todo-table">
+                    <thead>
+                      <tr>
+                        <th>{t("dashboard.colTask")}</th>
+                        <th>{t("dashboard.colProject")}</th>
+                        <th>{t("dashboard.colStart")}</th>
+                        <th>{t("dashboard.colAssignee")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {myTodo.starting.map((x) => (
+                        <tr key={x.id}>
+                          <td className="todo-task" title={x.name}>{x.name}</td>
+                          <td>{x.project_name}</td>
+                          <td>{formatDate(x.start_date)}</td>
+                          <td>{x.assignee || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

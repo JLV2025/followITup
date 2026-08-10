@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"followitup/internal/auth"
 	"followitup/internal/models"
@@ -41,6 +42,7 @@ func (h *TaskHandler) RegisterRoutes(r chi.Router) {
 	// 写操作（需登录）
 	r.Group(func(r chi.Router) {
 		r.Use(h.mid.RequireAuth)
+		r.Get("/api/tasks/mine", h.GetMyTasks) // 我的待办(登录用户负责的任务 + 未来一周开始)
 		r.Post("/api/projects/{id}/tasks", h.CreateTask)
 		r.Post("/api/projects/{id}/tasks/import", h.ImportTasks) // 必须注册在 /{taskID} 之前
 		r.Post("/api/projects/{id}/tasks/{taskID}/restore", h.RestoreTask)
@@ -506,6 +508,76 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 		"imported": imported,
 		"skipped":  skipped,
 		"errors":   skipReasons,
+	})
+}
+
+// MyTaskItem 我的待办条目（含项目名）
+type MyTaskItem struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	ProjectName string `json:"project_name"`
+	Status      string `json:"status"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date"`
+	ProgressPct float64 `json:"progress_pct"`
+	Assignee    string `json:"assignee"`
+}
+
+// GetMyTasks 我的待办：① 当前登录用户作为负责人的未完成任务（跨项目，按结束日期排序）
+// ② 未来 7 天内开始的任务（全部项目，按开始日期排序）。纯读操作，无写库。
+func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.GetUserID(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "请先登录")
+		return
+	}
+	var displayName, email string
+	h.db.QueryRow(`SELECT COALESCE(display_name, ''), COALESCE(email, '') FROM users WHERE id=? AND is_active=1`, userID).Scan(&displayName, &email)
+
+	today := time.Now().Format("2006-01-02")
+	weekLater := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
+
+	// 我的任务：assignee 匹配显示名或邮箱（与到期提醒同一套匹配），未完成
+	var mine []MyTaskItem
+	rows, err := h.db.Query(`
+		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct
+		FROM tasks t
+		JOIN projects p ON p.id = t.project_id AND p.deleted_at IS NULL
+		WHERE t.deleted_at IS NULL AND t.status != 'completed'
+		  AND (t.assignee = ? OR t.assignee = ?)
+		ORDER BY CASE WHEN t.end_date = '' THEN 1 ELSE 0 END, t.end_date`, displayName, email)
+	if err == nil {
+		for rows.Next() {
+			var it MyTaskItem
+			if rows.Scan(&it.ID, &it.Name, &it.ProjectName, &it.Status, &it.StartDate, &it.EndDate, &it.ProgressPct) == nil {
+				mine = append(mine, it)
+			}
+		}
+		rows.Close()
+	}
+
+	// 即将开始：未来 7 天内开始的任务（含已开始未完成之外的全部，按开始日期排序）
+	var starting []MyTaskItem
+	rows2, err := h.db.Query(`
+		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct, COALESCE(t.assignee, '')
+		FROM tasks t
+		JOIN projects p ON p.id = t.project_id AND p.deleted_at IS NULL
+		WHERE t.deleted_at IS NULL AND t.status != 'completed'
+		  AND t.start_date >= ? AND t.start_date <= ?
+		ORDER BY t.start_date`, today, weekLater)
+	if err == nil {
+		for rows2.Next() {
+			var it MyTaskItem
+			if rows2.Scan(&it.ID, &it.Name, &it.ProjectName, &it.Status, &it.StartDate, &it.EndDate, &it.ProgressPct, &it.Assignee) == nil {
+				starting = append(starting, it)
+			}
+		}
+		rows2.Close()
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"mine":      mine,
+		"starting":  starting,
 	})
 }
 

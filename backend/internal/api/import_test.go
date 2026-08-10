@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"followitup/internal/auth"
 	"followitup/internal/db"
 
 	"github.com/go-chi/chi/v5"
@@ -177,5 +179,50 @@ func TestUpdateTaskInvalidActual(t *testing.T) {
 	}
 	if !strings.Contains(w.Body.String(), "INVALID_ACTUAL") {
 		t.Errorf("错误码 = %s, want INVALID_ACTUAL", w.Body.String())
+	}
+}
+
+// 我的待办:返回登录用户负责的未完成任务与未来 7 天内开始的任务
+func TestGetMyTasks(t *testing.T) {
+	conn, h := testTaskHandler(t)
+	pid := setupProject(t, conn)
+	// 当前用户(需要 auth 上下文)
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_admin, is_active) VALUES ('me@test.local', 'me@test.local', 'Me User', 'x', 'local', 0, 1)`)
+	var uid int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='me@test.local'`).Scan(&uid)
+
+	// 我的任务:assignee=Me User,未完成,开始日期在过去(不在"即将开始"窗口)
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '我的任务A', 'task', 'in_progress', 'Me User', '2026-08-05', '2026-08-15', 5, 30, 0)`, pid)
+	// 已完成的任务不应出现
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '已完成任务', 'task', 'completed', 'Me User', '2026-08-01', '2026-08-05', 5, 100, 1)`, pid)
+	// 未来 7 天内开始的任务(assignee 是别人)
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '即将开始B', 'task', 'open', 'Other', '2026-08-14', '2026-08-18', 5, 0, 2)`, pid)
+
+	// 构造带 auth 上下文的请求（用 auth 包导出的 UserIDKey 注入）
+	r := chi.NewRouter()
+	r.Get("/api/tasks/mine", h.GetMyTasks)
+	req := httptest.NewRequest(http.MethodGet, "/api/tasks/mine", nil)
+	ctx := context.WithValue(req.Context(), auth.UserIDKey, uid)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("GetMyTasks 状态码 = %d, body=%s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		Data struct {
+			Mine     []MyTaskItem `json:"mine"`
+			Starting []MyTaskItem `json:"starting"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("解析响应: %v", err)
+	}
+	if len(resp.Data.Mine) != 1 || resp.Data.Mine[0].Name != "我的任务A" {
+		t.Errorf("mine = %+v, want 仅'我的任务A'", resp.Data.Mine)
+	}
+	if len(resp.Data.Starting) != 1 || resp.Data.Starting[0].Name != "即将开始B" {
+		t.Errorf("starting = %+v, want 仅'即将开始B'", resp.Data.Starting)
 	}
 }

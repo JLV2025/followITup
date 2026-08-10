@@ -1797,3 +1797,22 @@
 }
 /* 工具栏分组分隔线：基线组与缩放组之间 */
 .gantt-toolbar-sep { width: 1px; height: 18px; background: var(--card-border); margin: 0 4px; }
+
+/* ===== 我的待办（看板底部） ===== */
+.todo-block { margin-bottom: 10px; }
+.todo-block-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.todo-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.todo-table th {
+  text-align: left; font-weight: 500; color: var(--text-muted);
+  padding: 3px 8px 3px 0; border-bottom: 1px solid var(--card-border);
+  white-space: nowrap;
+}
+.todo-table td {
+  padding: 4px 8px 4px 0; border-bottom: 1px solid var(--surface-alt);
+  color: var(--text-secondary); white-space: nowrap;
+}
+.todo-table td.todo-task {
+  color: var(--text-primary); max-width: 180px; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.todo-table tr:last-child td { border-bottom: none; }
