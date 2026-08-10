@@ -462,28 +462,20 @@
   white-space: nowrap;
 }
 
-/* 项目所有者：第一排，右缘与第二排百分比数字右缘对齐（正上方） */
+/* 项目所有者（卡片 body 第二行，超长省略+title） */
 .project-owner {
-  font-size: 12px;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  /* 补齐第一排 gap(6) 与第二排 gap(12) 的差，实现右缘对齐 */
-  margin-right: 6px;
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;
 }
 
-/* 小人头图标固定宽 + 名字区固定 12 字母宽（≈72px），位置不随名字长度浮动 */
+/* 小人头图标固定宽 */
 .owner-icon {
   width: 18px;
   flex-shrink: 0;
 }
 
 .owner-name {
-  width: 72px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px;
 }
 
 .project-link {
@@ -1823,6 +1815,14 @@
   font-size: 11px; padding: 1px 4px; border: 1px solid var(--card-border);
   border-radius: 4px; background: var(--card-bg); color: var(--text-secondary);
 }
+
+/* 待办视角切换 */
+.todo-view-switch { display: inline-flex; gap: 2px; margin-left: 12px; vertical-align: middle; }
+.todo-view-btn {
+  border: 1px solid var(--border); background: #fff; color: var(--text-secondary);
+  font-size: 12px; padding: 3px 10px; border-radius: 4px; cursor: pointer;
+}
+.todo-view-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* 多选负责人(下拉+标签) */
 .multi-user-select { position: relative; min-height: 36px; }

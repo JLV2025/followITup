@@ -125,6 +125,8 @@ export default {
     todoLogin: "Sign in to see your to-dos",
     todoMine: "My Tasks",
     todoStarting: "Starting Soon (next {{days}} days)",
+    todoViewTask: "My Tasks",
+    todoViewProject: "My Projects",
     todoDaysHint: "Look-ahead window (days)",
     colTask: "Task",
     colProject: "Project",

@@ -8,6 +8,7 @@ import { useSettingsStore, availableCalendarYears, availableFiscalYears, fiscalY
 import api from "../api/client";
 import { formatDate } from "../utils/date";
 import { statusLabel } from "../utils/labels";
+import MultiUserSelect from "../components/MultiUserSelect";
 import i18n from "../i18n";
 
 export default function Dashboard() {
@@ -23,16 +24,17 @@ export default function Dashboard() {
 
   // 创建项目模态框状态
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: "", owner: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
+  const [createForm, setCreateForm] = useState({ name: "", owner_ids: [] as number[], start_date: "", end_date: "", schedule_direction: "forward", description: "" });
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [createError, setCreateError] = useState("");
   // 用户列表（项目所有者下拉，可手输兜底）
-  const [userOptions, setUserOptions] = useState<{ display_name: string; email: string }[]>([]);
+  const [userOptions, setUserOptions] = useState<{ id: number; display_name: string }[]>([]);
   // 时间线用全量项目（按排期日期过滤所选年度）；状态总览仍按创建时间过滤
   const [timelineProjects, setTimelineProjects] = useState<any[]>([]);
   // 我的待办：登录用户负责的任务 + 未来 N 天内开始的任务（窗口可选 7/14/30 天）
   const [myTodo, setMyTodo] = useState<{ mine: any[]; starting: any[] }>({ mine: [], starting: [] });
   const [todoDays, setTodoDays] = useState(7);
+  const [todoView, setTodoView] = useState<"task" | "project">("task");
 
   // 回收站模态框状态
   const [showRecycleBin, setShowRecycleBin] = useState(false);
@@ -133,9 +135,9 @@ export default function Dashboard() {
     api.get("/api/dashboard/projects").then((res) => setTimelineProjects(res.data.data || [])).catch(() => {});
     // 我的待办（需登录，窗口天数变化时重新拉取）
     if (isLoggedIn) {
-      api.get(`/api/tasks/mine?days=${todoDays}`).then((res) => setMyTodo(res.data?.data || { mine: [], starting: [] })).catch(() => {});
+      api.get(`/api/tasks/mine?days=${todoDays}&view=${todoView}`).then((res) => setMyTodo(res.data?.data || { mine: [], starting: [] })).catch(() => {});
     }
-  }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod, isLoggedIn, todoDays]);
+  }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod, isLoggedIn, todoDays, todoView]);
 
   const periods = displayMode === "fiscal"
     ? availableFiscalYears(fiscalStartMonth)
@@ -167,7 +169,7 @@ export default function Dashboard() {
   };
 
   const handleOpenCreate = () => {
-    setCreateForm({ name: "", owner: "", start_date: "", end_date: "", schedule_direction: "forward", description: "" });
+    setCreateForm({ name: "", owner_ids: [], start_date: "", end_date: "", schedule_direction: "forward", description: "" });
     setCreateError("");
     setShowCreateModal(true);
   };
@@ -178,7 +180,7 @@ export default function Dashboard() {
       setCreateError(i18n.t("dashboard.errNameEmpty"));
       return;
     }
-    if (!createForm.owner.trim()) {
+    if (createForm.owner_ids.length === 0) {
       setCreateError(i18n.t("dashboard.errOwnerEmpty"));
       return;
     }
@@ -187,7 +189,7 @@ export default function Dashboard() {
     try {
       await api.post("/api/projects", {
         name: createForm.name.trim(),
-        owner: createForm.owner.trim(),
+        owner_ids: createForm.owner_ids,
         description: createForm.description.trim(),
         start_date: createForm.start_date || null,
         end_date: createForm.end_date || null,
@@ -376,12 +378,6 @@ export default function Dashboard() {
                         Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} {t("dashboard.delayDays")}
                       </span>
                     )}
-                    {/* 项目所有者：第一排，右缘与第二排百分比数字对齐（正上方）；
-                        图标固定宽 + 名字区固定 15 字母宽（≈90px），位置不随名字长度浮动 */}
-                    <span className="project-owner" title={t("dashboard.ownerTitle")}>
-                      <span className="owner-icon">👤</span>
-                      <span className="owner-name">{p.owner || "—"}</span>
-                    </span>
                     <button
                       className="project-copy-btn"
                       title={t("dashboard.copyTitle")}
@@ -396,6 +392,11 @@ export default function Dashboard() {
                     <span className="project-link">{t("dashboard.detail")}</span>
                   </div>
                   <div className="project-card-body">
+                    {/* 第二行:负责人(多值分号分隔,超长省略+title) */}
+                    <span className="project-owner" title={p.owner || t("dashboard.ownerTitle")}>
+                      <span className="owner-icon">👤</span>
+                      <span className="owner-name">{p.owner || "—"}</span>
+                    </span>
                     <div className="project-card-progress">
                       <div className="progress-bar">
                         <div
@@ -538,6 +539,22 @@ export default function Dashboard() {
         </div>
         <div className="dashboard-bottom-col">
           <h3 className="section-title">{t("dashboard.sectionTodo")}</h3>
+          {isLoggedIn && (
+            <div className="todo-view-switch">
+              <button
+                className={`todo-view-btn${todoView === "task" ? " active" : ""}`}
+                onClick={() => setTodoView("task")}
+              >
+                {t("dashboard.todoViewTask")}
+              </button>
+              <button
+                className={`todo-view-btn${todoView === "project" ? " active" : ""}`}
+                onClick={() => setTodoView("project")}
+              >
+                {t("dashboard.todoViewProject")}
+              </button>
+            </div>
+          )}
           {!isLoggedIn ? (
             <p className="text-secondary">{t("dashboard.todoLogin")}</p>
           ) : myTodo.mine.length === 0 && myTodo.starting.length === 0 ? (
@@ -634,18 +651,12 @@ export default function Dashboard() {
               </div>
               <div className="form-group">
                 <label htmlFor="project-owner">{t("dashboard.ownerRequired")}</label>
-                <select
-                  id="project-owner"
-                  value={createForm.owner}
-                  onChange={(e) => setCreateForm({ ...createForm, owner: e.target.value })}
-                >
-                  <option value="">{userOptions.length === 0 ? t("dashboard.ownerEmpty") : t("dashboard.ownerSelect")}</option>
-                  {userOptions.map((u) => (
-                    <option key={u.email} value={u.display_name || u.email}>
-                      {u.display_name || u.email}
-                    </option>
-                  ))}
-                </select>
+                <MultiUserSelect
+                  users={userOptions}
+                  selectedIds={createForm.owner_ids}
+                  onChange={(ids) => setCreateForm({ ...createForm, owner_ids: ids })}
+                  placeholder={userOptions.length === 0 ? t("dashboard.ownerEmpty") : t("dashboard.ownerSelect")}
+                />
                 <span className="form-hint">{t("dashboard.ownerHint")}</span>
               </div>
               <div className="form-group">

@@ -125,6 +125,8 @@ export default {
     todoLogin: "登录后可查看个人待办",
     todoMine: "我的任务",
     todoStarting: "即将开始（未来 {{days}} 天）",
+    todoViewTask: "我负责的任务",
+    todoViewProject: "我负责的项目",
     todoDaysHint: "查看窗口天数",
     colTask: "任务",
     colProject: "项目",
