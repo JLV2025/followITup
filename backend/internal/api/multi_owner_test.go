@@ -206,7 +206,7 @@ func TestUpdateTaskPreservesOrOverwritesAssignees(t *testing.T) {
 	w2 := httptest.NewRecorder()
 	r.ServeHTTP(w2, req2)
 	if w2.Code != http.StatusOK {
-		t.Fatalf("覆盖写状态码 = %d, body=%s", w2.Code, w.Body.String())
+		t.Fatalf("覆盖写状态码 = %d, body=%s", w2.Code, w2.Body.String())
 	}
 	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees WHERE task_id=?`, tid).Scan(&n)
 	if n != 0 {
