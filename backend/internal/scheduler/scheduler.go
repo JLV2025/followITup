@@ -62,7 +62,47 @@ func Recalculate(db *sql.DB, projectID int64, triggerTaskID int64) (map[int64]ma
 	if err != nil {
 		return nil, err
 	}
+	// 正排项目：项目结束日期 = 最晚任务结束日期（锚点是开始日期，结束由任务推导）
+	rollupProjectEnd(db, projectID)
 	return changes, nil
+}
+
+// rollupProjectEnd 正排项目（forward）：projects.end_date 同步为最晚任务的 end_date。
+// 倒排项目结束是锚点（由用户设定），不覆盖。无任务或任务无日期时保持原值。
+func rollupProjectEnd(db *sql.DB, projectID int64) {
+	var dir string
+	if err := db.QueryRow(`SELECT schedule_direction FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&dir); err != nil {
+		return
+	}
+	if dir != "forward" {
+		return
+	}
+	var end sql.NullString
+	if err := db.QueryRow(
+		`SELECT MAX(end_date) FROM tasks WHERE project_id=? AND deleted_at IS NULL AND end_date != ''`,
+		projectID).Scan(&end); err != nil || !end.Valid || end.String == "" {
+		return
+	}
+	db.Exec(`UPDATE projects SET end_date=?, updated_at=datetime('now') WHERE id=?`, end.String, projectID)
+}
+
+// rollupProjectStart 倒排项目（backward）：projects.start_date 同步为最早任务的 start_date。
+// 正排项目开始是锚点（由用户设定），不覆盖。无任务或任务无日期时保持原值。
+func rollupProjectStart(db *sql.DB, projectID int64) {
+	var dir string
+	if err := db.QueryRow(`SELECT schedule_direction FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&dir); err != nil {
+		return
+	}
+	if dir != "backward" {
+		return
+	}
+	var start sql.NullString
+	if err := db.QueryRow(
+		`SELECT MIN(start_date) FROM tasks WHERE project_id=? AND deleted_at IS NULL AND start_date != ''`,
+		projectID).Scan(&start); err != nil || !start.Valid || start.String == "" {
+		return
+	}
+	db.Exec(`UPDATE projects SET start_date=?, updated_at=datetime('now') WHERE id=?`, start.String, projectID)
 }
 
 // fixTriggerEnd 触发任务自身 duration 变更时修正 end（end = start 后的 duration 个工作日）
@@ -248,6 +288,8 @@ func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[stri
 			changes[t.ID]["constraint_conflict"] = "1"
 		}
 	}
+	// 正排项目：项目结束日期 = 最晚任务结束日期（放在提前返回之前——任务无变化时也要同步项目日期）
+	rollupProjectEnd(db, projectID)
 	if len(changes) == 0 {
 		return nil, nil
 	}
@@ -268,6 +310,8 @@ func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[stri
 			}
 		}
 	}
+	// 任务已落库后再 rollup(提前返回分支前的调用取的是旧值,此处用重排结果覆盖)
+	rollupProjectEnd(db, projectID)
 	return changes, nil
 }
 
@@ -853,6 +897,8 @@ func backwardSchedule(db *sql.DB, projectID int64) (map[int64]map[string]string,
 			break // 收敛
 		}
 	}
+	// 倒排项目：项目开始日期 = 最早任务开始日期（放在提前返回之前——任务无变化时也要同步项目日期）
+	rollupProjectStart(db, projectID)
 	if len(changes) == 0 {
 		return nil, nil
 	}
@@ -873,6 +919,8 @@ func backwardSchedule(db *sql.DB, projectID int64) (map[int64]map[string]string,
 			}
 		}
 	}
+	// 任务已落库后再 rollup(提前返回分支前的调用取的是旧值,此处用重排结果覆盖)
+	rollupProjectStart(db, projectID)
 	return changes, nil
 }
 

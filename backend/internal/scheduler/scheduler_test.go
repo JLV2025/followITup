@@ -2,6 +2,8 @@ package scheduler
 
 import (
 	"testing"
+
+	"followitup/internal/db"
 )
 
 func TestShiftDate(t *testing.T) {
@@ -536,5 +538,50 @@ func TestChainHeadDurationChangePropagates(t *testing.T) {
 	}
 	if ch, ok := changes[3]; !ok || ch["start_date"] != "2026-08-12" {
 		t.Errorf("C 应提前到 08-12 开始,实际 changes=%v", changes[3])
+	}
+}
+
+// 正排项目:排程后项目 end_date = 最晚任务结束;倒排项目 end 锚点不被覆盖
+func TestRollupProjectEnd(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatalf("db.Open: %v", err)
+	}
+	defer d.Close()
+	conn := d.Conn
+
+	// 正排项目:end_date 留空
+	res, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, schedule_direction) VALUES ('正排', '2026-08-01', '', 'active', 'forward')`)
+	pid, _ := res.LastInsertId()
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, sort_order) VALUES (?, 'A', 'task', 'open', '2026-08-03', '2026-08-05', 3, 0)`, pid)
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, sort_order) VALUES (?, 'B', 'task', 'open', '2026-08-10', '2026-08-27', 14, 1)`, pid)
+
+	if _, err := RecalculateAll(conn, pid); err != nil {
+		t.Fatalf("RecalculateAll: %v", err)
+	}
+	var end, maxEnd string
+	conn.QueryRow(`SELECT end_date FROM projects WHERE id=?`, pid).Scan(&end)
+	conn.QueryRow(`SELECT MAX(end_date) FROM tasks WHERE project_id=? AND deleted_at IS NULL`, pid).Scan(&maxEnd)
+	if end != maxEnd || end == "" {
+		t.Errorf("正排项目 end_date = %q, want = 最晚任务结束 %q", end, maxEnd)
+	}
+
+	// 倒排项目:end 是锚点(不被覆盖),start 同步 = 最早任务开始
+	res2, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, schedule_direction) VALUES ('倒排', '', '2026-09-30', 'active', 'backward')`)
+	pid2, _ := res2.LastInsertId()
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, sort_order) VALUES (?, 'C', 'task', 'open', '2026-08-03', '2026-08-05', 3, 0)`, pid2)
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, sort_order) VALUES (?, 'D', 'task', 'open', '2026-08-17', '2026-08-19', 3, 1)`, pid2)
+	if _, err := RecalculateAll(conn, pid2); err != nil {
+		t.Fatalf("RecalculateAll 倒排: %v", err)
+	}
+	var start, minStart string
+	conn.QueryRow(`SELECT end_date FROM projects WHERE id=?`, pid2).Scan(&end)
+	if end != "2026-09-30" {
+		t.Errorf("倒排项目 end_date = %q, want 2026-09-30（锚点不变）", end)
+	}
+	conn.QueryRow(`SELECT start_date FROM projects WHERE id=?`, pid2).Scan(&start)
+	conn.QueryRow(`SELECT MIN(start_date) FROM tasks WHERE project_id=? AND deleted_at IS NULL`, pid2).Scan(&minStart)
+	if start != minStart || start == "" {
+		t.Errorf("倒排项目 start_date = %q, want = 最早任务开始 %q", start, minStart)
 	}
 }
