@@ -55,7 +55,6 @@ function getUserColor(name: string): string {
   return userColorCache.get(name)!;
 }
 
-const ZOOM_LABELS = ["日", "3日", "周", "2周", "月", "2月", "季", "年"];
 const ZOOM_LEVELS: dhtmlxZoomLevel[] = [
   { name: "day", scale_height: 40, min_column_width: 80, scales: [{ unit: "day", step: 1, format: "%d" }] },
   { name: "3days", scale_height: 40, min_column_width: 60, scales: [{ unit: "day", step: 3, format: "%m/%d" }] },
@@ -71,7 +70,7 @@ const ZOOM_LEVELS: dhtmlxZoomLevel[] = [
   // 双层 scale 时最细层（天）固定每格 1 天宽，月层只合并标签——短项目看不出区别（曾被误报"季档无效"）
   { name: "quarter", scale_height: 40, min_column_width: 80,
     scales: [{ unit: "month", step: 3, format: "%M" }] },
-  { name: "year", scale_height: 40, min_column_width: 50, scales: [{ unit: "month", step: 1, format: "%m月" }] },
+  { name: "year", scale_height: 40, min_column_width: 50, scales: [{ unit: "month", step: 1, format: "%M" }] },
 ];
 
 type dhtmlxZoomLevel = {
@@ -139,11 +138,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         await api.put(`/api/projects/${projectId}/tasks/${id}`, { ...t, ...patch });
         ok++;
       } catch (err: any) {
-        failed.push(`${t.name}${err?.response?.status === 409 ? "(已被他人修改)" : ""}`);
+        failed.push(`${t.name}${err?.response?.status === 409 ? i18n.t("gantt.conflictSuffix") : ""}`);
       }
     }
-    if (failed.length) alert(`成功 ${ok} 项，${failed.length} 项失败：\n${failed.join("、")}`);
-    else alert(`已更新 ${ok} 项`);
+    if (failed.length) alert(i18n.t("gantt.batchUpdateFailed", { ok, failed: failed.length, detail: failed.join("、") }));
+    else alert(i18n.t("gantt.batchUpdated", { ok }));
     clearSelection();
     fetchData(projectId, readonly);
   };
@@ -153,7 +152,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   const doCopyTask = async (src: Partial<Task>) => {
     try {
       await api.post(`/api/projects/${projectId}/tasks`, {
-        name: `${src.name}(副本)`,
+        name: `${src.name}${i18n.t("gantt.copySuffix")}`,
         description: src.description || "",
         task_type: src.task_type || "task",
         status: src.status || "open",
@@ -205,10 +204,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
       const a = document.createElement("a");
       a.href = canvas.toDataURL("image/png");
-      a.download = `${projectName || "项目"}-甘特图.png`;
+      a.download = `${i18n.t("gantt.exportName", { name: projectName || "Project" })}.png`;
       a.click();
     } catch (err) {
-      alert("导出 PNG 失败: " + String(err));
+      alert(i18n.t("gantt.exportPngFail", { err: String(err) }));
     }
   };
 
@@ -217,7 +216,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
   /** 批量删除：逐条软删（回收站），失败收集提示（与 batchUpdate 对称，不中断后续删除） */
   const batchDelete = async () => {
-    if (!window.confirm(`确定删除选中的 ${selectedIdsRef.current.size} 个任务？将移至回收站`)) return;
+    if (!window.confirm(i18n.t("gantt.confirmBatchDelete", { n: selectedIdsRef.current.size }))) return;
     let ok = 0;
     const failed: string[] = [];
     for (const id of Array.from(selectedIdsRef.current)) {
@@ -226,11 +225,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         await api.delete(`/api/projects/${projectId}/tasks/${id}`);
         ok++;
       } catch (err: any) {
-        failed.push(`${t?.name ?? `#${id}`}${err?.response?.status === 409 ? "(已被他人修改)" : ""}`);
+        failed.push(`${t?.name ?? `#${id}`}${err?.response?.status === 409 ? i18n.t("gantt.conflictSuffix") : ""}`);
       }
     }
-    if (failed.length) alert(`成功删除 ${ok} 项，${failed.length} 项失败：\n${failed.join("、")}`);
-    else alert(`已删除 ${ok} 项`);
+    if (failed.length) alert(i18n.t("gantt.batchDeleteFailed", { ok, failed: failed.length, detail: failed.join("、") }));
+    else alert(i18n.t("gantt.batchDeleted", { ok }));
     clearSelection();
     fetchData(projectId, readonly);
   };
@@ -304,7 +303,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
   useEffect(() => {
     if (!isLoggedIn || !user) return;
-    wsClient.connect(projectId, user.id, user.display_name || user.email || "未知");
+    wsClient.connect(projectId, user.id, user.display_name || user.email || i18n.t("gantt.unknownUser"));
     return () => { wsClient.disconnect(); };
   }, [projectId, isLoggedIn, user]);
 
@@ -500,7 +499,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           return `<span style="color:var(--text-muted);font-size:11px;">${n}</span>`;
         } as any,
       },
-      { name: "text", label: "任务名称", width: 220, tree: true,
+      { name: "text", label: t("gantt.colName"), width: 220, tree: true,
         template: function (task: Record<string, any>) {
           // 状态三态色（与 Dashboard/TaskListView 统一）：未开始灰 / 进行中蓝 / 完成绿 / 延迟红
           const statusColors: Record<string, string> = {
@@ -517,14 +516,14 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           </span>`;
         } as any,
       },
-      { name: "duration_col", label: "时长", width: 56, align: "center",
+      { name: "duration_col", label: t("gantt.colDuration"), width: 56, align: "center",
         template: function (task: Record<string, any>) {
           if (task.type === "milestone") return '<span style="color:var(--text-muted);">◆</span>';
           const d = task.duration_days ?? task.duration;
           return `<span style="font-size:12px;color:var(--text-secondary);">${d ?? ""}${d ? "d" : ""}</span>`;
         } as any,
       },
-      { name: "progress_bar", label: "进度", width: 90, align: "center",
+      { name: "progress_bar", label: t("gantt.colProgress"), width: 90, align: "center",
         template: function (task: Record<string, any>) {
           const pct = Math.round((task.progress || 0) * 100);
           return `<div style="display:flex;align-items:center;gap:6px;padding:0 4px;">
@@ -535,7 +534,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           </div>`;
         } as any,
       },
-      { name: "assignee_col", label: "负责人", width: 72, align: "center",
+      { name: "assignee_col", label: t("gantt.colAssignee"), width: 72, align: "center",
         template: function (task: Record<string, any>) {
           return task.assignee || '<span style="color:var(--text-muted);">—</span>';
         } as any,
@@ -671,6 +670,15 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // 隐藏默认连线，改用自定义合并连线层（MS Project 风格：多前置先汇合再连入）
     gantt.config.show_links = false;
+
+    // 刻度月份词随语言（%M/%a 由 dhtmlx locale 驱动；语言切换走整页刷新重建）
+    gantt.i18n.setLocale({
+      months: Array.from({ length: 12 }, (_, m) => i18n.t(`months.full.${m}`)),
+      months_short: Array.from({ length: 12 }, (_, m) => i18n.t(`months.short.${m}`)),
+      days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      days_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      week_start: 1,
+    });
 
     gantt.init(containerRef.current);
 
@@ -951,11 +959,11 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             e.stopPropagation();
             if (readonlyRef.current) return;
             if (seg.link) {
-              if (window.confirm("删除此依赖关系？")) {
+              if (window.confirm(i18n.t("gantt.confirmDeleteLink"))) {
                 gantt.deleteLink(seg.link.id);
                 setTimeout(drawMergedLinks, 50);
               }
-            } else if (window.confirm(`删除这 ${group.length} 条依赖关系？`)) {
+            } else if (window.confirm(i18n.t("gantt.confirmDeleteLinks", { n: group.length }))) {
               for (const l of group) gantt.deleteLink(l.id);
               setTimeout(drawMergedLinks, 50);
             }
@@ -969,7 +977,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         arrow.addEventListener("dblclick", (e) => {
           e.stopPropagation();
           if (readonlyRef.current) return;
-          if (window.confirm(`删除这 ${group.length} 条依赖关系？`)) {
+          if (window.confirm(i18n.t("gantt.confirmDeleteLinks", { n: group.length }))) {
             for (const l of group) gantt.deleteLink(l.id);
             setTimeout(drawMergedLinks, 50);
           }
@@ -1010,9 +1018,9 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             changed++;
           } catch (err: any) {
             if (err.response?.status === 409) {
-              alert("排序保存失败：任务已被他人修改，数据已刷新");
+              alert(i18n.t("gantt.sortConflict"));
             } else {
-              alert("排序保存失败，请重试");
+              alert(i18n.t("gantt.sortFailed"));
             }
             fetchData(projectId, readonlyRef.current);
             return;
@@ -1032,7 +1040,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     // 双击连线 → 确认删除（setTimeout 避免 dhtmlx 内部状态冲突）
     gantt.attachEvent("onLinkDblClick", function (id: unknown) {
       if (readonlyRef.current) return false;
-      if (!confirm("删除此依赖关系？")) return false;
+      if (!confirm(i18n.t("gantt.confirmDeleteLink"))) return false;
       const linkId = Number(id);
       setTimeout(() => { deleteLink(linkId, projectId); }, 50);
       return false;
@@ -1058,7 +1066,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const sid = Number(link.source);
       const tid = Number(link.target);
       if (gantt.hasChild(sid) || gantt.hasChild(tid)) {
-        alert("父任务不接受依赖连线，请对子任务建立依赖关系");
+        alert(i18n.t("gantt.parentNoLink"));
         return false;
       }
       return true;
@@ -1128,68 +1136,68 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         <div className="gantt-toolbar-left">
           {!readonly && (
             <button className="btn btn-primary btn-sm" onClick={handleAddTask}>
-              + 添加任务
+              {t("gantt.addTask")}
             </button>
           )}
           {!readonly && (
-            <button className="btn btn-ghost btn-sm" onClick={() => setShowImport(true)} title="批量导入任务(CSV)">
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowImport(true)} title={t("gantt.importTitle")}>
               ⬆ 导入
             </button>
           )}
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => fetchData(projectId, readonly)}
-            title="重新加载数据"
+            title={t("gantt.refreshTitle")}
           >
             ↻ 刷新
           </button>
           {!readonly && (
             <button
               className="btn btn-ghost btn-sm"
-              title="恢复已删除的任务"
+              title={t("gantt.recycleTitle")}
               onClick={() => setShowRecycleBin(true)}
             >
-              回收站
+              {t("dashboard.recycleBin")}
             </button>
           )}
-          <span className="gantt-toolbar-hint">双击任务编辑详情 · 双击连线删除</span>
+          <span className="gantt-toolbar-hint">{t("gantt.hint")}</span>
         </div>
         <div className="gantt-toolbar-right">
           <div className="baseline-menu-wrap">
             <button
               className={`btn-zoom btn-baseline${baselineMeta ? " has-baseline" : ""}`}
               onClick={(e) => { e.stopPropagation(); setBaselineMenuOpen(!baselineMenuOpen); }}
-              title="基线管理"
+              title={t("gantt.baselineTitle")}
             >
-              基线{baselineMeta ? " ✓" : " ▾"}
+              {t("gantt.baseline")}{baselineMeta ? " ✓" : " ▾"}
             </button>
             {baselineMenuOpen && (
               <div className="baseline-menu" onClick={(e) => e.stopPropagation()}>
                 {baselineMeta ? (
                   <>
                     <div className="baseline-menu-info">
-                      创建: {baselineMeta.created_at} · {baselineMeta.created_by}
-                      <br />快照 {baselineMeta.task_count} 个任务
+                      {t("gantt.baselineCreatedAt")} {baselineMeta.created_at} · {baselineMeta.created_by}
+                      <br />{t("gantt.baselineSnapshot", { n: baselineMeta.task_count })}
                     </div>
                     <button
                       className="baseline-menu-item"
                       onClick={async () => {
-                        if (!window.confirm("重新创建基线将覆盖当前基线，确定？")) return;
+                        if (!window.confirm(i18n.t("gantt.confirmRecreateBaseline"))) return;
                         const ok = await createBaseline(projectId);
                         if (ok) setBaselineMenuOpen(false);
                       }}
                     >
-                      重新创建基线
+                      {t("gantt.recreateBaseline")}
                     </button>
                     <button
                       className="baseline-menu-item danger"
                       onClick={async () => {
-                        if (!window.confirm("清除基线后无法恢复，确定？")) return;
+                        if (!window.confirm(i18n.t("gantt.confirmClearBaseline"))) return;
                         const ok = await clearBaseline(projectId);
                         if (ok) setBaselineMenuOpen(false);
                       }}
                     >
-                      清除基线
+                      {t("gantt.clearBaseline")}
                     </button>
                   </>
                 ) : (
@@ -1200,34 +1208,34 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
                       if (ok) setBaselineMenuOpen(false);
                     }}
                   >
-                    创建基线（快照当前计划）
+                    {t("gantt.createBaseline")}
                   </button>
                 )}
               </div>
             )}
           </div>
           <span className="gantt-toolbar-sep" />
-          <button className="btn-export" onClick={exportPNG} title="导出甘特图为 PNG 图片">⬇ PNG</button>
-          <button className="btn-export" onClick={exportPDF} title="打印 / 另存为 PDF">🖨 打印</button>
+          <button className="btn-export" onClick={exportPNG} title={t("gantt.exportPngTitle")}>⬇ PNG</button>
+          <button className="btn-export" onClick={exportPDF} title={t("gantt.exportPdfTitle")}>{t("gantt.exportPdf")}</button>
           <span className="gantt-toolbar-sep" />
-          <span className="gantt-zoom-label">缩放</span>
-          <button className="btn-zoom" onClick={() => handleZoom(-1)} title="缩小">−</button>
-          <span className="gantt-zoom-level">{ZOOM_LABELS[zoomLevel]}</span>
-          <button className="btn-zoom" onClick={() => handleZoom(1)} title="放大">+</button>
-          <button className="btn-zoom btn-auto-zoom" onClick={handleAutoZoom} title="自动适应项目时间范围">⊡</button>
+          <span className="gantt-zoom-label">{t("gantt.zoomLabel")}</span>
+          <button className="btn-zoom" onClick={() => handleZoom(-1)} title={t("gantt.zoomOut")}>−</button>
+          <span className="gantt-zoom-level">{t(`gantt.zoom.${ZOOM_LEVELS[zoomLevel].name}`)}</span>
+          <button className="btn-zoom" onClick={() => handleZoom(1)} title={t("gantt.zoomIn")}>+</button>
+          <button className="btn-zoom btn-auto-zoom" onClick={handleAutoZoom} title={t("gantt.autoZoom")}>⊡</button>
         </div>
       </div>
 
       {/* 批量操作条：多选后出现（只读模式无勾选框，条不渲染） */}
       {!readonly && selectedIds.size > 0 && (
         <div className="gantt-batch-bar">
-          <span className="gantt-batch-count">已选 {selectedIds.size} 项</span>
+          <span className="gantt-batch-count">{t("gantt.batchCount", { n: selectedIds.size })}</span>
           <select
             className="gantt-filter-select"
             value=""
             onChange={(e) => { if (e.target.value) { batchUpdate({ status: e.target.value }); e.target.value = ""; } }}
           >
-            <option value="" disabled>改状态...</option>
+            <option value="" disabled>{t("gantt.batchSetStatus")}</option>
             <option value="open">{t("status.open")}</option>
             <option value="in_progress">{t("status.in_progress")}</option>
             <option value="completed">{t("status.completed")}</option>
@@ -1238,13 +1246,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             value=""
             onChange={(e) => { if (e.target.value) { batchUpdate({ assignee: e.target.value }); e.target.value = ""; } }}
           >
-            <option value="" disabled>改负责人...</option>
+            <option value="" disabled>{t("gantt.batchSetOwner")}</option>
             {ownerOptions.map((o) => (
               <option key={o} value={o}>{o}</option>
             ))}
           </select>
-          <button className="btn btn-delete btn-sm" onClick={batchDelete}>删除</button>
-          <button className="btn btn-ghost btn-sm" onClick={clearSelection}>取消选择</button>
+          <button className="btn btn-delete btn-sm" onClick={batchDelete}>{t("common.delete")}</button>
+          <button className="btn btn-ghost btn-sm" onClick={clearSelection}>{t("gantt.clearSelection")}</button>
         </div>
       )}
 
@@ -1252,7 +1260,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       <div className="gantt-filter-bar">
         <input
           className="gantt-filter-search"
-          placeholder="🔍 搜索任务名..."
+          placeholder={`🔍 ${t("gantt.filterSearch")}`}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
@@ -1261,7 +1269,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="all">全部状态</option>
+          <option value="all">{t("gantt.filterAllStatus")}</option>
           <option value="open">{t("status.open")}</option>
           <option value="in_progress">{t("status.in_progress")}</option>
           <option value="completed">{t("status.completed")}</option>
@@ -1272,32 +1280,32 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           value={ownerFilter}
           onChange={(e) => setOwnerFilter(e.target.value)}
         >
-          <option value="all">全部负责人</option>
+          <option value="all">{t("gantt.filterAllOwner")}</option>
           {ownerOptions.map((o) => (
             <option key={o} value={o}>{o}</option>
           ))}
         </select>
-        <label className="gantt-filter-milestone" title="仅显示里程碑任务">
+        <label className="gantt-filter-milestone" title={t("gantt.filterMilestoneTitle")}>
           <input
             type="checkbox"
             checked={milestoneOnly}
             onChange={(e) => setMilestoneOnly(e.target.checked)}
           />
-          ◇ 仅里程碑
+          ◇ {t("gantt.filterMilestone")}
         </label>
         {(searchText || statusFilter !== "all" || ownerFilter !== "all" || milestoneOnly) && (
           <button
             className="gantt-filter-clear"
             onClick={() => { setSearchText(""); setStatusFilter("all"); setOwnerFilter("all"); setMilestoneOnly(false); }}
           >
-            ✕ 清除
+            {t("gantt.filterClear")}
           </button>
         )}
       </div>
 
-      {loading && <div className="gantt-loading">加载甘特图...</div>}
+      {loading && <div className="gantt-loading">{t("gantt.loading")}</div>}
       {!loading && tasks.length === 0 && (
-        <div className="gantt-loading">{readonly ? "暂无任务" : "点击「+ 添加任务」开始规划"}</div>
+        <div className="gantt-loading">{readonly ? t("gantt.emptyReadonly") : t("gantt.emptyPlan")}</div>
       )}
 
       <div ref={containerRef} className="gantt-container" style={{ display: loading ? "none" : "block" }} />
@@ -1324,7 +1332,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       {showRecycleBin && (
         <RecycleBinModal
           projectId={projectId}
-          projectName={projectName || "项目"}
+          projectName={projectName || i18n.t("common.project")}
           onClose={() => setShowRecycleBin(false)}
           onRestored={() => fetchData(projectId, readonly)}
         />
