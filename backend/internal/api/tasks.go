@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -334,12 +335,12 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 	}
 	records = records[1:] // 跳过表头
 
-	// 状态映射：兼容中文与英文值
+	// 状态映射：兼容中文与英文值（含 UI 展示词"待开始/已延期"，与弹窗/列表一致）
 	statusMap := map[string]string{
-		"未开始": "open", "open": "open",
-		"进行中": "in_progress", "in_progress": "in_progress", "进行": "in_progress",
+		"未开始": "open", "待开始": "open", "open": "open",
+		"进行中": "in_progress", "进行": "in_progress", "in_progress": "in_progress",
 		"完成": "completed", "已完成": "completed", "completed": "completed",
-		"延迟": "delayed", "delayed": "delayed", "超期": "delayed",
+		"延迟": "delayed", "延期": "delayed", "已延期": "delayed", "delayed": "delayed", "超期": "delayed",
 	}
 
 	type importRow struct {
@@ -392,15 +393,26 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 		} else {
 			row.taskType = "milestone"
 		}
-		// 进度（%）
+		// 进度（%）：Excel 常带 % 后缀；非法值跳过该行并提示，不静默置 0（避免状态兜底连带失效）
 		if p := strings.TrimSpace(getCol(rec, 5)); p != "" {
-			if v, err := strconv.ParseFloat(p, 64); err == nil {
-				row.progress = clampFloat(v, 0, 100)
+			p = strings.TrimSuffix(strings.TrimSuffix(p, "%"), "％")
+			v, err := strconv.ParseFloat(p, 64)
+			if err != nil || v < 0 || v > 100 {
+				skipped++
+				skipReasons = append(skipReasons, fmt.Sprintf("第%d行:进度[%s]非法,须为 0-100 的数字", i+2, getCol(rec, 5)))
+				continue
 			}
+			row.progress = v
 		}
-		// 状态（进度 100 兜底为已完成）
-		row.status = statusMap[strings.ToLower(strings.TrimSpace(getCol(rec, 6)))]
+		// 状态（未知词跳过并提示，不静默兜底；状态列留空时按进度 100 兜底为已完成）
+		statusCol := strings.TrimSpace(getCol(rec, 6))
+		row.status = statusMap[strings.ToLower(statusCol)]
 		if row.status == "" {
+			if statusCol != "" {
+				skipped++
+				skipReasons = append(skipReasons, fmt.Sprintf("第%d行:未知状态[%s],可选:未开始/进行中/已完成/延迟(或 open/in_progress/completed/delayed)", i+2, statusCol))
+				continue
+			}
 			if row.progress >= 100 {
 				row.status = "completed"
 			} else {
@@ -422,6 +434,11 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 	// 逐行插入（父必须在子之前出现，父 WBS 查 map）
 	wbsToID := map[string]int64{}
 	imported := 0
+	// sort_order 基数先查一次（不能用 INSERT...SELECT 子查询——空项目时 SELECT 空集
+	// 导致 INSERT 0 行且不报错，导入静默全丢）
+	var baseSort int64 = -1
+	h.db.QueryRow(`SELECT COALESCE(MAX(sort_order), -1) FROM tasks WHERE project_id=? AND deleted_at IS NULL`, projectID).Scan(&baseSort)
+	nextSort := baseSort + 1
 	for _, row := range rows {
 		var parentID *int64
 		if row.parentWBS != "" {
@@ -432,6 +449,12 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			parentID = &pid
+		}
+		// 重复 WBS：跳过并提示（否则子任务会全挂到最后一个，先插入的变孤儿）
+		if _, dup := wbsToID[row.wbs]; dup {
+			skipped++
+			skipReasons = append(skipReasons, fmt.Sprintf("行[%s %s]:WBS[%s] 重复,已跳过", row.wbs, row.name, row.wbs))
+			continue
 		}
 		// 排程:有开始日期+工期 → 算工作日 end_date;否则留空交给 RecalculateAll 自动排
 		endDate := ""
@@ -445,22 +468,24 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 			h.db.QueryRow(`SELECT COALESCE(owner, '') FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&owner)
 			assignee = owner
 		}
+		// 实际日期默认跟随计划（与 CreateTask 新语义一致：用户选择 > 系统默认）
+		actualStart, actualEnd := fillActualDates("", "", row.startDate, endDate)
 
 		result, err := h.db.Exec(
 			`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
 			 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
-			 constraint_type, constraint_date, sort_order)
-			 SELECT ?, ?, ?, '', ?, ?, 'medium', ?, ?, ?, ?, ?, 0, '', '', COALESCE(MAX(sort_order), -1) + 1
-			 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`,
+			 constraint_type, constraint_date, sort_order, actual_start, actual_end)
+			 VALUES (?, ?, ?, '', ?, ?, 'medium', ?, ?, ?, ?, ?, 0, '', '', ?, ?, ?)`,
 			projectID, parentID, row.name, row.taskType, row.status,
 			assignee, row.startDate, endDate, row.duration, row.progress,
-			projectID,
+			nextSort, actualStart, actualEnd,
 		)
 		if err != nil {
 			skipped++
 			skipReasons = append(skipReasons, fmt.Sprintf("行[%s %s]:插入失败 %v", row.wbs, row.name, err))
 			continue
 		}
+		nextSort++
 		id, _ := result.LastInsertId()
 		wbsToID[row.wbs] = id
 		imported++
@@ -508,10 +533,25 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	taskID, _ := strconv.ParseInt(chi.URLParam(r, "taskID"), 10, 64)
 	projectID, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 
-	var t models.Task
-	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+	// 先整体读入再两次解析：请求体只传部分字段（脚本/集成）时，
+	// actual_* 缺失须保留 DB 旧值，不能用零值覆盖用户手填的实际日期
+	raw, err := io.ReadAll(r.Body)
+	if err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
 		return
+	}
+	var t models.Task
+	if err := json.Unmarshal(raw, &t); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "请求格式错误")
+		return
+	}
+	var fieldCheck map[string]json.RawMessage
+	json.Unmarshal(raw, &fieldCheck)
+	if _, provided := fieldCheck["actual_start"]; !provided {
+		h.db.QueryRow(`SELECT COALESCE(actual_start, '') FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&t.ActualStart)
+	}
+	if _, provided := fieldCheck["actual_end"]; !provided {
+		h.db.QueryRow(`SELECT COALESCE(actual_end, '') FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&t.ActualEnd)
 	}
 
 	if t.DurationDays < 1 && t.TaskType != "milestone" {
@@ -525,11 +565,12 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 实际日期：用户选择优先；未填则默认取计划日期（实际开始=开始日，实际结束=结束日）
+	// 实际日期：用户选择优先；未填则默认取计划日期（实际开始=开始日，实际结束=结束日）。
+	// 注意：请求体未传 actual_* 时上面已保留 DB 旧值，此处兜底只作用于"显式传空 = 恢复默认跟随计划"
 	t.ActualStart, t.ActualEnd = fillActualDates(t.ActualStart, t.ActualEnd, t.StartDate, t.EndDate)
 	// 逻辑校验：实际结束不能早于实际开始（超出计划范围允许——提前/延期正是偏差可视化要表达的）
 	if t.ActualStart != "" && t.ActualEnd != "" && t.ActualEnd < t.ActualStart {
-		writeError(w, http.StatusBadRequest, "INVALID_ACTUAL", "实际结束不能早于实际开始")
+		writeError(w, http.StatusBadRequest, "INVALID_ACTUAL", "实际结束不能早于实际开始(如未填写实际结束,请同时设置)")
 		return
 	}
 
