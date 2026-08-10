@@ -266,12 +266,38 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	// 实际日期默认跟随计划（实际开始=开始日，实际结束=结束日）；用户显式值优先
 	t.ActualStart, t.ActualEnd = fillActualDates(t.ActualStart, t.ActualEnd, t.StartDate, t.EndDate)
 
-	// 防呆：未指定负责人时默认取项目 owner
-	if strings.TrimSpace(t.Assignee) == "" {
-		var owner string
-		h.db.QueryRow(`SELECT COALESCE(owner, '') FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&owner)
-		t.Assignee = owner
+	// 解析负责人:assignee_ids 数组优先,其次旧 assignee 文本,都未指定时默认取项目全部 owner
+	var assigneeIDs []int64
+	var missing []string
+	if len(t.AssigneeIDs) > 0 {
+		// 请求体直接传入 assignee_ids 数组(去重)
+		seen := map[int64]bool{}
+		for _, id := range t.AssigneeIDs {
+			if !seen[id] {
+				assigneeIDs = append(assigneeIDs, id)
+				seen[id] = true
+			}
+		}
+	} else if strings.TrimSpace(t.Assignee) != "" {
+		assigneeIDs, missing = resolveUserIDs(h.db, splitOwnerNames(t.Assignee))
+		if len(missing) > 0 {
+			writeError(w, http.StatusBadRequest, "INVALID_OWNER", "负责人["+strings.Join(missing, ",")+"]不是系统用户,请从现有用户中选择")
+			return
+		}
+	} else {
+		rows, err := h.db.Query(`SELECT po.user_id FROM project_owners po JOIN projects p ON p.id = po.project_id WHERE p.id = ? AND p.deleted_at IS NULL`, projectID)
+		if err == nil {
+			for rows.Next() {
+				var uid int64
+				if rows.Scan(&uid) == nil {
+					assigneeIDs = append(assigneeIDs, uid)
+				}
+			}
+			rows.Close()
+		}
 	}
+	// 快照列同步(写入后回填显示名)
+	assigneeSnapshot := strings.Join(ownerNamesOf(h.db, assigneeIDs), "; ")
 
 	// 分配下一个 sort_order（单条 INSERT...SELECT 原子完成，消除并发创建重复序号）
 	result, err := h.db.Exec(
@@ -282,7 +308,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		        COALESCE(MAX(sort_order), -1) + 1
 		 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`,
 		projectID, t.ParentID, t.Name, t.Description, t.TaskType, t.Status, t.Priority,
-		t.Assignee, t.StartDate, t.EndDate, t.DurationDays, t.ProgressPct, t.ActualStart, t.ActualEnd,
+		assigneeSnapshot, t.StartDate, t.EndDate, t.DurationDays, t.ProgressPct, t.ActualStart, t.ActualEnd,
 		boolToInt2(t.ManualScheduled), t.ConstraintType, t.ConstraintDate,
 		projectID,
 	)
@@ -294,6 +320,11 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	id, _ := result.LastInsertId()
 	t.ID = id
 	t.ProjectID = projectID
+
+	// 写关联表(权威)并回填响应模型
+	saveTaskAssignees(h.db, id, assigneeIDs)
+	t.AssigneeIDs = assigneeIDs
+	t.Assignee = assigneeSnapshot
 
 	// 触发自动排程（正推：新任务无后继，Recalculate 传播链为空，无副作用；倒推：全量倒推对齐完成日期）
 	if changed := triggersReschedule(t); changed {
@@ -631,6 +662,21 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		h.db.QueryRow(`SELECT COALESCE(actual_end, '') FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&t.ActualEnd)
 	}
 
+	// 负责人:assignee_ids/assignee 都未携带 → 保留 DB 旧关联(与 actual_* 同策略)
+	var assigneeIDs []int64
+	if _, ok := fieldCheck["assignee_ids"]; ok {
+		json.Unmarshal(fieldCheck["assignee_ids"], &assigneeIDs)
+	} else if _, ok := fieldCheck["assignee"]; ok {
+		assigneeIDs, _ = resolveUserIDs(h.db, splitOwnerNames(t.Assignee))
+		if len(splitOwnerNames(t.Assignee)) > len(assigneeIDs) {
+			writeError(w, http.StatusBadRequest, "INVALID_OWNER", "负责人含非系统用户,请从现有用户中选择")
+			return
+		}
+	} else {
+		assigneeIDs, _ = loadTaskAssignees(h.db, taskID)
+	}
+	t.AssigneeIDs = assigneeIDs
+
 	if t.DurationDays < 1 && t.TaskType != "milestone" {
 		writeError(w, http.StatusBadRequest, "INVALID_DURATION", "工期至少 1 天")
 		return
@@ -662,6 +708,9 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	// 负责人快照列:以关联表为准(等写关联表后回填;这里先按当前 ids 拼,写关联表用同一批)
+	t.Assignee = strings.Join(ownerNamesOf(h.db, assigneeIDs), "; ")
 
 	oldVersion := t.Version
 	t.Version = oldVersion + 1
@@ -701,6 +750,13 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	h.broadcastChange(r, t.ProjectID, taskID)
 	if t.ParentID != nil && *t.ParentID > 0 {
 		h.recalcParentProgress(taskID)
+	}
+
+	// 负责人字段在请求体中提供过才写关联表(未提供时上面的 loadTaskAssignees 已保留旧关联,无需重写)
+	_, providedIDs := fieldCheck["assignee_ids"]
+	_, providedText := fieldCheck["assignee"]
+	if providedIDs || providedText {
+		saveTaskAssignees(h.db, taskID, assigneeIDs)
 	}
 
 	writeJSON(w, http.StatusOK, t)
