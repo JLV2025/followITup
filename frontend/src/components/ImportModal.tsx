@@ -1,6 +1,8 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../api/client";
+import i18n from "../i18n";
 
 /** CSV 任务批量导入弹窗
  *  - 文件选择(UTF-8 或 GBK 自动识别,Excel 导出兼容)
@@ -16,6 +18,7 @@ export default function ImportModal({
   onClose: () => void;
   onImported: () => void;
 }) {
+  const { t } = useTranslation();
   const [fileName, setFileName] = useState("");
   const [content, setContent] = useState("");
   const [importing, setImporting] = useState(false);
@@ -38,9 +41,16 @@ export default function ImportModal({
     setContent(text);
   };
 
-  // 模板下载:表头 + 示例两行(UTF-8 BOM 保证 Excel 识别)
+  // 模板下载:表头 + 示例两行(UTF-8 BOM 保证 Excel 识别;状态列值用后端收录的英文词,双语通用)
   const downloadTemplate = () => {
-    const tpl = [
+    const en = i18n.language === "en";
+    const tpl = en ? [
+      "Task,WBS,Duration(days),Start Date,Assignee,Progress(%),Status",
+      "Project Kickoff,1,5,2026-08-10,Zhang San,100,completed",
+      "Requirements Survey,1.1,10,2026-08-17,Li Si,50,in_progress",
+      "Requirements Review,1.1.1,2,2026-08-31,Li Si,0,open",
+      "Launch & Go Live,2,0,2026-10-01,Wang Wu,0,open",
+    ].join("\n") : [
       "任务名,WBS编号,工期(天),开始日期,负责人,进度(%),状态",
       "项目立项,1,5,2026-08-10,张三,100,已完成",
       "需求调研,1.1,10,2026-08-17,李四,50,进行中",
@@ -50,7 +60,7 @@ export default function ImportModal({
     const blob = new Blob(["﻿" + tpl], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "任务导入模板.csv";
+    a.download = i18n.t("importModal.templateName");
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -73,9 +83,9 @@ export default function ImportModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
-        <h2 className="modal-title">导入任务 (CSV)</h2>
+        <h2 className="modal-title">{t("importModal.title")}</h2>
 
-        <div className="modal-section-title" style={{ marginTop: 4 }}>1. 选择文件</div>
+        <div className="modal-section-title" style={{ marginTop: 4 }}>{t("importModal.sectionFile")}</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
           <input
             ref={fileRef}
@@ -85,36 +95,36 @@ export default function ImportModal({
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
           />
           <button className="btn btn-primary btn-sm" onClick={() => fileRef.current?.click()}>
-            选择文件
+            {t("importModal.selectFile")}
           </button>
-          <span className="text-secondary" style={{ fontSize: 13 }}>{fileName || "未选择(支持 UTF-8 / GBK 编码)"}</span>
+          <span className="text-secondary" style={{ fontSize: 13 }}>{fileName || t("importModal.fileNone")}</span>
         </div>
 
-        <div className="modal-section-title">2. 格式说明</div>
+        <div className="modal-section-title">{t("importModal.sectionFormat")}</div>
         <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", marginBottom: 12 }}>
           <thead>
             <tr style={{ color: "var(--text-secondary)", textAlign: "left" }}>
-              <th style={{ padding: "2px 6px" }}>列</th>
-              <th style={{ padding: "2px 6px" }}>说明</th>
+              <th style={{ padding: "2px 6px" }}>{t("importModal.colCol")}</th>
+              <th style={{ padding: "2px 6px" }}>{t("importModal.colDesc")}</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td style={{ padding: "2px 6px" }}>任务名</td><td style={{ padding: "2px 6px" }}>必填</td></tr>
-            <tr><td style={{ padding: "2px 6px" }}>WBS编号</td><td style={{ padding: "2px 6px" }}>层级用点分隔:1 / 1.1 / 1.2.1,父须在子之前</td></tr>
-            <tr><td style={{ padding: "2px 6px" }}>工期(天)</td><td style={{ padding: "2px 6px" }}>0 或空 = 里程碑;有子任务的父行工期自动按子任务汇总</td></tr>
-            <tr><td style={{ padding: "2px 6px" }}>开始日期</td><td style={{ padding: "2px 6px" }}>YYYY-MM-DD,可空(自动排程)</td></tr>
-            <tr><td style={{ padding: "2px 6px" }}>负责人</td><td style={{ padding: "2px 6px" }}>可空(默认项目所有者)</td></tr>
-            <tr><td style={{ padding: "2px 6px" }}>进度(%)</td><td style={{ padding: "2px 6px" }}>0-100,可空</td></tr>
-            <tr><td style={{ padding: "2px 6px" }}>状态</td><td style={{ padding: "2px 6px" }}>未开始/进行中/已完成/延迟,可空(按进度推断)</td></tr>
+            <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowName")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowNameDesc")}</td></tr>
+            <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowWbs")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowWbsDesc")}</td></tr>
+            <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowDuration")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowDurationDesc")}</td></tr>
+            <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowStart")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowStartDesc")}</td></tr>
+            <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowAssignee")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowAssigneeDesc")}</td></tr>
+            <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowProgress")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowProgressDesc")}</td></tr>
+            <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowStatus")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowStatusDesc")}</td></tr>
           </tbody>
         </table>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button className="btn btn-ghost btn-sm" onClick={downloadTemplate}>⬇ 下载模板</button>
+          <button className="btn btn-ghost btn-sm" onClick={downloadTemplate}>{t("importModal.downloadTemplate")}</button>
           <div className="modal-actions" style={{ gap: 8 }}>
-            <button className="btn btn-ghost btn-sm" onClick={onClose}>取消</button>
+            <button className="btn btn-ghost btn-sm" onClick={onClose}>{t("importModal.cancel")}</button>
             <button className="btn btn-primary btn-sm" disabled={!content.trim() || importing} onClick={doImport}>
-              {importing ? "导入中..." : "开始导入"}
+              {importing ? t("importModal.importing") : t("importModal.startImport")}
             </button>
           </div>
         </div>
@@ -122,8 +132,8 @@ export default function ImportModal({
         {result && (
           <div className="import-result" style={{ marginTop: 12, fontSize: 13 }}>
             <p>
-              导入完成:成功 <strong style={{ color: "var(--success)" }}>{result.imported}</strong> 行
-              {result.skipped > 0 && <> · 跳过 <strong style={{ color: "var(--danger)" }}>{result.skipped}</strong> 行</>}
+              {t("importModal.imported", { n: result.imported })}
+              {result.skipped > 0 && <>{t("importModal.skipped", { n: result.skipped })}</>}
             </p>
             {result.errors.length > 0 && (
               <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12, color: "var(--text-secondary)", maxHeight: 140, overflowY: "auto" }}>

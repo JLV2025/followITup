@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../api/client";
 import { useAuthStore } from "../stores/authStore"
 import { formatDate } from "../utils/date";
 import { statusLabel, priorityLabel } from "../utils/labels";
+import i18n from "../i18n";
 
 interface Task {
   id: number;
@@ -45,6 +47,7 @@ function computeDepths(tasks: Task[]): Map<number, number> {
 }
 
 export default function TaskListView() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -138,7 +141,7 @@ export default function TaskListView() {
       );
     } catch (err: any) {
       if (err.response?.status === 409) {
-        alert("任务已被他人修改，请刷新后重试");
+        alert(i18n.t("taskList.errConflict"));
         fetchTasks();
       }
     }
@@ -149,7 +152,7 @@ export default function TaskListView() {
     if (!isLoggedIn) return;
     try {
       const res = await api.post(`/api/projects/${id}/tasks`, {
-        name: "新任务",
+        name: i18n.t("taskList.newTask"),
         task_type: "task",
         status: "open",
         priority: "medium",
@@ -179,7 +182,7 @@ export default function TaskListView() {
       );
     } catch (err: any) {
       if (err.response?.status === 409) {
-        alert("任务已被他人修改，请刷新后重试");
+        alert(i18n.t("taskList.errConflict"));
         fetchTasks();
       }
     }
@@ -198,14 +201,14 @@ export default function TaskListView() {
       );
     } catch (err: any) {
       if (err.response?.status === 409) {
-        alert("任务已被他人修改，请刷新后重试");
+        alert(i18n.t("taskList.errConflict"));
         fetchTasks();
       }
     }
   };
 
   const deleteTask = async (task: Task) => {
-    if (!isLoggedIn || !confirm(`确认删除任务"${task.name}"?`)) return;
+    if (!isLoggedIn || !confirm(i18n.t("taskList.confirmDeleteTask", { name: task.name }))) return;
     try {
       await api.delete(`/api/projects/${id}/tasks/${task.id}`);
       setTasks((prev) => prev.filter((t) => t.id !== task.id));
@@ -214,7 +217,7 @@ export default function TaskListView() {
     }
   };
 
-  if (loading) return <p className="text-secondary p-4">加载任务中...</p>;
+  if (loading) return <p className="text-secondary p-4">{t("taskList.loading")}</p>;
 
   const statusColor = (s: string) => {
     switch (s) {
@@ -237,10 +240,10 @@ export default function TaskListView() {
       {isLoggedIn && (
         <div className="task-toolbar">
           <button className="btn btn-primary btn-sm" onClick={addTask}>
-            + 新建任务
+            {t("taskList.addTask")}
           </button>
           <span className="text-secondary" style={{ fontSize: 12 }}>
-            点击单元格编辑 · →缩进 (设为上一行子任务) · ←升级
+            {t("taskList.toolbarHint")}
           </span>
         </div>
       )}
@@ -250,14 +253,14 @@ export default function TaskListView() {
         <thead>
           <tr>
             <th style={{ width: 40 }}>#</th>
-            <th>任务名称</th>
-            <th style={{ width: 80 }}>状态</th>
-            <th style={{ width: 80 }}>优先级</th>
-            <th style={{ width: 100 }}>负责人</th>
-            <th style={{ width: 60 }}>时长</th>
-            <th style={{ width: 110 }}>开始</th>
-            <th style={{ width: 110 }}>结束</th>
-            <th style={{ width: 100 }}>进度</th>
+            <th>{t("taskList.colName")}</th>
+            <th style={{ width: 80 }}>{t("taskList.colStatus")}</th>
+            <th style={{ width: 80 }}>{t("taskList.colPriority")}</th>
+            <th style={{ width: 100 }}>{t("taskList.colAssignee")}</th>
+            <th style={{ width: 60 }}>{t("taskList.colDuration")}</th>
+            <th style={{ width: 110 }}>{t("taskList.colStart")}</th>
+            <th style={{ width: 110 }}>{t("taskList.colEnd")}</th>
+            <th style={{ width: 100 }}>{t("taskList.colProgress")}</th>
             {isLoggedIn && <th style={{ width: 80 }}></th>}
           </tr>
         </thead>
@@ -288,7 +291,7 @@ export default function TaskListView() {
                       autoFocus
                     />
                   ) : (
-                    <span onClick={() => startEdit(t, "name")} title="点击编辑">
+                    <span onClick={() => startEdit(t, "name")} title={t("taskList.editTitle")}>
                       {depth > 0 && "└ "}
                       {t.task_type === "milestone" && "◆ "}{t.name}
                     </span>
@@ -350,7 +353,7 @@ export default function TaskListView() {
                     <button
                       className="btn-indent"
                       onClick={() => indentTask(t, idx)}
-                      title="缩进 — 设为上一行子任务"
+                      title={t("taskList.indentTitle")}
                       disabled={idx === 0 || tasks[idx - 1].parent_id === t.id}
                     >
                       →
@@ -358,7 +361,7 @@ export default function TaskListView() {
                     <button
                       className="btn-indent"
                       onClick={() => outdentTask(t)}
-                      title="升级 — 脱离父任务"
+                      title={t("taskList.outdentTitle")}
                       disabled={t.parent_id == null}
                     >
                       ←
@@ -366,7 +369,7 @@ export default function TaskListView() {
                     <button
                       className="btn-delete"
                       onClick={() => deleteTask(t)}
-                      title="删除任务"
+                      title={t("taskList.deleteTitle")}
                     >
                       ×
                     </button>
@@ -382,7 +385,7 @@ export default function TaskListView() {
                 className="text-secondary"
                 style={{ textAlign: "center", padding: 32 }}
               >
-                暂无任务，点击"+ 新建任务"开始
+                {t("taskList.empty")}
               </td>
             </tr>
           )}

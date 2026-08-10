@@ -1,8 +1,10 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../api/client";
 import { formatDateShort } from "../utils/date";
 import { statusLabel, priorityLabel } from "../utils/labels";
+import i18n from "../i18n";
 
 interface Task {
   id: number;
@@ -51,6 +53,7 @@ const STATUSES = ["open", "in_progress", "completed", "delayed"];
 const PRIORITIES = ["low", "medium", "high", "critical"];
 
 export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers, onClose, onSaved }: Props) {
+  const { t } = useTranslation();
   const isNew = !task;
   // 父任务：起止日期/工期由子任务自动汇总，不允许直接编辑；也不支持设置前置任务
   const isParent = task ? allTasks.some((t) => t.parent_id === task.id) : false;
@@ -164,7 +167,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
       .map((row) => rowToId[row])
       .filter((id) => id !== undefined && id !== task.id);
     if (ids.length === 0) {
-      setError("请输入有效的前置任务行号（不能是自己的行号）");
+      setError(i18n.t("taskDetail.errQuickPred"));
       return;
     }
     setError("");
@@ -217,7 +220,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
   const handleDelete = async () => {
     if (!task) return;
     const taskName = name || `#${task.id}`;
-    if (!confirm(`确认删除任务「${taskName}」？\n\n此操作不可撤销。如有子任务，请先手动处理。`)) return;
+    if (!confirm(i18n.t("taskDetail.confirmDeleteTask", { name: taskName }))) return;
     setSaving(true);
     try {
       await api.delete(`/api/projects/${projectId}/tasks/${task.id}`);
@@ -242,7 +245,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
       if (finalProgress === 100) finalStatus = "completed";
       else if (finalProgress > 0) finalStatus = "in_progress";
       const payload = {
-        name: name.trim() || "未命名",
+        name: name.trim() || i18n.t("taskDetail.untitled"),
         parent_id: parentId,
         task_type: taskType,
         start_date: startDate,
@@ -287,9 +290,9 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             return;
           }
         } catch { /* 重取失败走下方错误提示 */ }
-        setError("任务已被他人修改，请关闭窗口重试");
+        setError(i18n.t("taskDetail.errConflict"));
       } else {
-        setError("保存失败，请重试");
+        setError(i18n.t("taskDetail.errSave"));
       }
     } finally {
       setSaving(false);
@@ -330,7 +333,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         className="modal-card task-detail-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="modal-title">{isNew ? "新建任务" : "编辑任务"}</h2>
+        <h2 className="modal-title">{isNew ? t("taskDetail.titleNew") : t("taskDetail.titleEdit")}</h2>
 
         {error && <div className="form-error">{error}</div>}
 
@@ -339,7 +342,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         {/* 左栏：基本信息 / 日期与进度 / 状态 */}
         {/* 基本信息 */}
         <div className="form-group">
-          <label>任务名称</label>
+          <label>{t("taskDetail.name")}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -349,7 +352,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
 
         <div className="form-row">
           <div className="form-group">
-            <label>父任务</label>
+            <label>{t("taskDetail.parent")}</label>
             <div style={{ display: "flex", gap: 6 }}>
               <select
                 value={parentId ?? ""}
@@ -358,7 +361,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                 }
                 style={{ flex: 1 }}
               >
-                <option value="">无（顶级任务）</option>
+                <option value="">{t("taskDetail.noParent")}</option>
                 {availableParents.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name}
@@ -370,7 +373,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   <button
                     className="btn-indent-modal"
                     onClick={handleIndent}
-                    title="缩进 — 设为上一行任务的子任务"
+                    title={t("taskDetail.indentTitle")}
                     type="button"
                   >
                     →
@@ -379,7 +382,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                     className="btn-indent-modal"
                     onClick={handleOutdent}
                     disabled={!parentId}
-                    title="升级 — 脱离父任务"
+                    title={t("taskDetail.outdentTitle")}
                     type="button"
                   >
                     ←
@@ -389,37 +392,37 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             </div>
           </div>
           <div className="form-group">
-            <label>任务类型</label>
+            <label>{t("taskDetail.taskType")}</label>
             <select
               value={taskType}
               onChange={(e) => setTaskType(e.target.value)}
             >
-              <option value="task">任务</option>
-              <option value="milestone">里程碑</option>
+              <option value="task">{t("taskDetail.typeTask")}</option>
+              <option value="milestone">{t("taskDetail.typeMilestone")}</option>
             </select>
           </div>
         </div>
 
         <hr className="modal-divider" />
-        <h4 className="modal-section-title">日期与进度</h4>
+        <h4 className="modal-section-title">{t("taskDetail.sectionDates")}</h4>
 
         <div className="form-row">
           <div className="form-group">
-            <label>开始日期（由排程自动计算）</label>
+            <label>{t("taskDetail.startAuto")}</label>
             <input type="date" value={startDate} disabled />
           </div>
           <div className="form-group">
-            <label>结束日期（由排程自动计算）</label>
+            <label>{t("taskDetail.endAuto")}</label>
             <input type="date" value={endDate} disabled />
           </div>
         </div>
         <div className="form-row">
           <div className="form-group">
-            <label>实际开始</label>
+            <label>{t("taskDetail.actualStart")}</label>
             <input type="date" value={actualStart} onChange={(e) => setActualStart(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>实际结束</label>
+            <label>{t("taskDetail.actualEnd")}</label>
             <input type="date" value={actualEnd} onChange={(e) => setActualEnd(e.target.value)} />
           </div>
         </div>
@@ -435,7 +438,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         )}
         <div className="form-row">
           <div className="form-group">
-            <label>工期（工作日）</label>
+            <label>{t("taskDetail.duration")}</label>
             <input
               type="number"
               min={1}
@@ -445,7 +448,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             />
           </div>
           <div className="form-group">
-            <label>进度 (%)</label>
+            <label>{t("taskDetail.progress")}</label>
             <input
               type="number"
               min={0}
@@ -463,11 +466,11 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         </div>
 
         <hr className="modal-divider" />
-        <h4 className="modal-section-title">状态</h4>
+        <h4 className="modal-section-title">{t("taskDetail.sectionStatus")}</h4>
 
         <div className="form-row">
           <div className="form-group">
-            <label>状态</label>
+            <label>{t("taskDetail.status")}</label>
             <select
               value={status}
               onChange={(e) => {
@@ -485,7 +488,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             </select>
           </div>
           <div className="form-group">
-            <label>优先级</label>
+            <label>{t("taskDetail.priority")}</label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
@@ -499,12 +502,12 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
           </div>
         </div>
         <div className="form-group">
-          <label>负责人</label>
+          <label>{t("taskDetail.assignee")}</label>
           <select
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
           >
-            <option value="">未指派</option>
+            <option value="">{t("taskDetail.unassigned")}</option>
             {users.map((u) => (
               <option key={u.id} value={u.display_name}>{u.display_name}</option>
             ))}
@@ -518,7 +521,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         {!isNew && (
           <>
             <hr className="modal-divider" />
-            <h4 className="modal-section-title">前置任务</h4>
+            <h4 className="modal-section-title">{t("taskDetail.sectionPred")}</h4>
 
             {isParent ? (
               <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
@@ -536,7 +539,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   type="text"
                   value={quickPredIds}
                   onChange={(e) => setQuickPredIds(e.target.value)}
-                  placeholder="输入前置任务行号..."
+                  placeholder={t("taskDetail.predPlaceholder")}
                   style={{ flex: 2 }}
                 />
                 <select
@@ -553,7 +556,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   value={quickLag}
                   onChange={(e) => setQuickLag(Number(e.target.value))}
                   min={0}
-                  placeholder="延迟"
+                  placeholder={t("taskDetail.lagPlaceholder")}
                   style={{ width: 56 }}
                 />
                 <button
@@ -576,7 +579,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   }
                   style={{ flex: 2 }}
                 >
-                  <option value="">逐个选择...</option>
+                  <option value="">{t("taskDetail.predSelect")}</option>
                   {availablePreds.map((t) => (
                     <option key={t.id} value={t.id}>
                       #{displayNo(t.id)} {t.name}
@@ -597,7 +600,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   value={newLag}
                   onChange={(e) => setNewLag(Number(e.target.value))}
                   min={0}
-                  placeholder="延迟"
+                  placeholder={t("taskDetail.lagPlaceholder")}
                   style={{ width: 56 }}
                 />
                 <button
@@ -612,7 +615,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
 
             {/* 已有前置任务列表 */}
             {depLoading && (
-              <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 8 }}>加载中...</p>
+              <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 8 }}>{t("common.loading")}</p>
             )}
             {!depLoading && deps.length > 0 && (
               <div className="dep-list">
@@ -621,7 +624,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   return (
                     <div key={d.id} className="dep-item">
                       <span className="dep-name">
-                        {pred ? `#${displayNo(pred.id)} ${pred.name}` : `#${displayNo(d.predecessor_id)}（已删除）`}
+                        {pred ? `#${displayNo(pred.id)} ${pred.name}` : i18n.t("taskDetail.deletedPred", { n: displayNo(d.predecessor_id) })}
                       </span>
                       <span className="dep-type-badge">{d.dep_type}</span>
                       {d.lag_days > 0 && (
@@ -630,7 +633,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                       <button
                         className="btn-delete-dep"
                         onClick={() => handleRemoveDep(d.id)}
-                        title="删除此前置关系"
+                        title={t("taskDetail.removePredTitle")}
                       >
                         ×
                       </button>
@@ -650,7 +653,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         )}
 
         <hr className="modal-divider" />
-        <h4 className="modal-section-title">约束</h4>
+        <h4 className="modal-section-title">{t("taskDetail.sectionConstraint")}</h4>
         <div className="form-group">
           <label className="checkbox-label">
             <input
@@ -664,18 +667,18 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
         {!isNew && (
           <div className="form-row">
             <div className="form-group">
-              <label>截止日期约束</label>
+              <label>{t("taskDetail.constraintDeadline")}</label>
               <select
                 value={constraintType}
                 onChange={(e) => setConstraintType(e.target.value)}
               >
-                <option value="">无约束</option>
-                <option value="finish_no_later_than">不晚于</option>
-                <option value="start_no_earlier_than">不早于</option>
+                <option value="">{t("taskDetail.noConstraint")}</option>
+                <option value="finish_no_later_than">{t("taskDetail.constraintNoLater")}</option>
+                <option value="start_no_earlier_than">{t("taskDetail.constraintNoEarlier")}</option>
               </select>
             </div>
             <div className="form-group">
-              <label>约束日期</label>
+              <label>{t("taskDetail.constraintDate")}</label>
               <input
                 type="date"
                 value={constraintDate}
@@ -694,7 +697,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
               onClick={handleDelete}
               disabled={saving}
             >
-              {saving ? "删除中..." : "删除任务"}
+              {saving ? t("taskDetail.deleting") : t("taskDetail.deleteTask")}
             </button>
           )}
           <div className="modal-actions-right">
@@ -706,7 +709,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? "保存中..." : isNew ? "创建任务" : "确认修改"}
+              {saving ? t("taskDetail.saving") : isNew ? t("taskDetail.createTask") : t("taskDetail.saveEdit")}
             </button>
           </div>
         </div>

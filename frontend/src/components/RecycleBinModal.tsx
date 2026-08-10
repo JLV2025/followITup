@@ -1,6 +1,8 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../api/client";
+import i18n from "../i18n";
 
 interface DeletedTask {
   id: number;
@@ -24,6 +26,7 @@ interface Props {
 }
 
 export default function RecycleBinModal({ projectId, projectName, onClose, onRestored }: Props) {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<DeletedTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -34,7 +37,7 @@ export default function RecycleBinModal({ projectId, projectName, onClose, onRes
       const res = await api.get(`/api/projects/${projectId}/tasks/deleted`);
       setTasks(res.data.data || []);
     } catch {
-      setError("加载已删除任务失败");
+      setError(i18n.t("recycleBin.errLoad"));
     } finally {
       setLoading(false);
     }
@@ -50,7 +53,7 @@ export default function RecycleBinModal({ projectId, projectName, onClose, onRes
       await api.post(`/api/projects/${projectId}/tasks/${task.id}/restore`);
       await fetchDeleted();
       onRestored();
-      alert(`「${task.name}」已恢复，任务回到甘特图（显式依赖需手动重连）`);
+      alert(i18n.t("recycleBin.restored", { name: task.name }));
     } catch (err: any) {
       setError(getErrorMessage(err, "common.unknownError"));
     } finally {
@@ -62,15 +65,15 @@ export default function RecycleBinModal({ projectId, projectName, onClose, onRes
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-title">
-          <h2>回收站 · {projectName}</h2>
+          <h2>{t("recycleBin.title", { name: projectName })}</h2>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
           {error && <div className="form-error">{error}</div>}
           {loading ? (
-            <p className="text-secondary">加载中...</p>
+            <p className="text-secondary">{t("common.loading")}</p>
           ) : tasks.length === 0 ? (
-            <p className="text-secondary">没有已删除的任务</p>
+            <p className="text-secondary">{t("recycleBin.empty")}</p>
           ) : (
             <div className="dep-list">
               {tasks.map((t) => (
@@ -78,19 +81,19 @@ export default function RecycleBinModal({ projectId, projectName, onClose, onRes
                   <div className="dep-item-main">
                     <span className="dep-item-name">
                       {t.name}
-                      {t.task_type === "milestone" && <em className="tag">里程碑</em>}
+                      {t.task_type === "milestone" && <em className="tag">{t("recycleBin.milestoneTag")}</em>}
                     </span>
                     <span className="dep-item-detail">
                       {t.start_date || "—"} ~ {t.end_date || "—"} · {t.duration_days}天 · 进度 {t.progress_pct}% · 原排序 #{t.sort_order + 1}
                     </span>
-                    <span className="dep-item-detail">删除于 {t.deleted_at?.slice(0, 10)}</span>
+                    <span className="dep-item-detail">{t("recycleBin.deletedAt", { date: t.deleted_at?.slice(0, 10) })}</span>
                   </div>
                   <button
                     className="btn btn-primary btn-sm"
                     disabled={restoringId === t.id}
                     onClick={() => handleRestore(t)}
                   >
-                    {restoringId === t.id ? "恢复中..." : "恢复"}
+                    {restoringId === t.id ? t("recycleBin.restoring") : t("recycleBin.restore")}
                   </button>
                 </div>
               ))}
@@ -98,7 +101,7 @@ export default function RecycleBinModal({ projectId, projectName, onClose, onRes
           )}
         </div>
         <div className="modal-actions">
-          <button className="btn btn-ghost" onClick={onClose}>关闭</button>
+          <button className="btn btn-ghost" onClick={onClose}>{t("common.close")}</button>
         </div>
       </div>
     </div>
