@@ -204,6 +204,52 @@ var migrations = []migration{
 	-- 项目所有者（v8）：创建项目必填，未开始任务默认取项目 owner
 	ALTER TABLE projects ADD COLUMN owner TEXT NOT NULL DEFAULT '';
 	`},
+	{9, `
+	-- 多负责人(v9):任务负责人与项目负责人支持多人,关联表为权威,原文本列保留为快照
+	CREATE TABLE IF NOT EXISTS task_assignees (
+		task_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		PRIMARY KEY (task_id, user_id)
+	);
+	CREATE TABLE IF NOT EXISTS project_owners (
+		project_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		PRIMARY KEY (project_id, user_id)
+	);
+
+	-- 存量迁移:email 或 display_name 精确匹配活跃用户,重名取 id 最小;解析失败跳过(归未分配)。
+	-- 不按 deleted_at 过滤:软删任务/项目恢复后负责人仍在
+	INSERT OR IGNORE INTO task_assignees (task_id, user_id)
+	SELECT t.id, MIN(u.id) FROM tasks t
+	JOIN users u ON (u.email = t.assignee OR u.display_name = t.assignee) AND u.is_active = 1
+	WHERE t.assignee != '' GROUP BY t.id;
+	-- 项目 owner 支持分号分隔多值(如 '张三;李四'),递归 CTE 拆分后逐个匹配;
+	-- 每个(项目, 名字)取最小 id,同项目多值保留多行
+	WITH RECURSIVE split(project_id, rest, item) AS (
+		SELECT id, owner, '' FROM projects WHERE owner != ''
+		UNION ALL
+		SELECT project_id,
+			CASE WHEN instr(rest, ';') > 0 THEN substr(rest, instr(rest, ';') + 1) ELSE '' END,
+			CASE WHEN instr(rest, ';') > 0 THEN substr(rest, 1, instr(rest, ';') - 1) ELSE rest END
+		FROM split WHERE rest != ''
+	)
+	INSERT OR IGNORE INTO project_owners (project_id, user_id)
+	SELECT s.project_id, MIN(u.id)
+	FROM split s
+	JOIN users u ON (u.email = trim(s.item) OR u.display_name = trim(s.item)) AND u.is_active = 1
+	WHERE trim(s.item) != ''
+	GROUP BY s.project_id, s.item;
+
+	-- 快照列回填最新显示名(分号+空格分隔)
+	UPDATE tasks SET assignee = (
+		SELECT GROUP_CONCAT(u.display_name, '; ') FROM task_assignees ta JOIN users u ON u.id = ta.user_id
+		WHERE ta.task_id = tasks.id)
+	WHERE EXISTS (SELECT 1 FROM task_assignees ta WHERE ta.task_id = tasks.id);
+	UPDATE projects SET owner = (
+		SELECT GROUP_CONCAT(u.display_name, '; ') FROM project_owners po JOIN users u ON u.id = po.user_id
+		WHERE po.project_id = projects.id)
+	WHERE EXISTS (SELECT 1 FROM project_owners po WHERE po.project_id = projects.id);
+	`},
 }
 
 // migrate 执行所有未应用的迁移
