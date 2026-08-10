@@ -118,7 +118,7 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		COALESCE(p.baseline_created_at, '') as baseline_created_at,
 		COALESCE(p.baseline_created_by, '') as baseline_created_by,
 			p.schedule_direction, COALESCE(p.owner, '') as owner,
-		(SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = p.id) as owner_ids
+		COALESCE((SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = p.id), '') as owner_ids
 		FROM projects p WHERE p.deleted_at IS NULL ORDER BY p.created_at ASC, p.id ASC`
 
 	rows, err := h.db.Query(query)
@@ -582,7 +582,7 @@ func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	var ownerIDsStr string
 	err := h.db.QueryRow(
 		`SELECT id, name, description, owner, start_date, end_date, status, is_public, schedule_direction,
-		(SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = projects.id) as owner_ids
+		COALESCE((SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = projects.id), '') as owner_ids
 		FROM projects WHERE id = ? AND deleted_at IS NULL`,
 		id,
 	).Scan(&p.ID, &p.Name, &p.Description, &p.Owner, &p.StartDate, &p.EndDate, &p.Status, &isPublic, &p.ScheduleDirection, &ownerIDsStr)

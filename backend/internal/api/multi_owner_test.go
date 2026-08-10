@@ -791,3 +791,57 @@ func TestImportTasksMultiAssignee(t *testing.T) {
 		t.Errorf("errors = %v, want 含赵六提示", resp.Data.Errors)
 	}
 }
+
+// 项目无负责人(project_owners 空):GetProject 200 且 owner_ids 空;ProjectList 仍含该项目
+// (COALESCE 防 NULL scan 报错导致项目从列表剔除/详情 404——bug-237 根因回归)
+func TestGetProjectAndListWithNoOwners(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	ph := &ProjectHandler{db: conn}
+	pid := setupProject(t, conn) // 不写 project_owners
+
+	// GetProject:无 owner 项目必须 200(不能 404)
+	r := chi.NewRouter()
+	r.Get("/api/projects/{id}", ph.GetProject)
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/projects/%d", pid), nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("无owner项目 GetProject 状态码 = %d, body=%s", w.Code, w.Body.String())
+	}
+	var pResp struct {
+		Data models.Project `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &pResp)
+	if len(pResp.Data.OwnerIDs) != 0 {
+		t.Errorf("无owner项目 owner_ids = %v, want []", pResp.Data.OwnerIDs)
+	}
+
+	// ProjectList:无 owner 项目仍出现在列表(不因 NULL scan 被剔除)
+	r2 := chi.NewRouter()
+	r2.Get("/api/projects", ph.ProjectList)
+	req2 := httptest.NewRequest(http.MethodGet, "/api/projects", nil)
+	w2 := httptest.NewRecorder()
+	r2.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusOK {
+		t.Fatalf("ProjectList 状态码 = %d", w2.Code)
+	}
+	var listResp struct {
+		Data []struct {
+			ID       int64   `json:"id"`
+			OwnerIDs []int64 `json:"owner_ids"`
+		} `json:"data"`
+	}
+	json.Unmarshal(w2.Body.Bytes(), &listResp)
+	found := false
+	for _, p := range listResp.Data {
+		if p.ID == pid {
+			found = true
+			if len(p.OwnerIDs) != 0 {
+				t.Errorf("列表中无owner项目 owner_ids = %v, want []", p.OwnerIDs)
+			}
+		}
+	}
+	if !found {
+		t.Error("无owner项目从 ProjectList 消失(应保留)")
+	}
+}

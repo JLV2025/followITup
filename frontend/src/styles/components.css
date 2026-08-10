@@ -1838,7 +1838,7 @@
   background: var(--accent-soft, rgba(64, 128, 128, 0.12)); color: var(--accent);
   border-radius: 4px; padding: 2px 6px; font-size: 12px;
 }
-.mus-tag-x { border: none; background: none; cursor: pointer; color: inherit; font-size: 13px; line-height: 1; padding: 0 2px; }
+.mus-tag-x { border: none; background: none; cursor: pointer; color: inherit; font-size: 13px; line-height: 1; padding: 0 5px; min-width: 18px; }
 .mus-tag-x:hover { color: var(--danger); }
 .mus-dropdown {
   position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20;
