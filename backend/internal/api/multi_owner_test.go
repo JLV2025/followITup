@@ -313,3 +313,38 @@ func TestUpdateTaskAssigneeIDsDedup(t *testing.T) {
 		t.Errorf("关联表行数 = %d, want 2(去重)", n)
 	}
 }
+
+// ListTasks 返回 assignee_ids 与分号分隔 assignee
+func TestListTasksReturnsAssigneeIDs(t *testing.T) {
+	conn, h := testTaskHandler(t)
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a','a@x.com','张三','x','local',1), ('b','b@x.com','李四','x','local',1)`)
+	pid := setupProject(t, conn)
+	tid := setupTask(t, conn, pid, "任务E", "", "")
+	ids, _ := resolveUserIDs(conn, []string{"张三", "李四"})
+	saveTaskAssignees(conn, tid, ids)
+
+	r := chi.NewRouter()
+	r.Get("/api/projects/{id}/tasks", h.ListTasks)
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/projects/%d/tasks", pid), nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("状态码 = %d", w.Code)
+	}
+	var resp struct {
+		Data struct {
+			Tasks []models.Task `json:"tasks"`
+		} `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if len(resp.Data.Tasks) != 1 {
+		t.Fatalf("任务数 = %d", len(resp.Data.Tasks))
+	}
+	task := resp.Data.Tasks[0]
+	if len(task.AssigneeIDs) != 2 {
+		t.Errorf("assignee_ids = %v, want 2 个", task.AssigneeIDs)
+	}
+	if task.Assignee != "张三; 李四" {
+		t.Errorf("assignee = %q, want %q", task.Assignee, "张三; 李四")
+	}
+}

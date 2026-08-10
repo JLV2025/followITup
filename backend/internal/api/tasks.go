@@ -94,6 +94,8 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 			t.ParentID = &parentID
 		}
 		t.ManualScheduled = manualSched != 0
+		// 多负责人:权威在关联表,覆盖快照列并回填 ids
+		t.AssigneeIDs, t.Assignee = loadTaskAssignees(h.db, t.ID)
 		tasks = append(tasks, t)
 	}
 
@@ -142,6 +144,7 @@ func (h *TaskHandler) ListDeletedTasks(w http.ResponseWriter, r *http.Request) {
 		Status       string  `json:"status"`
 		Priority     string  `json:"priority"`
 		Assignee     string  `json:"assignee"`
+		AssigneeIDs  []int64 `json:"assignee_ids"`
 		StartDate    string  `json:"start_date"`
 		EndDate      string  `json:"end_date"`
 		DurationDays int     `json:"duration_days"`
@@ -162,6 +165,9 @@ func (h *TaskHandler) ListDeletedTasks(w http.ResponseWriter, r *http.Request) {
 			t.ParentID = &parentID.Int64
 		}
 		tasks = append(tasks, t)
+		// 多负责人:回填 ids(回收站列表只需数组,显示名仍用快照列)
+		last := &tasks[len(tasks)-1]
+		last.AssigneeIDs, _ = loadTaskAssignees(h.db, last.ID)
 	}
 	writeJSON(w, http.StatusOK, tasks)
 }
@@ -225,6 +231,8 @@ func (h *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
 		t.ParentID = &parentID
 	}
 	t.ManualScheduled = manualSched != 0
+	// 多负责人:权威在关联表,覆盖快照列并回填 ids
+	t.AssigneeIDs, t.Assignee = loadTaskAssignees(h.db, t.ID)
 
 	writeJSON(w, http.StatusOK, t)
 }
