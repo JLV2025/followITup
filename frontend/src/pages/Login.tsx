@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
@@ -25,8 +26,7 @@ export default function Login() {
       // 首登强制改密：跳到改密页
       navigate(needChange ? "/change-password" : "/", { replace: true });
     } catch (err: any) {
-      const msg = err.response?.data?.error?.message || "登录失败，请重试";
-      setError(msg);
+      setError(getErrorMessage(err, "common.unknownError"));
     } finally {
       setLoading(false);
     }

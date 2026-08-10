@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -167,7 +168,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       });
       fetchData(projectId, readonly);
     } catch (err: any) {
-      alert(err?.response?.data?.error?.message || "复制任务失败");
+      alert(getErrorMessage(err, "common.unknownError"));
     }
   };
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
@@ -151,7 +152,7 @@ export default function Dashboard() {
       alert(`已复制项目：${np.name}`);
       fetchProjects();
     } catch (err: any) {
-      alert(err?.response?.data?.error?.message || "复制项目失败");
+      alert(getErrorMessage(err, "common.unknownError"));
     }
   };
 
@@ -237,7 +238,7 @@ export default function Dashboard() {
                     setDeletedProjects(res.data.data || []);
                     setShowRecycleBin(true);
                   } catch (err: any) {
-                    alert(err?.response?.data?.error?.message || "加载回收站失败");
+                    alert(getErrorMessage(err, "common.unknownError"));
                   }
                 }}
               >
@@ -411,7 +412,7 @@ export default function Dashboard() {
                         fetchProjects();
                         alert(`项目「${p.name}」已删除，可在「回收站」恢复`);
                       } catch (err: any) {
-                        alert(err?.response?.data?.error?.message || "删除失败");
+                        alert(getErrorMessage(err, "common.unknownError"));
                       }
                     }}
                   >
@@ -655,7 +656,7 @@ export default function Dashboard() {
                             setDeletedProjects((prev) => prev.filter((x) => x.id !== p.id));
                             fetchProjects(); // 刷新看板项目列表
                           } catch (err: any) {
-                            alert(err?.response?.data?.error?.message || "恢复失败");
+                            alert(getErrorMessage(err, "common.unknownError"));
                           }
                         }}
                       >

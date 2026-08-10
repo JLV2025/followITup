@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useRef, useState } from "react";
 import api from "../api/client";
 
@@ -63,7 +64,7 @@ export default function ImportModal({
       setResult(res.data.data || { imported: 0, skipped: 0, errors: [] });
       onImported(); // 通知父组件刷新甘特图
     } catch (err: any) {
-      alert(err?.response?.data?.error?.message || "导入失败");
+      alert(getErrorMessage(err, "common.unknownError"));
     } finally {
       setImporting(false);
     }

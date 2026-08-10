@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { create } from "zustand";
 import api from "../api/client";
 import { toGanttTask, toGanttLink, fromGanttTask, fromGanttLink } from "../api/gantt-adapter";
@@ -137,7 +138,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
       return true;
     } catch (err: any) {
       if (err.response?.status === 409) {
-        alert("任务已被他人修改，数据已刷新");
+        alert(getErrorMessage(err, "common.unknownError"));
         get().fetchData(projectId, get().readonly);
       }
       return false;

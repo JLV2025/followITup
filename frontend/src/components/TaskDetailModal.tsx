@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useState, useEffect } from "react";
 import api from "../api/client";
 import { formatDateShort } from "../utils/date";
@@ -222,7 +223,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
       await api.delete(`/api/projects/${projectId}/tasks/${task.id}`);
       onSaved();
     } catch (err: any) {
-      setError(`删除失败：${err?.response?.data?.message || err?.message || "请重试"}`);
+      setError(getErrorMessage(err, "common.unknownError"));
     } finally {
       setSaving(false);
     }

@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
 import api from "../api/client";
 
@@ -51,7 +52,7 @@ export default function RecycleBinModal({ projectId, projectName, onClose, onRes
       onRestored();
       alert(`「${task.name}」已恢复，任务回到甘特图（显式依赖需手动重连）`);
     } catch (err: any) {
-      setError(err?.response?.data?.error?.message || "恢复失败");
+      setError(getErrorMessage(err, "common.unknownError"));
     } finally {
       setRestoringId(null);
     }

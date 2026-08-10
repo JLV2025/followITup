@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
@@ -30,7 +31,7 @@ export default function ChangePassword() {
       alert("密码修改成功");
       navigate("/", { replace: true });
     } catch (err: any) {
-      setError(err?.response?.data?.error?.message || "修改失败");
+      setError(getErrorMessage(err, "common.unknownError"));
     } finally {
       setSubmitting(false);
     }

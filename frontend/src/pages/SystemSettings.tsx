@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
 import api from "../api/client";
 
@@ -57,7 +58,7 @@ export default function SystemSettings() {
       await api.put("/api/settings", patch);
       setMessage(okMsg);
     } catch (err: any) {
-      setMessage(err?.response?.data?.error?.message || "保存失败");
+      setMessage(getErrorMessage(err, "common.unknownError"));
     }
   };
 
@@ -68,7 +69,7 @@ export default function SystemSettings() {
       await api.post("/api/settings/test-email", { to });
       setMessage("测试邮件已发送");
     } catch (err: any) {
-      setMessage("发送失败: " + (err?.response?.data?.error?.message || ""));
+      setMessage("发送失败: " + (getErrorMessage(err, "common.unknownError")));
     }
   };
 
@@ -77,7 +78,7 @@ export default function SystemSettings() {
       await api.post("/api/settings/reminder/run", {});
       setMessage("到期提醒已扫描并发送（见服务端日志）");
     } catch (err: any) {
-      setMessage("提醒发送失败: " + (err?.response?.data?.error?.message || ""));
+      setMessage("提醒发送失败: " + (getErrorMessage(err, "common.unknownError")));
     }
   };
 
@@ -94,7 +95,7 @@ export default function SystemSettings() {
       setHolidayStart(""); setHolidayEnd(""); setHolidayLabel("");
       fetchHolidays();
     } catch (err: any) {
-      setMessage(err?.response?.data?.error?.message || "添加失败");
+      setMessage(getErrorMessage(err, "common.unknownError"));
     }
   };
 
@@ -268,7 +269,7 @@ export default function SystemSettings() {
                       await api.delete(`/api/calendar/${h.id}`);
                       fetchHolidays();
                     } catch (err: any) {
-                      setMessage(err?.response?.data?.error?.message || "删除失败");
+                      setMessage(getErrorMessage(err, "common.unknownError"));
                     }
                   }}>删除</button>
                 </td>

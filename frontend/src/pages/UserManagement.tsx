@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
 import api from "../api/client";
 import { useAuthStore } from "../stores/authStore";
@@ -66,7 +67,7 @@ export default function UserManagement() {
       await api.put(`/api/admin/users/${u.id}/role`, { is_admin: !u.is_admin });
       fetchUsers();
     } catch (err: any) {
-      alert(err?.response?.data?.error?.message || "操作失败");
+      alert(getErrorMessage(err, "common.unknownError"));
     }
   };
 
@@ -76,7 +77,7 @@ export default function UserManagement() {
       await api.delete(`/api/admin/users/${u.id}`);
       fetchUsers();
     } catch (err: any) {
-      alert(err?.response?.data?.error?.message || "删除失败");
+      alert(getErrorMessage(err, "common.unknownError"));
     }
   };
 
@@ -93,7 +94,7 @@ export default function UserManagement() {
         : d?.message || "密码已重置");
       setResetTarget(null);
     } catch (err: any) {
-      alert(err?.response?.data?.error?.message || "重置失败");
+      alert(getErrorMessage(err, "common.unknownError"));
       setResetTarget(null);
     } finally {
       setResetting(false);

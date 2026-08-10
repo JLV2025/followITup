@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
 import { useParams, Link, NavLink, Outlet } from "react-router-dom";
 import api from "../api/client";
@@ -40,7 +41,7 @@ export default function ProjectDetail() {
       // 不依赖任何前端事件/路由机制（改日期是低频操作，重载无感知）
       window.location.reload();
     } catch (err: any) {
-      alert(err?.response?.data?.error?.message || "项目日期更新失败");
+      alert(getErrorMessage(err, "common.unknownError"));
     }
   };
 
@@ -74,7 +75,7 @@ export default function ProjectDetail() {
               await api.put(`/api/projects/${id}`, { ...project, schedule_direction: dir });
               setProject({ ...project, schedule_direction: dir });
             } catch (err: any) {
-              alert(err?.response?.data?.error?.message || "排程方向修改失败");
+              alert(getErrorMessage(err, "common.unknownError"));
               setProject({ ...project }); // 回弹原值
             }
           }}
@@ -116,7 +117,7 @@ export default function ProjectDetail() {
                 await api.put(`/api/projects/${id}`, { ...project, owner });
                 setProject({ ...project, owner });
               } catch (err: any) {
-                alert(err?.response?.data?.error?.message || "所有者修改失败");
+                alert(getErrorMessage(err, "common.unknownError"));
               }
             }}
           >
