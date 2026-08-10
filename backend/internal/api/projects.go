@@ -32,9 +32,10 @@ func NewProjectHandler(db *sql.DB, mid *auth.Middleware, hub *ws.Hub) *ProjectHa
 
 // RegisterRoutes 注册路由
 func (h *ProjectHandler) RegisterRoutes(r chi.Router) {
-	// 看板统计（公开只读）
+	// 看板统计 + 项目详情（公开只读：未登录可浏览项目页，任务列表/甘特图只读）
 	r.Get("/api/dashboard/stats", h.DashboardStats)
 	r.Get("/api/dashboard/projects", h.ProjectList)
+	r.Get("/api/projects/{id}", h.GetProject)
 
 	// 项目 CRUD（需登录）
 	r.Group(func(r chi.Router) {
@@ -45,7 +46,6 @@ func (h *ProjectHandler) RegisterRoutes(r chi.Router) {
 		r.Post("/api/projects/{id}/restore", h.RestoreProject)
 		r.Put("/api/projects/{id}", h.UpdateProject)
 		r.Delete("/api/projects/{id}", h.DeleteProject)
-		r.Get("/api/projects/{id}", h.GetProject)
 		r.Post("/api/projects/{id}/members", h.AddMember)
 		r.Delete("/api/projects/{id}/members/{userID}", h.RemoveMember)
 	})
