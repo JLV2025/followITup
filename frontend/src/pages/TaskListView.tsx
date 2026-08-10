@@ -47,7 +47,7 @@ function computeDepths(tasks: Task[]): Map<number, number> {
 }
 
 export default function TaskListView() {
-  const { t } = useTranslation();
+  const { t: tr } = useTranslation(); // 注意:map 回调参数名为 t(任务对象),翻译函数改名 tr 避免遮蔽
   const { id } = useParams<{ id: string }>();
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -217,7 +217,7 @@ export default function TaskListView() {
     }
   };
 
-  if (loading) return <p className="text-secondary p-4">{t("taskList.loading")}</p>;
+  if (loading) return <p className="text-secondary p-4">{tr("taskList.loading")}</p>;
 
   const statusColor = (s: string) => {
     switch (s) {
@@ -240,10 +240,10 @@ export default function TaskListView() {
       {isLoggedIn && (
         <div className="task-toolbar">
           <button className="btn btn-primary btn-sm" onClick={addTask}>
-            {t("taskList.addTask")}
+            {tr("taskList.addTask")}
           </button>
           <span className="text-secondary" style={{ fontSize: 12 }}>
-            {t("taskList.toolbarHint")}
+            {tr("taskList.toolbarHint")}
           </span>
         </div>
       )}
@@ -253,14 +253,14 @@ export default function TaskListView() {
         <thead>
           <tr>
             <th style={{ width: 40 }}>#</th>
-            <th>{t("taskList.colName")}</th>
-            <th style={{ width: 80 }}>{t("taskList.colStatus")}</th>
-            <th style={{ width: 80 }}>{t("taskList.colPriority")}</th>
-            <th style={{ width: 100 }}>{t("taskList.colAssignee")}</th>
-            <th style={{ width: 60 }}>{t("taskList.colDuration")}</th>
-            <th style={{ width: 110 }}>{t("taskList.colStart")}</th>
-            <th style={{ width: 110 }}>{t("taskList.colEnd")}</th>
-            <th style={{ width: 100 }}>{t("taskList.colProgress")}</th>
+            <th>{tr("taskList.colName")}</th>
+            <th style={{ width: 80 }}>{tr("taskList.colStatus")}</th>
+            <th style={{ width: 80 }}>{tr("taskList.colPriority")}</th>
+            <th style={{ width: 100 }}>{tr("taskList.colAssignee")}</th>
+            <th style={{ width: 60 }}>{tr("taskList.colDuration")}</th>
+            <th style={{ width: 110 }}>{tr("taskList.colStart")}</th>
+            <th style={{ width: 110 }}>{tr("taskList.colEnd")}</th>
+            <th style={{ width: 100 }}>{tr("taskList.colProgress")}</th>
             {isLoggedIn && <th style={{ width: 80 }}></th>}
           </tr>
         </thead>
@@ -291,7 +291,7 @@ export default function TaskListView() {
                       autoFocus
                     />
                   ) : (
-                    <span onClick={() => startEdit(t, "name")} title={t("taskList.editTitle")}>
+                    <span onClick={() => startEdit(t, "name")} title={tr("taskList.editTitle")}>
                       {depth > 0 && "└ "}
                       {t.task_type === "milestone" && "◆ "}{t.name}
                     </span>
@@ -353,7 +353,7 @@ export default function TaskListView() {
                     <button
                       className="btn-indent"
                       onClick={() => indentTask(t, idx)}
-                      title={t("taskList.indentTitle")}
+                      title={tr("taskList.indentTitle")}
                       disabled={idx === 0 || tasks[idx - 1].parent_id === t.id}
                     >
                       →
@@ -361,7 +361,7 @@ export default function TaskListView() {
                     <button
                       className="btn-indent"
                       onClick={() => outdentTask(t)}
-                      title={t("taskList.outdentTitle")}
+                      title={tr("taskList.outdentTitle")}
                       disabled={t.parent_id == null}
                     >
                       ←
@@ -369,7 +369,7 @@ export default function TaskListView() {
                     <button
                       className="btn-delete"
                       onClick={() => deleteTask(t)}
-                      title={t("taskList.deleteTitle")}
+                      title={tr("taskList.deleteTitle")}
                     >
                       ×
                     </button>
@@ -385,7 +385,7 @@ export default function TaskListView() {
                 className="text-secondary"
                 style={{ textAlign: "center", padding: 32 }}
               >
-                {t("taskList.empty")}
+                {tr("taskList.empty")}
               </td>
             </tr>
           )}
