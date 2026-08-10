@@ -242,11 +242,11 @@ var migrations = []migration{
 
 	-- 快照列回填最新显示名(分号+空格分隔)
 	UPDATE tasks SET assignee = (
-		SELECT GROUP_CONCAT(u.display_name, '; ') FROM task_assignees ta JOIN users u ON u.id = ta.user_id
+		SELECT GROUP_CONCAT(u.display_name, '; ' ORDER BY u.id) FROM task_assignees ta JOIN users u ON u.id = ta.user_id
 		WHERE ta.task_id = tasks.id)
 	WHERE EXISTS (SELECT 1 FROM task_assignees ta WHERE ta.task_id = tasks.id);
 	UPDATE projects SET owner = (
-		SELECT GROUP_CONCAT(u.display_name, '; ') FROM project_owners po JOIN users u ON u.id = po.user_id
+		SELECT GROUP_CONCAT(u.display_name, '; ' ORDER BY u.id) FROM project_owners po JOIN users u ON u.id = po.user_id
 		WHERE po.project_id = projects.id)
 	WHERE EXISTS (SELECT 1 FROM project_owners po WHERE po.project_id = projects.id);
 	`},
