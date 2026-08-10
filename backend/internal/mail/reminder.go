@@ -93,12 +93,12 @@ func RunDueReminder(db *sql.DB) (int, error) {
 	var lastErr error
 	for _, email := range order {
 		list := groups[email]
-		body := fmt.Sprintf("你好：\n\n以下 %d 个任务将在 %d 天内到期，请及时跟进：\n\n", len(list), days)
+		body := fmt.Sprintf("Hi,\n\nThe following %d task(s) are due within %d day(s). Please follow up:\n\n", len(list), days)
 		for _, t := range list {
-			body += fmt.Sprintf("  • [%s] %s —— 截止 %s\n", t.ProjectName, t.TaskName, t.EndDate)
+			body += fmt.Sprintf("  • [%s] %s — due %s\n", t.ProjectName, t.TaskName, t.EndDate)
 		}
-		body += "\n—— FollowITup 系统通知"
-		if err := Send(db, email, "FollowITup 任务到期提醒", body); err != nil {
+		body += "\n— FollowITup"
+		if err := Send(db, email, "FollowITup Task Due Reminder", body); err != nil {
 			log.Printf("[Reminder] 发送到期提醒失败 %s: %v", email, err)
 			lastErr = err
 			continue

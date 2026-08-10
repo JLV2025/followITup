@@ -42,30 +42,30 @@ func Send(db *sql.DB, to, subject, body string) error {
 
 // SendPasswordReset 发送密码重置通知（含新密码）
 func SendPasswordReset(db *sql.DB, to, displayName, password string) error {
-	subject := "FollowITup 密码已重置"
-	body := fmt.Sprintf(`你好，%s：
+	subject := "FollowITup Password Reset"
+	body := fmt.Sprintf(`Hi %s,
 
-你的 FollowITup 密码已被管理员重置，请使用以下信息登录：
-  邮箱：%s
-  新密码：%s
+Your FollowITup password has been reset by an administrator. Sign in with:
+  Email: %s
+  New password: %s
 
-如果管理员勾选了"下次登录时须更改密码"，首次登录后系统会要求你修改。
+If the administrator enabled "must change password on next login", you will be asked to set a new one after signing in.
 
-—— FollowITup 系统通知`, displayName, to, password)
+— FollowITup`, displayName, to, password)
 	return Send(db, to, subject, body)
 }
 
 // SendTemporaryPassword 发送账号创建通知（含初始密码）
 func SendTemporaryPassword(db *sql.DB, to, displayName, password string) error {
-	subject := "FollowITup 账号已创建"
-	body := fmt.Sprintf(`你好，%s：
+	subject := "FollowITup Account Created"
+	body := fmt.Sprintf(`Hi %s,
 
-你的 FollowITup 账号已创建，请使用以下信息登录：
-  邮箱：%s
-  初始密码：%s
+Your FollowITup account has been created. Sign in with:
+  Email: %s
+  Initial password: %s
 
-首次登录后系统会要求你修改密码。
+You will be asked to change your password after your first sign-in.
 
-—— FollowITup 系统通知`, displayName, to, password)
+— FollowITup`, displayName, to, password)
 	return Send(db, to, subject, body)
 }
