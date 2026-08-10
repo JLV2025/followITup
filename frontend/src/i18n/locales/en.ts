@@ -75,6 +75,8 @@ export default {
     colProgress: "Progress",
     colAssignee: "Assignee",
     unknownUser: "Unknown",
+    // Zoom level labels by index (0-7, matching ZOOM_LEVELS order)
+    zoom: ["Day", "3d", "Week", "2w", "Month", "2mo", "Quarter", "Year"],
   },
   dashboard: {
     title: "Dashboard",
@@ -185,6 +187,13 @@ export default {
     saving: "Saving...",
     createTask: "Create Task",
     saveEdit: "Save Changes",
+    diffDays: "d",
+    parentNoPred: "Parent tasks roll up dates from subtasks; predecessors not supported",
+    quickAddHint: "Quick add (comma/semicolon separated row numbers, e.g. \"2, 3, 5\")",
+    batchAdd: "Add All",
+    add: "Add",
+    noPreds: "No predecessors",
+    manualScheduled: "Manual scheduling (not affected by dependencies)",
   },
   taskList: {
     errConflict: "Modified by someone else. Refresh and retry",
@@ -368,7 +377,7 @@ export default {
     count: "{{owners}} assignees · {{leaves}} leaf tasks",
   },
   priority: { low: "Low", medium: "Medium", high: "High", critical: "Critical" },
-  zoom: { day: "Day", "3days": "3d", week: "Week", "2weeks": "2w", month: "Month", "2months": "2mo", quarter: "Quarter", year: "Year" },
+  // Zoom level labels by index (0-7, matching ZOOM_LEVELS order)
   errors: {
     UNKNOWN: "Operation failed. Please try again later",
     INVALID_CREDENTIALS: "Incorrect email or password",

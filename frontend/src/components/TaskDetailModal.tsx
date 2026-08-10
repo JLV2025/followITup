@@ -431,7 +431,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             <span className="baseline-diff">
               基线: {formatDateShort(baselineStartDate)} ~ {formatDateShort(baselineEndDate)}
               <em className={`baseline-diff-badge ${diffDays > 0 ? "neg" : diffDays < 0 ? "pos" : ""}`}>
-                &Delta; {diffDays > 0 ? `+${diffDays}` : diffDays} 天
+                &Delta; {diffDays > 0 ? `+${diffDays}` : diffDays} {t("taskDetail.diffDays")}
               </em>
             </span>
           </div>
@@ -525,14 +525,14 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
 
             {isParent ? (
               <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
-                父任务由子任务汇总日期，不支持设置前置任务
+                {t("taskDetail.parentNoPred")}
               </p>
             ) : (
             <>
             {/* 快速添加：逗号/分号分隔多个行号 */}
             <div className="dep-quick-add">
               <label style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>
-                快速添加（多个行号用逗号/分号分隔，如 "2, 3, 5"）
+                {t("taskDetail.quickAddHint")}
               </label>
               <div className="dep-add-row">
                 <input
@@ -564,7 +564,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   onClick={handleQuickAddPreds}
                   disabled={!quickPredIds.trim()}
                 >
-                  批量添加
+                  {t("taskDetail.batchAdd")}
                 </button>
               </div>
             </div>
@@ -608,7 +608,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
                   onClick={handleAddDep}
                   disabled={!newPredId}
                 >
-                  添加
+                  {t("taskDetail.add")}
                 </button>
               </div>
             )}
@@ -644,7 +644,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             )}
             {!depLoading && deps.length === 0 && (
               <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
-                暂无前置任务
+                {t("taskDetail.noPreds")}
               </p>
             )}
             </>
@@ -661,7 +661,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
               checked={manualScheduled}
               onChange={(e) => setManualScheduled(e.target.checked)}
             />
-            手动排程（不受依赖关系影响）
+            {t("taskDetail.manualScheduled")}
           </label>
         </div>
         {!isNew && (
@@ -702,7 +702,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
           )}
           <div className="modal-actions-right">
             <button className="btn btn-link" onClick={onClose}>
-              取消
+              {t("common.cancel")}
             </button>
             <button
               className="btn btn-primary"

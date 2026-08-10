@@ -75,6 +75,8 @@ export default {
     colProgress: "进度",
     colAssignee: "负责人",
     unknownUser: "未知",
+    // 缩放档位标签按索引(0-7,对应 ZOOM_LEVELS 顺序);数组键避免数字开头键名被 i18next 解析异常
+    zoom: ["日", "3日", "周", "2周", "月", "2月", "季", "年"],
   },
   dashboard: {
     title: "项目看板",
@@ -185,6 +187,13 @@ export default {
     saving: "保存中...",
     createTask: "创建任务",
     saveEdit: "确认修改",
+    diffDays: "天",
+    parentNoPred: "父任务由子任务汇总日期，不支持设置前置任务",
+    quickAddHint: "快速添加（多个行号用逗号/分号分隔，如 \"2, 3, 5\"）",
+    batchAdd: "批量添加",
+    add: "添加",
+    noPreds: "暂无前置任务",
+    manualScheduled: "手动排程（不受依赖关系影响）",
   },
   taskList: {
     errConflict: "任务已被他人修改，请刷新后重试",
@@ -368,7 +377,6 @@ export default {
     count: "共 {{owners}} 位负责人 · {{leaves}} 个叶子任务",
   },
   priority: { low: "低", medium: "中", high: "高", critical: "紧急" },
-  zoom: { day: "日", "3days": "3日", week: "周", "2weeks": "2周", month: "月", "2months": "2月", quarter: "季", year: "年" },
   errors: {
     UNKNOWN: "操作失败，请稍后重试",
     INVALID_CREDENTIALS: "邮箱或密码错误",

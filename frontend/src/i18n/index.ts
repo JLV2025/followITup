@@ -31,11 +31,13 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false }, // React 默认防 XSS，无需 i18next 转义
 });
 
-// html lang 与标题随语言同步
-i18n.on("languageChanged", (l) => {
+// html lang 与标题随语言同步（init 完成时不触发 languageChanged，需手动同步一次）
+const syncHtmlLang = (l: string) => {
   document.documentElement.lang = l;
   document.title = i18n.t("app.title");
-});
+};
+i18n.on("languageChanged", syncHtmlLang);
+syncHtmlLang(i18n.language);
 
 /** 切换语言（调用方随后 window.location.reload() 以重建 gantt 等初始化时固化的部分） */
 export function setLanguage(l: Lang): void {

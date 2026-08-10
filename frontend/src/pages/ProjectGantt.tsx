@@ -59,7 +59,7 @@ const ZOOM_LEVELS: dhtmlxZoomLevel[] = [
   { name: "day", scale_height: 40, min_column_width: 80, scales: [{ unit: "day", step: 1, format: "%d" }] },
   { name: "3days", scale_height: 40, min_column_width: 60, scales: [{ unit: "day", step: 3, format: "%m/%d" }] },
   { name: "week", scale_height: 40, min_column_width: 60,
-    scales: [{ unit: "week", step: 1, format: "W%W" }, { unit: "day", step: 1, format: "%a" }] },
+    scales: [{ unit: "week", step: 1, format: "W%W" }, { unit: "day", step: 1, format: "%D" }] },
   { name: "2weeks", scale_height: 40, min_column_width: 50,
     scales: [{ unit: "week", step: 2, format: "W%W-%W" }, { unit: "day", step: 1, format: "%d" }] },
   { name: "month", scale_height: 40, min_column_width: 90,
@@ -1220,7 +1220,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           <span className="gantt-toolbar-sep" />
           <span className="gantt-zoom-label">{t("gantt.zoomLabel")}</span>
           <button className="btn-zoom" onClick={() => handleZoom(-1)} title={t("gantt.zoomOut")}>−</button>
-          <span className="gantt-zoom-level">{t(`gantt.zoom.${ZOOM_LEVELS[zoomLevel].name}`)}</span>
+          <span className="gantt-zoom-level">{t(`gantt.zoom.${zoomLevel}`)}</span>
           <button className="btn-zoom" onClick={() => handleZoom(1)} title={t("gantt.zoomIn")}>+</button>
           <button className="btn-zoom btn-auto-zoom" onClick={handleAutoZoom} title={t("gantt.autoZoom")}>⊡</button>
         </div>
