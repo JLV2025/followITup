@@ -53,18 +53,15 @@ func RunDueReminder(db *sql.DB) (int, error) {
 	today := time.Now().Format("2006-01-02")
 	deadline := time.Now().AddDate(0, 0, days).Format("2006-01-02")
 
-	// 未来 N 天内到期、未完成、有负责人(且能解析出邮箱)的任务。
-	// 负责人优先按 email 精确匹配；仅当该值不是任何用户 email 时才按 display_name 匹配，
-	// 避免 assignee 字符串同时命中另一用户的 email 导致重复发信。
+	// 未来 N 天内到期、未完成、有关联负责人(且活跃)的任务。
+	// 通过 task_assignees 关联表匹配多负责人，JOIN 天然去重，每个活跃负责人各收一封。
 	rows, err := db.Query(`
 		SELECT p.name, t.name, t.end_date, u.email
 		FROM tasks t
 		JOIN projects p ON p.id = t.project_id
-		JOIN users u ON u.email = t.assignee
-			OR (u.display_name = t.assignee
-				AND NOT EXISTS (SELECT 1 FROM users u2 WHERE u2.email = t.assignee AND u2.is_active = 1))
+		JOIN task_assignees ta ON ta.task_id = t.id
+		JOIN users u ON u.id = ta.user_id AND u.is_active = 1
 		WHERE t.deleted_at IS NULL AND p.deleted_at IS NULL
-		  AND u.is_active = 1
 		  AND t.status != 'completed'
 		  AND t.end_date != ''
 		  AND t.end_date >= ?
