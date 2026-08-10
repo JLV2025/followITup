@@ -1,6 +1,10 @@
 # FollowITup
 
-> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v0.8.5
+> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v0.8.10
+
+## Languages
+
+简体中文 / English — switch via the 中/EN button in the top navigation bar. Language preference persists in the browser (localStorage). Email templates are sent in English; backend error messages stay in Chinese and are mapped by the frontend via error codes.
 
 ## What is FollowITup?
 
