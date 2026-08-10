@@ -28,10 +28,14 @@ export default function Resources() {
       .catch(() => setLoading(false));
   }, [id]);
 
+  // 叶子 = 无子任务（顶层父任务如 WBS "1" 有子任务，不算叶子，否则其子任务被隐藏且计数/工时失真）
+  const isParent = (id: number) => tasks.some((c) => c.parent_id === id);
+  const isLeaf = (t: TaskRow) => !isParent(t.id);
+
   // 分组：负责人 → 叶子任务列表
   const groups = new Map<string, TaskRow[]>();
   for (const t of tasks) {
-    if (t.parent_id && t.parent_id !== 0) continue; // 父任务不重复计入
+    if (!isLeaf(t)) continue; // 父任务不重复计入
     const key = t.assignee || "未分配";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(t);
@@ -51,7 +55,7 @@ export default function Resources() {
       <div className="section-title-row" style={{ marginBottom: 12 }}>
         <h2 className="section-title">资源视图</h2>
         <span className="text-secondary" style={{ fontSize: 13 }}>
-          共 {sorted.length} 位负责人 · {tasks.filter((t) => !(t.parent_id && t.parent_id !== 0)).length} 个叶子任务
+          共 {sorted.length} 位负责人 · {tasks.filter(isLeaf).length} 个叶子任务
         </span>
       </div>
 

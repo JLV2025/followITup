@@ -171,6 +171,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return; // 编辑控件内不拦截
       if (!(e.ctrlKey || e.metaKey)) return;
+      if (readonlyRef.current) return; // 只读（未登录）模式不可复制/粘贴
       const key = e.key.toLowerCase();
       if (key === "c") {
         const id = selectedTaskRef.current;
@@ -209,12 +210,22 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   /** 导出 PDF：打印样式（@media print 隐藏控件，仅保留甘特图区），浏览器另存为 PDF */
   const exportPDF = () => window.print();
 
-  /** 批量删除：逐条软删（回收站） */
+  /** 批量删除：逐条软删（回收站），失败收集提示（与 batchUpdate 对称，不中断后续删除） */
   const batchDelete = async () => {
     if (!window.confirm(`确定删除选中的 ${selectedIdsRef.current.size} 个任务？将移至回收站`)) return;
+    let ok = 0;
+    const failed: string[] = [];
     for (const id of Array.from(selectedIdsRef.current)) {
-      await api.delete(`/api/projects/${projectId}/tasks/${id}`);
+      const t = allTasks.find((x) => x.id === id);
+      try {
+        await api.delete(`/api/projects/${projectId}/tasks/${id}`);
+        ok++;
+      } catch (err: any) {
+        failed.push(`${t?.name ?? `#${id}`}${err?.response?.status === 409 ? "(已被他人修改)" : ""}`);
+      }
     }
+    if (failed.length) alert(`成功删除 ${ok} 项，${failed.length} 项失败：\n${failed.join("、")}`);
+    else alert(`已删除 ${ok} 项`);
     clearSelection();
     fetchData(projectId, readonly);
   };
@@ -226,19 +237,30 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   );
 
   /** 过滤条生效：onBeforeTaskDisplay 逐行过滤（dhtmlx 10.x API）+ refreshData 重建
-   *（onDataRender 自动重画连线层） */
+   *（onDataRender 自动重画连线层）；过滤激活时按可见任务重建行号列（避免行号空洞） */
   const filterHandlerRef = useRef<string | null>(null);
+  const rowNosRef = useRef<Record<number, number>>({}); // 过滤时的可见行号映射（# 列模板读取）
   useEffect(() => {
     if (!containerRef.current?.querySelector(".gantt_container")) return; // 甘特图未初始化
     if (filterHandlerRef.current !== null) gantt.detachEvent(filterHandlerRef.current);
     const text = searchText.trim().toLowerCase();
-    filterHandlerRef.current = gantt.attachEvent("onBeforeTaskDisplay", (_id: number, task: Record<string, any>) => {
+    const filtering = !!(text || statusFilter !== "all" || ownerFilter !== "all" || milestoneOnly);
+    // 过滤判定与行号重建共用同一函数，保证行号与显示行一一对应
+    const isTaskVisible = (task: Record<string, any>) => {
       if (text && !(task.text || "").toLowerCase().includes(text)) return false;
       if (statusFilter !== "all" && task.status !== statusFilter) return false;
       if (ownerFilter !== "all" && (task.assignee || "") !== ownerFilter) return false;
       if (milestoneOnly && (task.task_type || task.type) !== "milestone") return false;
       return true;
-    });
+    };
+    filterHandlerRef.current = gantt.attachEvent("onBeforeTaskDisplay", (_id: number, task: Record<string, any>) => isTaskVisible(task));
+    // 过滤激活：按树顺序（=渲染顺序）对可见任务连续编号；未过滤时清空回退 $index
+    const map: Record<number, number> = {};
+    if (filtering) {
+      let n = 0;
+      gantt.eachTask((t: Record<string, any>) => { if (isTaskVisible(t)) map[t.id as number] = ++n; });
+    }
+    rowNosRef.current = map;
     gantt.refreshData();
   }, [searchText, statusFilter, ownerFilter, milestoneOnly]);
 
@@ -461,14 +483,16 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     gantt.config.columns = [
       { name: "chk", label: "", width: 30, align: "center",
         template: function (task: Record<string, any>) {
-          // 批量选择复选框（勾选状态读 ref，事件由容器 change 委托处理）
+          // 批量选择复选框（勾选状态读 ref，事件由容器 change 委托处理；只读模式不渲染）
+          if (readonlyRef.current) return "";
           return `<input type="checkbox" class="gantt-task-check" data-id="${task.id}" ${selectedIdsRef.current.has(task.id as number) ? "checked" : ""} />`;
         } as any,
       },
       { name: "id_col", label: "#", width: 36, align: "center",
         template: function (task: Record<string, any>) {
-          // 项目内行号：按当前树展示顺序 1..N 连续编号，与数据库 id 解耦
-          return `<span style="color:var(--text-muted);font-size:11px;">${(task.$index ?? 0) + 1}</span>`;
+          // 项目内行号：过滤时按可见任务连续编号（避免空洞），无过滤时用树索引，与数据库 id 解耦
+          const n = rowNosRef.current[task.id as number] ?? (task.$index ?? 0) + 1;
+          return `<span style="color:var(--text-muted);font-size:11px;">${n}</span>`;
         } as any,
       },
       { name: "text", label: "任务名称", width: 220, tree: true,
@@ -648,6 +672,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // 批量选择复选框事件委托（checkbox 由 dhtmlx 模板渲染，事件统一在容器层处理）
     containerRef.current?.addEventListener("change", (e) => {
+      if (readonlyRef.current) return; // 只读模式无勾选框，防御程序性触发
       const el = e.target as HTMLInputElement;
       if (el.classList.contains("gantt-task-check") && el.dataset.id) {
         toggleSelect(Number(el.dataset.id), el.checked);
@@ -725,7 +750,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       // segHit/findGapMidY 只测与线段 y 区间重叠的条，不再全量遍历
       const sortedRects = Array.from(barRects.entries()).sort((a, b) => a[1].top - b[1].top);
       const tops = sortedRects.map(([, br]) => br.top);
-      // 二分返回最后一个 top < yHigh 的索引
+      // 二分返回最后一个 top < yHigh 的索引。
+      // 前提：行距 ≥ 最大条高时 bottom 随 top 单调递增（本项目 28px 行距 / 条高 ≤24px），
+      // 下方两处 break 依赖该单调性；若未来某类条（如更高的大纲条）高度差超过行距，
+      // bottom 不再单调 → break 会漏检，需改为非单调兜底（遍历窗口内全部条）。
       const lastTopBelow = (yHigh: number) => {
         let lo = 0, hi = tops.length;
         while (lo < hi) {
@@ -766,7 +794,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           const yMax2 = Math.max(y1, y2);
           for (let i = lastTopBelow(yMax2); i >= 0; i--) {
             const [bid, br] = sortedRects[i];
-            if (br.bottom <= yMin2) break; // 更靠上的条已完全在线段区间外
+            if (br.bottom <= yMin2) break; // 更靠上的条已完全在线段区间外（依赖 bottom 单调，见 lastTopBelow）
             if (srcIdSet.has(bid) || bid === Number(targetId)) continue;
             // 水平段：x 为区间、y 为单点；垂直段：x 为单点、y 为区间（单点需严格在条内）
             const xIn = xMax - xMin > 0.5
@@ -786,7 +814,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           // 二分窗口：只取纵向 [lo, hi] 与横向 [hMin, hMax] 均重叠的条
           for (let i = lastTopBelow(hi); i >= 0; i--) {
             const [, br] = sortedRects[i];
-            if (br.bottom <= lo) break;
+            if (br.bottom <= lo) break; // 依赖 bottom 单调（见 lastTopBelow）
             if (br.right > hMin && br.left < hMax) occ.push([br.top, br.bottom]);
           }
           occ.sort((a, b) => a[0] - b[0]);
@@ -1186,8 +1214,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         </div>
       </div>
 
-      {/* 批量操作条：多选后出现 */}
-      {selectedIds.size > 0 && (
+      {/* 批量操作条：多选后出现（只读模式无勾选框，条不渲染） */}
+      {!readonly && selectedIds.size > 0 && (
         <div className="gantt-batch-bar">
           <span className="gantt-batch-count">已选 {selectedIds.size} 项</span>
           <select
