@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api/client";
 import { formatDateShort } from "../utils/date";
+import { statusLabel, priorityLabel } from "../utils/labels";
 
 interface Task {
   id: number;
@@ -47,12 +48,6 @@ interface Props {
 const DEP_TYPES = ["FS", "SS", "FF", "SF"];
 const STATUSES = ["open", "in_progress", "completed", "delayed"];
 const PRIORITIES = ["low", "medium", "high", "critical"];
-const STATUS_LABELS: Record<string, string> = {
-  open: "待开始", in_progress: "进行中", completed: "已完成", delayed: "已延期",
-};
-const PRIORITY_LABELS: Record<string, string> = {
-  low: "低", medium: "中", high: "高", critical: "紧急",
-};
 
 export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers, onClose, onSaved }: Props) {
   const isNew = !task;
@@ -483,7 +478,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {STATUS_LABELS[s]}
+                  {statusLabel(s)}
                 </option>
               ))}
             </select>
@@ -496,7 +491,7 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
             >
               {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
-                  {PRIORITY_LABELS[p]}
+                  {priorityLabel(p)}
                 </option>
               ))}
             </select>

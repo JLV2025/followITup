@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { gantt } from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import html2canvas from "html2canvas";
@@ -7,6 +8,8 @@ import { useGanttStore } from "../stores/ganttStore";
 import { useAuthStore } from "../stores/authStore";
 import { wsClient } from "../api/ws-client";
 import api from "../api/client";
+import i18n from "../i18n";
+import { statusLabel } from "../utils/labels";
 import TaskDetailModal from "../components/TaskDetailModal";
 import ImportModal from "../components/ImportModal";
 import RecycleBinModal from "../components/RecycleBinModal";
@@ -78,6 +81,7 @@ type dhtmlxZoomLevel = {
 };
 
 export default function ProjectGantt({ readonly }: { readonly: boolean }) {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const projectId = Number(id);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -654,14 +658,13 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
 
     // 甘特图条悬停提示
     gantt.templates.tooltip_text = function (_s: Date, _e: Date, task: Record<string, any>) {
-      const statusMap: Record<string, string> = { open: "未开始", in_progress: "进行中", completed: "已完成", delayed: "已延期" };
-      const status = statusMap[task.status] || task.status || "—";
+      const status = statusLabel(task.status || "");
       const days = Math.ceil((new Date(task.end_date).getTime() - new Date(task.start_date).getTime()) / 86400000) + 1;
       return [
         `<b>${task.text}</b>`,
-        `状态: ${status}　进度: ${Math.round((task.progress || 0) * 100)}%`,
-        `日期: ${task.start_date} → ${task.end_date}（${days}天）`,
-        task.assignee ? `负责人: ${task.assignee}` : "",
+        `${i18n.t("gantt.tooltipStatus")}: ${status}　${i18n.t("gantt.tooltipProgress")}: ${Math.round((task.progress || 0) * 100)}%`,
+        `${i18n.t("gantt.tooltipDates")}: ${task.start_date} → ${task.end_date}（${days}${i18n.t("gantt.tooltipDays")}）`,
+        task.assignee ? `${i18n.t("gantt.tooltipAssignee")}: ${task.assignee}` : "",
       ].filter(Boolean).join("<br>");
     };
 
@@ -1224,10 +1227,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             onChange={(e) => { if (e.target.value) { batchUpdate({ status: e.target.value }); e.target.value = ""; } }}
           >
             <option value="" disabled>改状态...</option>
-            <option value="open">未开始</option>
-            <option value="in_progress">进行中</option>
-            <option value="completed">已完成</option>
-            <option value="delayed">延迟</option>
+            <option value="open">{t("status.open")}</option>
+            <option value="in_progress">{t("status.in_progress")}</option>
+            <option value="completed">{t("status.completed")}</option>
+            <option value="delayed">{t("status.delayed")}</option>
           </select>
           <select
             className="gantt-filter-select"
@@ -1258,10 +1261,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="all">全部状态</option>
-          <option value="open">未开始</option>
-          <option value="in_progress">进行中</option>
-          <option value="completed">已完成</option>
-          <option value="delayed">延迟</option>
+          <option value="open">{t("status.open")}</option>
+          <option value="in_progress">{t("status.in_progress")}</option>
+          <option value="completed">{t("status.completed")}</option>
+          <option value="delayed">{t("status.delayed")}</option>
         </select>
         <select
           className="gantt-filter-select"

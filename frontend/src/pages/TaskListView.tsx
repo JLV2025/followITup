@@ -3,6 +3,7 @@ import { useOutletContext, useParams } from "react-router-dom";
 import api from "../api/client";
 import { useAuthStore } from "../stores/authStore"
 import { formatDate } from "../utils/date";
+import { statusLabel, priorityLabel } from "../utils/labels";
 
 interface Task {
   id: number;
@@ -22,19 +23,6 @@ interface Task {
   version: number;
 }
 
-const STATUS_MAP: Record<string, string> = {
-  open: "待开始",
-  in_progress: "进行中",
-  completed: "已完成",
-  delayed: "已延期",
-};
-
-const PRIORITY_MAP: Record<string, string> = {
-  low: "低",
-  medium: "中",
-  high: "高",
-  critical: "紧急",
-};
 
 /** 为任务列表计算每行的可视化深度（递归查找 parent chain） */
 function computeDepths(tasks: Task[]): Map<number, number> {
@@ -314,10 +302,10 @@ export default function TaskListView() {
                       color: statusColor(t.status),
                     }}
                   >
-                    {STATUS_MAP[t.status] || t.status}
+                    {statusLabel(t.status)}
                   </span>
                 </td>
-                <td>{PRIORITY_MAP[t.priority] || t.priority}</td>
+                <td>{priorityLabel(t.priority)}</td>
                 <td
                   onClick={() => startEdit(t, "assignee")}
                   className="cell-editable"

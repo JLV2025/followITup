@@ -19,6 +19,7 @@ export default {
     upper: ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
   },
   status: { open: "Not started", in_progress: "In progress", completed: "Completed", delayed: "Delayed" },
+  gantt: { tooltipStatus: "Status", tooltipProgress: "Progress", tooltipDates: "Dates", tooltipDays: "d", tooltipAssignee: "Assignee" },
   priority: { low: "Low", medium: "Medium", high: "High", critical: "Critical" },
   zoom: { day: "Day", "3days": "3d", week: "Week", "2weeks": "2w", month: "Month", "2months": "2mo", quarter: "Quarter", year: "Year" },
   errors: {

@@ -19,6 +19,7 @@ export default {
     upper: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
   },
   status: { open: "待开始", in_progress: "进行中", completed: "已完成", delayed: "已延期" },
+  gantt: { tooltipStatus: "状态", tooltipProgress: "进度", tooltipDates: "日期", tooltipDays: "天", tooltipAssignee: "负责人" },
   priority: { low: "低", medium: "中", high: "高", critical: "紧急" },
   zoom: { day: "日", "3days": "3日", week: "周", "2weeks": "2周", month: "月", "2months": "2月", quarter: "季", year: "年" },
   errors: {

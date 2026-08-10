@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/client";
 import { formatDate } from "../utils/date";
+import { statusLabel } from "../utils/labels";
+import i18n from "../i18n";
 
 interface TaskRow {
   id: number;
@@ -40,9 +42,9 @@ export default function Resources() {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(t);
   }
-  const sorted = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0], "zh"));
+  const sorted = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0], i18n.language));
 
-  const statusText = (s: string) => ({ open: "未开始", in_progress: "进行中", completed: "已完成", delayed: "延迟" } as Record<string, string>)[s] || s || "未开始";
+  const statusText = (s: string) => statusLabel(s);
   const statusColor = (t: TaskRow) => {
     if (t.status === "completed") return "var(--success)";
     if (t.status === "delayed") return "var(--danger)";
