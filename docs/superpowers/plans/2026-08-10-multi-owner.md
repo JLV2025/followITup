@@ -745,24 +745,13 @@ INSERT 语句的 `assignee` 参数改为 `assigneeSnapshot`(现 284-285 行 `t.A
 UPDATE 成功后(broadcastChange 之后、writeJSON 之前)加:
 
 ```go
-	// 写关联表(权威);响应模型回填
-	if _, ok := fieldCheck["assignee_ids"]; ok || ok2 := fieldCheck["assignee"]; false {
-		_ = ok2
-	}
-	saveTaskAssignees(h.db, taskID, assigneeIDs)
-```
-
-注意:上一步的表达式写法不对,改为清晰实现——直接在写关联表前判断是否有提供:
-
-```go
+	// 负责人字段在请求体中提供过才写关联表(未提供时上面的 loadTaskAssignees 已保留旧关联,无需重写)
 	_, providedIDs := fieldCheck["assignee_ids"]
 	_, providedText := fieldCheck["assignee"]
 	if providedIDs || providedText {
 		saveTaskAssignees(h.db, taskID, assigneeIDs)
 	}
 ```
-
-(已保留旧值时 loadTaskAssignees 已含旧 id,不必重写关联表;若重写也无副作用,但避免多余写。)
 
 - [ ] **Step 5: 跑测试确认通过**
 
@@ -1328,22 +1317,6 @@ Expected: FAIL(owner_ids 未实现)
 - [ ] **Step 3: CreateProject 改造**
 
 `projects.go` CreateProject 中,替换 owner 校验块(现 221-225 行)为:
-
-```go
-	// 负责人解析:owner_ids 优先,其次 owner 文本(分号/逗号分隔);每项必须是活跃系统用户
-	var ownerIDs []int64
-	if len(p.OwnerIDs) > 0 {
-		ownerIDs = p.OwnerIDs
-		missing := []string{}
-		valid, _ := resolveUserIDs(h.db, ownerNamesOfPlaceholder())
-		_ = valid
-		_ = missing
-	} else if strings.TrimSpace(p.Owner) != "" {
-		ownerIDs, _ = resolveUserIDs(h.db, splitOwnerNames(p.Owner))
-	}
-```
-
-注意 `ownerNamesOfPlaceholder` 不是真实函数——**正确实现**:ids 数组也要校验存在且活跃。用 `loadProjectOwners` 不行(还没写)。新增校验方式:对 owner_ids 数组逐 id 查 users:
 
 ```go
 	// 负责人解析与校验:owner_ids 优先,其次 owner 文本(分号/逗号分隔);每项必须是活跃系统用户
