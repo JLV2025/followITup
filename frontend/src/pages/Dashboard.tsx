@@ -30,8 +30,9 @@ export default function Dashboard() {
   const [userOptions, setUserOptions] = useState<{ display_name: string; email: string }[]>([]);
   // 时间线用全量项目（按排期日期过滤所选年度）；状态总览仍按创建时间过滤
   const [timelineProjects, setTimelineProjects] = useState<any[]>([]);
-  // 我的待办：登录用户负责的任务 + 未来 7 天内开始的任务
+  // 我的待办：登录用户负责的任务 + 未来 N 天内开始的任务（窗口可选 7/14/30 天）
   const [myTodo, setMyTodo] = useState<{ mine: any[]; starting: any[] }>({ mine: [], starting: [] });
+  const [todoDays, setTodoDays] = useState(7);
 
   // 回收站模态框状态
   const [showRecycleBin, setShowRecycleBin] = useState(false);
@@ -130,11 +131,11 @@ export default function Dashboard() {
     api.get("/api/users").then((res) => setUserOptions(res.data.data || [])).catch(() => {});
     // 全量项目（不带年度参数）：时间线按排期日期过滤所选年度
     api.get("/api/dashboard/projects").then((res) => setTimelineProjects(res.data.data || [])).catch(() => {});
-    // 我的待办（需登录）
+    // 我的待办（需登录，窗口天数变化时重新拉取）
     if (isLoggedIn) {
-      api.get("/api/tasks/mine").then((res) => setMyTodo(res.data?.data || { mine: [], starting: [] })).catch(() => {});
+      api.get(`/api/tasks/mine?days=${todoDays}`).then((res) => setMyTodo(res.data?.data || { mine: [], starting: [] })).catch(() => {});
     }
-  }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod, isLoggedIn]);
+  }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod, isLoggedIn, todoDays]);
 
   const periods = displayMode === "fiscal"
     ? availableFiscalYears(fiscalStartMonth)
@@ -574,7 +575,19 @@ export default function Dashboard() {
               )}
               {myTodo.starting.length > 0 && (
                 <div className="todo-block">
-                  <div className="todo-block-title">{t("dashboard.todoStarting")}</div>
+                  <div className="todo-block-title todo-block-title-row">
+                    <span>{t("dashboard.todoStarting", { days: todoDays })}</span>
+                    <select
+                      className="todo-days-select"
+                      value={todoDays}
+                      onChange={(e) => setTodoDays(Number(e.target.value))}
+                      title={t("dashboard.todoDaysHint")}
+                    >
+                      <option value={7}>7</option>
+                      <option value={14}>14</option>
+                      <option value={30}>30</option>
+                    </select>
+                  </div>
                   <table className="todo-table">
                     <thead>
                       <tr>

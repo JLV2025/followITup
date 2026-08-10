@@ -523,8 +523,9 @@ type MyTaskItem struct {
 	Assignee    string `json:"assignee"`
 }
 
-// GetMyTasks 我的待办：① 当前登录用户作为负责人的未完成任务（跨项目，按结束日期排序）
-// ② 未来 7 天内开始的任务（全部项目，按开始日期排序）。纯读操作，无写库。
+// GetMyTasks 我的待办：① 当前登录用户作为负责人的进行中任务（跨项目，按结束日期排序）
+// ② 未来 N 天内开始的任务（全部项目，按开始日期排序；N 由 ?days= 指定，默认 7，上限 30）。
+// 纯读操作，无写库。待开始(open)任务不占"我的任务"——由"即将开始"按窗口覆盖。
 func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.GetUserID(r.Context())
 	if !ok {
@@ -534,16 +535,20 @@ func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 	var displayName, email string
 	h.db.QueryRow(`SELECT COALESCE(display_name, ''), COALESCE(email, '') FROM users WHERE id=? AND is_active=1`, userID).Scan(&displayName, &email)
 
+	days := 7
+	if d, err := strconv.Atoi(r.URL.Query().Get("days")); err == nil && d >= 1 && d <= 30 {
+		days = d
+	}
 	today := time.Now().Format("2006-01-02")
-	weekLater := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
+	windowEnd := time.Now().AddDate(0, 0, days).Format("2006-01-02")
 
-	// 我的任务：assignee 匹配显示名或邮箱（与到期提醒同一套匹配），未完成
+	// 我的任务：assignee 匹配显示名或邮箱（与到期提醒同一套匹配），仅进行中
 	var mine []MyTaskItem
 	rows, err := h.db.Query(`
 		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct
 		FROM tasks t
 		JOIN projects p ON p.id = t.project_id AND p.deleted_at IS NULL
-		WHERE t.deleted_at IS NULL AND t.status != 'completed'
+		WHERE t.deleted_at IS NULL AND t.status = 'in_progress'
 		  AND (t.assignee = ? OR t.assignee = ?)
 		ORDER BY CASE WHEN t.end_date = '' THEN 1 ELSE 0 END, t.end_date`, displayName, email)
 	if err == nil {
@@ -556,7 +561,7 @@ func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 		rows.Close()
 	}
 
-	// 即将开始：未来 7 天内开始的任务（含已开始未完成之外的全部，按开始日期排序）
+	// 即将开始：未来 N 天内开始的任务（按开始日期排序）
 	var starting []MyTaskItem
 	rows2, err := h.db.Query(`
 		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct, COALESCE(t.assignee, '')
@@ -564,7 +569,7 @@ func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 		JOIN projects p ON p.id = t.project_id AND p.deleted_at IS NULL
 		WHERE t.deleted_at IS NULL AND t.status != 'completed'
 		  AND t.start_date >= ? AND t.start_date <= ?
-		ORDER BY t.start_date`, today, weekLater)
+		ORDER BY t.start_date`, today, windowEnd)
 	if err == nil {
 		for rows2.Next() {
 			var it MyTaskItem
@@ -576,8 +581,8 @@ func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"mine":      mine,
-		"starting":  starting,
+		"mine":     mine,
+		"starting": starting,
 	})
 }
 

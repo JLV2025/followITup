@@ -195,6 +195,8 @@ func TestGetMyTasks(t *testing.T) {
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '我的任务A', 'task', 'in_progress', 'Me User', '2026-08-05', '2026-08-15', 5, 30, 0)`, pid)
 	// 已完成的任务不应出现
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '已完成任务', 'task', 'completed', 'Me User', '2026-08-01', '2026-08-05', 5, 100, 1)`, pid)
+	// 待开始的任务也不应出现在"我的任务"（只显示进行中）
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '待开始任务', 'task', 'open', 'Me User', '2026-09-01', '2026-09-05', 5, 0, 3)`, pid)
 	// 未来 7 天内开始的任务(assignee 是别人)
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '即将开始B', 'task', 'open', 'Other', '2026-08-14', '2026-08-18', 5, 0, 2)`, pid)
 

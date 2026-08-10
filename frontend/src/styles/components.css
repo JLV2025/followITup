@@ -1816,3 +1816,10 @@
   text-overflow: ellipsis;
 }
 .todo-table tr:last-child td { border-bottom: none; }
+
+/* 待办窗口选择 */
+.todo-block-title-row { display: flex; align-items: center; gap: 8px; }
+.todo-days-select {
+  font-size: 11px; padding: 1px 4px; border: 1px solid var(--card-border);
+  border-radius: 4px; background: var(--card-bg); color: var(--text-secondary);
+}
