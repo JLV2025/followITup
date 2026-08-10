@@ -46,13 +46,13 @@ export default function ImportModal({
     const en = i18n.language === "en";
     const tpl = en ? [
       "Task,WBS,Duration(days),Start Date,Assignee,Progress(%),Status",
-      "Project Kickoff,1,5,2026-08-10,Zhang San,100,completed",
+      "Project Kickoff,1,5,2026-08-10,Zhang San;Li Si,50,in_progress",
       "Requirements Survey,1.1,10,2026-08-17,Li Si,50,in_progress",
       "Requirements Review,1.1.1,2,2026-08-31,Li Si,0,open",
       "Launch & Go Live,2,0,2026-10-01,Wang Wu,0,open",
     ].join("\n") : [
       "任务名,WBS编号,工期(天),开始日期,负责人,进度(%),状态",
-      "项目立项,1,5,2026-08-10,张三,100,已完成",
+      "项目立项,1,5,2026-08-10,张三;李四,50,进行中",
       "需求调研,1.1,10,2026-08-17,李四,50,进行中",
       "需求评审,1.1.1,2,2026-08-31,李四,0,未开始",
       "验收上线,2,0,2026-10-01,王五,0,未开始",
@@ -118,6 +118,8 @@ export default function ImportModal({
             <tr><td style={{ padding: "2px 6px" }}>{t("importModal.rowStatus")}</td><td style={{ padding: "2px 6px" }}>{t("importModal.rowStatusDesc")}</td></tr>
           </tbody>
         </table>
+
+        <p className="text-secondary" style={{ fontSize: 12, marginBottom: 12 }}>{t("importModal.assigneeHint")}</p>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button className="btn btn-ghost btn-sm" onClick={downloadTemplate}>{t("importModal.downloadTemplate")}</button>

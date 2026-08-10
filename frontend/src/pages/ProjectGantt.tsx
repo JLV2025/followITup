@@ -234,9 +234,9 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     fetchData(projectId, readonly);
   };
 
-  /** 负责人下拉选项（全部任务去重，含空值不列） */
+  /** 负责人下拉选项（全部任务按分号拆分去重） */
   const ownerOptions = useMemo(
-    () => Array.from(new Set(allTasks.map((t) => t.assignee).filter(Boolean))),
+    () => Array.from(new Set(allTasks.flatMap((t) => (t.assignee || "").split(";").map((s) => s.trim()).filter(Boolean)))),
     [allTasks]
   );
 
@@ -253,7 +253,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     const isTaskVisible = (task: Record<string, any>) => {
       if (text && !(task.text || "").toLowerCase().includes(text)) return false;
       if (statusFilter !== "all" && task.status !== statusFilter) return false;
-      if (ownerFilter !== "all" && (task.assignee || "") !== ownerFilter) return false;
+      if (ownerFilter !== "all") {
+        const owners = (task.assignee || "").split(";").map((s: string) => s.trim());
+        if (!owners.includes(ownerFilter)) return false;
+      }
       if (milestoneOnly && (task.task_type || task.type) !== "milestone") return false;
       return true;
     };
@@ -534,11 +537,10 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           </div>`;
         } as any,
       },
-      { name: "assignee_col", label: t("gantt.colAssignee"), width: 72, align: "center",
-        template: function (task: Record<string, any>) {
-          return task.assignee || '<span style="color:var(--text-muted);">—</span>';
-        } as any,
-      },
+      { name: "assignee_col", label: t("gantt.colAssignee"), width: 90, align: "center",
+        template: (task: any) => task.assignee
+          ? `<span title="${(task.assignee || "").replace(/"/g, "&quot;")}" style="font-size:11px;">${task.assignee}</span>`
+          : '<span style="color:var(--text-muted);">—</span>' },
     ];
 
     // 任务条内不显示百分比（dhtmlx 默认 progress_text 模板即返回空串，删除自定义模板）
@@ -1240,16 +1242,6 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
             <option value="in_progress">{t("status.in_progress")}</option>
             <option value="completed">{t("status.completed")}</option>
             <option value="delayed">{t("status.delayed")}</option>
-          </select>
-          <select
-            className="gantt-filter-select"
-            value=""
-            onChange={(e) => { if (e.target.value) { batchUpdate({ assignee: e.target.value }); e.target.value = ""; } }}
-          >
-            <option value="" disabled>{t("gantt.batchSetOwner")}</option>
-            {ownerOptions.map((o) => (
-              <option key={o} value={o}>{o}</option>
-            ))}
           </select>
           <button className="btn btn-delete btn-sm" onClick={batchDelete}>{t("common.delete")}</button>
           <button className="btn btn-ghost btn-sm" onClick={clearSelection}>{t("gantt.clearSelection")}</button>

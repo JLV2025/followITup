@@ -251,6 +251,7 @@ export default {
     rowStartDesc: "YYYY-MM-DD，可空(自动排程)",
     rowAssignee: "负责人",
     rowAssigneeDesc: "可空(默认项目所有者)",
+    assigneeHint: "负责人支持多人，分号分隔(如 张三;李四)，需为系统用户",
     rowProgress: "进度(%)",
     rowProgressDesc: "0-100，可空",
     rowStatus: "状态",

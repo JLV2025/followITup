@@ -251,6 +251,7 @@ export default {
     rowStartDesc: "YYYY-MM-DD, optional (auto-scheduled)",
     rowAssignee: "Assignee",
     rowAssigneeDesc: "Optional (defaults to project owner)",
+    assigneeHint: "Assignee supports multiple people, separated by ; (e.g. Zhang San; Li Si). Must be system users.",
     rowProgress: "Progress (%)",
     rowProgressDesc: "0-100, optional",
     rowStatus: "Status",

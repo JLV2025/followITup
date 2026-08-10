@@ -120,9 +120,6 @@ export default function TaskListView() {
       case "progress_pct":
         updated.progress_pct = Math.min(100, Math.max(0, parseFloat(val) || 0));
         break;
-      case "assignee":
-        updated.assignee = val;
-        break;
       case "status":
         updated.status = val;
         break;
@@ -309,26 +306,8 @@ export default function TaskListView() {
                   </span>
                 </td>
                 <td>{priorityLabel(t.priority)}</td>
-                <td
-                  onClick={() => startEdit(t, "assignee")}
-                  className="cell-editable"
-                >
-                  {editingCell?.taskId === t.id &&
-                  editingCell.field === "assignee" ? (
-                    <input
-                      className="cell-input"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={saveEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") saveEdit();
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    t.assignee || "—"
-                  )}
-                </td>
+                {/* 多负责人后行内编辑体验差，编辑统一走详情弹窗 */}
+                <td title={t.assignee}>{t.assignee || "—"}</td>
                 <td>{t.duration_days ? `${t.duration_days}d` : "—"}</td>
                 <td>{formatDate(t.start_date)}</td>
                 <td>{formatDate(t.end_date)}</td>
