@@ -76,3 +76,38 @@ func TestResolveAndSaveProjectOwners(t *testing.T) {
 		t.Errorf("owners = %v, want 2 个", got)
 	}
 }
+
+// resolveUserIDs email 精确匹配优先于 display_name(反例:B.display_name 撞 email 文本且 B.id 更小)
+func TestResolveUserIDsEmailPriority(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	// B 先插(id 更小):display_name='foo@x.com';A 后插:id 更大,email='foo@x.com'
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('b','bar@x.com','foo@x.com','x','local',1), ('a','foo@x.com','Bar','x','local',1)`)
+	ids, missing := resolveUserIDs(conn, []string{"foo@x.com"})
+	if len(ids) != 1 || len(missing) != 0 {
+		t.Fatalf("resolveUserIDs = (%v, %v), want 1 成功 0 失败", ids, missing)
+	}
+	var wantID int64
+	conn.QueryRow(`SELECT id FROM users WHERE email = 'foo@x.com'`).Scan(&wantID)
+	if ids[0] != wantID {
+		t.Errorf("email 优先解析 = %d, want %d(A),否则被 display_name 撞车的 B 抢先", ids[0], wantID)
+	}
+}
+
+// ownerNamesOf 按传入 ids 顺序返回显示名,缺失跳过
+func TestOwnerNamesOf(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a','a@x.com','张三','x','local',1), ('b','b@x.com','李四','x','local',1)`)
+	var uid1, uid2 int64
+	conn.QueryRow(`SELECT id FROM users WHERE login = 'a'`).Scan(&uid1)
+	conn.QueryRow(`SELECT id FROM users WHERE login = 'b'`).Scan(&uid2)
+
+	names := ownerNamesOf(conn, []int64{uid2, uid1})
+	if len(names) != 2 || names[0] != "李四" || names[1] != "张三" {
+		t.Errorf("ownerNamesOf 顺序 = %v, want [李四 张三]", names)
+	}
+	// 含不存在 id:跳过
+	names = ownerNamesOf(conn, []int64{uid1, 99999, uid2})
+	if len(names) != 2 || names[0] != "张三" || names[1] != "李四" {
+		t.Errorf("ownerNamesOf 缺失跳过 = %v, want [张三 李四]", names)
+	}
+}

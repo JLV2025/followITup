@@ -775,14 +775,17 @@ func splitOwnerNames(s string) []string {
 	return out
 }
 
-// resolveUserIDs 逐名解析活跃用户(id 精确优先:email 命中才算;其次 display_name),返回成功 ids 与失败名
+// resolveUserIDs 逐名解析活跃用户(email 精确匹配优先,其次 display_name,重名取 id 最小),返回成功 ids 与失败名
 func resolveUserIDs(db *sql.DB, names []string) ([]int64, []string) {
 	var ids []int64
 	var missing []string
 	seen := map[int64]bool{}
 	for _, name := range names {
 		var uid int64
-		err := db.QueryRow(`SELECT id FROM users WHERE is_active = 1 AND (email = ? OR display_name = ?) ORDER BY id LIMIT 1`, name, name).Scan(&uid)
+		err := db.QueryRow(`SELECT id FROM users WHERE is_active = 1 AND email = ? LIMIT 1`, name).Scan(&uid)
+		if err != nil {
+			err = db.QueryRow(`SELECT id FROM users WHERE is_active = 1 AND display_name = ? ORDER BY id LIMIT 1`, name).Scan(&uid)
+		}
 		if err != nil || seen[uid] {
 			if err != nil {
 				missing = append(missing, name)
@@ -893,6 +896,38 @@ func loadProjectOwners(db *sql.DB, projectID int64) ([]int64, string) {
 		}
 	}
 	return ids, strings.Join(names, "; ")
+}
+
+// ownerNamesOf 按 user_id 数组返回显示名(与传入顺序一致,缺失跳过)
+func ownerNamesOf(db *sql.DB, ids []int64) []string {
+	if len(ids) == 0 {
+		return nil
+	}
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	rows, err := db.Query(`SELECT id, display_name FROM users WHERE id IN (`+placeholders+`)`, args...)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	nameByID := map[int64]string{}
+	for rows.Next() {
+		var id int64
+		var name string
+		if rows.Scan(&id, &name) == nil {
+			nameByID[id] = name
+		}
+	}
+	var out []string
+	for _, id := range ids {
+		if n, ok := nameByID[id]; ok {
+			out = append(out, n)
+		}
+	}
+	return out
 }
 
 // DeleteTask 软删除任务，同时清理关联的依赖关系
