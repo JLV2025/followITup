@@ -503,8 +503,9 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 			endDate = scheduler.AddWorkDays(nil, row.startDate, row.duration)
 		}
 		// 防呆:负责人空 → 项目全部 owner;非空 → 分号拆分为多值,逐个解析
+		// (仅原始列为空才兜底——missing 必空;非空但全解析失败 → 归未分配,提示与行为一致)
 		assigneeIDs, missing := resolveUserIDs(h.db, splitOwnerNames(row.assignee))
-		if len(assigneeIDs) == 0 {
+		if len(assigneeIDs) == 0 && len(missing) == 0 {
 			rows, err := h.db.Query(`SELECT po.user_id FROM project_owners po JOIN projects p ON p.id = po.project_id WHERE p.id = ? AND p.deleted_at IS NULL`, projectID)
 			if err == nil {
 				for rows.Next() {
