@@ -1,6 +1,7 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../stores/authStore";
 import { useDashboardStore } from "../stores/dashboardStore";
 import { useSettingsStore, availableCalendarYears, availableFiscalYears, fiscalYearLabel, currentFiscalYear } from "../stores/settingsStore";
@@ -9,6 +10,7 @@ import { formatDate } from "../utils/date";
 import i18n from "../i18n";
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
@@ -132,7 +134,7 @@ export default function Dashboard() {
     : availableCalendarYears(5);
 
   const periodLabel = (p: number) =>
-    displayMode === "fiscal" ? fiscalYearLabel(p) : `${p} 年`;
+    displayMode === "fiscal" ? fiscalYearLabel(p) : i18n.t("dashboard.yearLabel", { year: p });
 
   const handleToggleMode = () => {
     const nextMode = displayMode === "fiscal" ? "calendar" : "fiscal";
@@ -149,7 +151,7 @@ export default function Dashboard() {
     try {
       const res = await api.post(`/api/projects/${id}/copy`);
       const np = res.data.data;
-      alert(`已复制项目：${np.name}`);
+      alert(i18n.t("dashboard.copied", { name: np.name }));
       fetchProjects();
     } catch (err: any) {
       alert(getErrorMessage(err, "common.unknownError"));
@@ -165,11 +167,11 @@ export default function Dashboard() {
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.name.trim()) {
-      setCreateError("项目名称不能为空");
+      setCreateError(i18n.t("dashboard.errNameEmpty"));
       return;
     }
     if (!createForm.owner.trim()) {
-      setCreateError("请选择项目所有者");
+      setCreateError(i18n.t("dashboard.errOwnerEmpty"));
       return;
     }
     setCreateSubmitting(true);
@@ -187,7 +189,7 @@ export default function Dashboard() {
       fetchProjects();
       fetchStats();
     } catch (err: any) {
-      setCreateError(err.response?.data?.error?.message || "创建失败，请重试");
+      setCreateError(getErrorMessage(err, "dashboard.errCreate"));
     } finally {
       setCreateSubmitting(false);
     }
@@ -214,21 +216,21 @@ export default function Dashboard() {
       <div className="dashboard-header">
         <div className="dashboard-header-row">
           <div>
-            <h1>项目看板</h1>
+            <h1>{t("dashboard.title")}</h1>
             {isLoggedIn ? (
               <p className="text-secondary">
-                欢迎回来，{user?.display_name || user?.email}
+                {t("dashboard.welcome", { name: user?.display_name || user?.email })}
               </p>
             ) : (
               <p className="text-secondary">
-                只读模式 — <Link to="/login">登录</Link> 后可编辑
+                {t("dashboard.readonly")} <Link to="/login">{t("nav.login")}</Link> {t("dashboard.readonlyEdit")}
               </p>
             )}
           </div>
           {isLoggedIn && (
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn btn-primary" onClick={handleOpenCreate}>
-                + 创建项目
+                {t("dashboard.createProject")}
               </button>
               <button
                 className="btn btn-ghost"
@@ -242,7 +244,7 @@ export default function Dashboard() {
                   }
                 }}
               >
-                回收站
+                {t("dashboard.recycleBin")}
               </button>
             </div>
           )}
@@ -252,21 +254,21 @@ export default function Dashboard() {
       {/* 统计卡片 */}
       <div className="stats-row">
         <div className="stat-card">
-          <span className="stat-label">活跃项目</span>
+          <span className="stat-label">{t("dashboard.statActive")}</span>
           <span className="stat-value">{stats?.active_projects ?? 0}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">⚠ 有风险</span>
+          <span className="stat-label">{t("dashboard.statAtRisk")}</span>
           <span className={`stat-value ${statRiskClass}`}>
             {stats?.at_risk ?? 0}
           </span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">本周到期</span>
+          <span className="stat-label">{t("dashboard.statDueWeek")}</span>
           <span className="stat-value">{stats?.due_this_week ?? 0}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">整体完成</span>
+          <span className="stat-label">{t("dashboard.statOverall")}</span>
           <span className="stat-value">
             {stats?.overall_progress ?? 0}%
           </span>
@@ -311,9 +313,9 @@ export default function Dashboard() {
         <button
           className="btn btn-sm btn-ghost"
           onClick={handleToggleMode}
-          title={displayMode === "fiscal" ? "切换为自然年" : "切换为财年"}
+          title={displayMode === "fiscal" ? t("dashboard.switchCalendar") : t("dashboard.switchFiscal")}
         >
-          {displayMode === "fiscal" ? "📅 财年" : "🗓 自然年"}
+          {displayMode === "fiscal" ? t("dashboard.modeFiscal") : t("dashboard.modeCalendar")}
         </button>
       </div>
 
@@ -322,24 +324,24 @@ export default function Dashboard() {
         {/* 左栏：项目卡片列表 */}
         <div className="dashboard-left">
           <div className="section-title-row">
-            <h2 className="section-title">项目状态总览</h2>
+            <h2 className="section-title">{t("dashboard.sectionOverview")}</h2>
             <select
               className="project-filter"
               value={projectFilter}
               onChange={(e) => setProjectFilter(e.target.value as any)}
             >
-              <option value="active">进行中</option>
-              <option value="completed">已完成</option>
+              <option value="active">{t("dashboard.filterActive")}</option>
+              <option value="completed">{t("dashboard.filterCompleted")}</option>
             </select>
           </div>
           {loading ? (
-            <p className="text-secondary">加载中...</p>
+            <p className="text-secondary">{t("common.loading")}</p>
           ) : numberedProjects.length === 0 ? (
             <div className="empty-state-small">
-              <p>暂无项目数据</p>
+              <p>{t("dashboard.emptyProjects")}</p>
               {isLoggedIn && (
                 <button className="btn btn-primary" onClick={handleOpenCreate}>
-                  + 创建第一个项目
+                  {t("dashboard.createFirst")}
                 </button>
               )}
             </div>
@@ -360,18 +362,18 @@ export default function Dashboard() {
                     <span className="project-name">{p.name}</span>
                     {p.baseline_created_at && p.delay_days !== 0 && (
                       <span className={`delay-badge ${p.delay_days > 0 ? "neg" : "pos"}`}>
-                        Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} 天
+                        Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} {t("dashboard.delayDays")}
                       </span>
                     )}
                     {/* 项目所有者：第一排，右缘与第二排百分比数字对齐（正上方）；
                         图标固定宽 + 名字区固定 15 字母宽（≈90px），位置不随名字长度浮动 */}
-                    <span className="project-owner" title="项目所有者">
+                    <span className="project-owner" title={t("dashboard.ownerTitle")}>
                       <span className="owner-icon">👤</span>
                       <span className="owner-name">{p.owner || "—"}</span>
                     </span>
                     <button
                       className="project-copy-btn"
-                      title="复制项目（含任务与依赖）"
+                      title={t("dashboard.copyTitle")}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -380,7 +382,7 @@ export default function Dashboard() {
                     >
                       ⧉
                     </button>
-                    <span className="project-link">详情 →</span>
+                    <span className="project-link">{t("dashboard.detail")}</span>
                   </div>
                   <div className="project-card-body">
                     <div className="project-card-progress">
@@ -397,26 +399,26 @@ export default function Dashboard() {
                     </div>
                     {/* 恒渲染占位：保证有无截止日期时进度条长度统一 */}
                     <span className="project-card-end">
-                      {p.end_date ? `截止: ${formatDate(p.end_date)}` : ""}
+                      {p.end_date ? t("dashboard.dueBy", { date: formatDate(p.end_date) }) : ""}
                     </span>
                   </div>
                 </Link>
                 {isLoggedIn && (
                   <button
                     className="card-delete"
-                    title="删除项目（可在首页回收站恢复）"
+                    title={t("dashboard.deleteTitle")}
                     onClick={async () => {
-                      if (!confirm(`确认删除项目「${p.name}」？\n\n项目内任务不会被删除，删除后可在首页「回收站」恢复。`)) return;
+                      if (!confirm(i18n.t("dashboard.confirmDeleteProject", { name: p.name }))) return;
                       try {
                         await api.delete(`/api/projects/${p.id}`);
                         fetchProjects();
-                        alert(`项目「${p.name}」已删除，可在「回收站」恢复`);
+                        alert(i18n.t("dashboard.deleted", { name: p.name }));
                       } catch (err: any) {
                         alert(getErrorMessage(err, "common.unknownError"));
                       }
                     }}
                   >
-                    删除
+                    {t("dashboard.delete")}
                   </button>
                 )}
                 </div>
@@ -428,13 +430,13 @@ export default function Dashboard() {
         {/* 右栏：迷你甘特图 */}
         <div className="dashboard-right">
           <div className="section-title-row">
-            <h2 className="section-title">时间线概览</h2>
+            <h2 className="section-title">{t("dashboard.sectionTimeline")}</h2>
           </div>
           <div className="mini-gantt-placeholder">
             {timelineProjects.length === 0 ? (
-              <p className="text-secondary">该年度内没有排期项目</p>
+              <p className="text-secondary">{t("dashboard.timelineEmpty")}</p>
             ) : datedProjects.length === 0 ? (
-              <p className="text-secondary">该年度内没有排期项目（未设置日期范围的项目不参与时间线）</p>
+              <p className="text-secondary">{t("dashboard.timelineEmptyHint")}</p>
             ) : (
               <div className="mini-gantt-chart">
                 {/* 第一行：年度标识（FY27 / CY2026，画框名字） */}
@@ -491,7 +493,7 @@ export default function Dashboard() {
                             <div className="mini-gantt-bar-done" style={{ width: `${donePct}%`, background: "var(--accent)" }} />
                           )}
                         </div>
-                        {p.has_risk && <span className="mini-gantt-risk" title="存在延迟任务">▼</span>}
+                        {p.has_risk && <span className="mini-gantt-risk" title={t("dashboard.riskTitle")}>▼</span>}
                       </div>
                     </div>
                   );
@@ -503,7 +505,7 @@ export default function Dashboard() {
                     <div key={i} className="mini-gantt-gridline" style={{ left: `${x}%` }} />
                   ))}
                   {todayInYear && (
-                    <div className="mini-gantt-today" style={{ left: `${todayPct}%` }} title="今日" />
+                    <div className="mini-gantt-today" style={{ left: `${todayPct}%` }} title={t("dashboard.todayTitle")} />
                   )}
                 </div>
               </div>
@@ -515,15 +517,15 @@ export default function Dashboard() {
       {/* 底部 */}
       <div className="dashboard-bottom">
         <div className="dashboard-bottom-col">
-          <h3 className="section-title">近期里程碑</h3>
-          <p className="text-secondary">未来 14 天的里程碑将显示在此</p>
+          <h3 className="section-title">{t("dashboard.sectionMilestones")}</h3>
+          <p className="text-secondary">{t("dashboard.milestonesEmpty")}</p>
         </div>
         <div className="dashboard-bottom-col">
-          <h3 className="section-title">我的待办</h3>
+          <h3 className="section-title">{t("dashboard.sectionTodo")}</h3>
           {isLoggedIn ? (
-            <p className="text-secondary">你还没有待办任务</p>
+            <p className="text-secondary">{t("dashboard.todoEmpty")}</p>
           ) : (
-            <p className="text-secondary">登录后可查看个人待办</p>
+            <p className="text-secondary">{t("dashboard.todoLogin")}</p>
           )}
         </div>
       </div>
@@ -532,37 +534,37 @@ export default function Dashboard() {
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2 className="modal-title">创建项目</h2>
+            <h2 className="modal-title">{t("dashboard.modalCreateTitle")}</h2>
             <form onSubmit={handleCreateSubmit}>
               <div className="form-group">
-                <label htmlFor="project-name">项目名称 *</label>
+                <label htmlFor="project-name">{t("dashboard.nameRequired")}</label>
                 <input
                   id="project-name"
                   type="text"
-                  placeholder="输入项目名称"
+                  placeholder={t("dashboard.namePlaceholder")}
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   autoFocus
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="project-owner">项目所有者 *</label>
+                <label htmlFor="project-owner">{t("dashboard.ownerRequired")}</label>
                 <select
                   id="project-owner"
                   value={createForm.owner}
                   onChange={(e) => setCreateForm({ ...createForm, owner: e.target.value })}
                 >
-                  <option value="">{userOptions.length === 0 ? "（暂无用户，请先在用户管理创建）" : "请选择"}</option>
+                  <option value="">{userOptions.length === 0 ? t("dashboard.ownerEmpty") : t("dashboard.ownerSelect")}</option>
                   {userOptions.map((u) => (
                     <option key={u.email} value={u.display_name || u.email}>
                       {u.display_name || u.email}
                     </option>
                   ))}
                 </select>
-                <span className="form-hint">所有者必须是系统用户（发邮件通知用），未开始任务默认取该所有者</span>
+                <span className="form-hint">{t("dashboard.ownerHint")}</span>
               </div>
               <div className="form-group">
-                <label htmlFor="project-direction">排程方向</label>
+                <label htmlFor="project-direction">{t("dashboard.direction")}</label>
                 <select
                   id="project-direction"
                   value={createForm.schedule_direction}
@@ -570,14 +572,14 @@ export default function Dashboard() {
                     setCreateForm({ ...createForm, schedule_direction: e.target.value })
                   }
                 >
-                  <option value="forward">正排（从开始日期向后排）</option>
-                  <option value="backward">倒排（从完成日期向前排）</option>
+                  <option value="forward">{t("dashboard.directionForward")}</option>
+                  <option value="backward">{t("dashboard.directionBackward")}</option>
                 </select>
               </div>
               <div className="form-row">
                 {createForm.schedule_direction === "forward" ? (
                   <div className="form-group">
-                    <label htmlFor="project-start">开始日期</label>
+                    <label htmlFor="project-start">{t("dashboard.startDate")}</label>
                     <input
                       id="project-start"
                       type="date"
@@ -587,7 +589,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="form-group">
-                    <label htmlFor="project-end">完成日期</label>
+                    <label htmlFor="project-end">{t("dashboard.endDate")}</label>
                     <input
                       id="project-end"
                       type="date"
@@ -598,11 +600,11 @@ export default function Dashboard() {
                 )}
               </div>
               <div className="form-group">
-                <label htmlFor="project-desc">描述</label>
+                <label htmlFor="project-desc">{t("dashboard.desc")}</label>
                 <textarea
                   id="project-desc"
                   rows={3}
-                  placeholder="简要描述项目目标或范围"
+                  placeholder={t("dashboard.descPlaceholder")}
                   value={createForm.description}
                   onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
                 />
@@ -614,10 +616,10 @@ export default function Dashboard() {
                   className="btn btn-ghost"
                   onClick={() => setShowCreateModal(false)}
                 >
-                  取消
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={createSubmitting}>
-                  {createSubmitting ? "创建中..." : "创建项目"}
+                  {createSubmitting ? t("dashboard.creating") : t("dashboard.createSubmit")}
                 </button>
               </div>
             </form>
@@ -630,12 +632,12 @@ export default function Dashboard() {
         <div className="modal-overlay" onClick={() => setShowRecycleBin(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-title">
-              <h2>回收站</h2>
+              <h2>{t("dashboard.recycleBin")}</h2>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowRecycleBin(false)}>×</button>
             </div>
             <div className="modal-body">
               {deletedProjects.length === 0 ? (
-                <p className="text-secondary">没有已删除的项目</p>
+                <p className="text-secondary">{t("dashboard.recycleEmpty")}</p>
               ) : (
                 <div className="dep-list">
                   {deletedProjects.map((p) => (
@@ -643,16 +645,16 @@ export default function Dashboard() {
                       <div className="dep-item-main">
                         <span className="dep-item-name">{p.name}</span>
                         <span className="dep-item-detail">
-                          {p.description || "—"} · {p.schedule_direction === "backward" ? "倒排" : "正排"}
+                          {p.description || "—"} · {p.schedule_direction === "backward" ? t("dashboard.directionBackward") : t("dashboard.directionForward")}
                         </span>
-                        <span className="dep-item-detail">删除于 {p.deleted_at?.slice(0, 10)}</span>
+                        <span className="dep-item-detail">{t("dashboard.deletedAt", { date: p.deleted_at?.slice(0, 10) })}</span>
                       </div>
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={async () => {
                           try {
                             await api.post(`/api/projects/${p.id}/restore`);
-                            alert(`项目「${p.name}」已恢复，项目内任务已全部恢复`);
+                            alert(i18n.t("dashboard.restored", { name: p.name }));
                             setDeletedProjects((prev) => prev.filter((x) => x.id !== p.id));
                             fetchProjects(); // 刷新看板项目列表
                           } catch (err: any) {
@@ -660,7 +662,7 @@ export default function Dashboard() {
                           }
                         }}
                       >
-                        恢复
+                        {t("dashboard.restore")}
                       </button>
                     </div>
                   ))}
@@ -668,7 +670,7 @@ export default function Dashboard() {
               )}
             </div>
             <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={() => setShowRecycleBin(false)}>关闭</button>
+              <button className="btn btn-ghost" onClick={() => setShowRecycleBin(false)}>{t("common.close")}</button>
             </div>
           </div>
         </div>
