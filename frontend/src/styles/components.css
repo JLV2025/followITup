@@ -1826,11 +1826,18 @@
 
 /* 多选负责人(下拉+标签) */
 .multi-user-select { position: relative; min-height: 36px; }
+.mus-tags-row { display: flex; align-items: center; gap: 6px; }
 .mus-tags {
   display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
   min-height: 36px; padding: 4px 8px; border: 1px solid var(--border);
-  border-radius: 6px; cursor: pointer; background: #fff;
+  border-radius: 6px; background: #fff; flex: 1;
 }
+.mus-add-btn {
+  border: 1px dashed var(--border); background: #fff; color: var(--text-secondary);
+  border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+  white-space: nowrap;
+}
+.mus-add-btn:hover { border-color: var(--accent); color: var(--accent); }
 .mus-tags:hover { border-color: var(--accent); }
 .mus-placeholder { color: var(--text-muted); font-size: 13px; }
 .mus-tag {

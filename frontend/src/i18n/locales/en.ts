@@ -12,6 +12,7 @@ export default {
     none: "None",
     project: "Project",
     remove: "Remove",
+    add: "Add",
     noData: "No data",
   },
   nav: { login: "Sign in", logout: "Sign out", users: "User Management", settings: "System Settings" },

@@ -12,6 +12,7 @@ export default {
     none: "无",
     project: "项目",
     remove: "移除",
+    add: "添加",
     noData: "暂无数据",
   },
   nav: { login: "登录", logout: "退出", users: "用户管理", settings: "系统设置" },
