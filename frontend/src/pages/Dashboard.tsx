@@ -5,6 +5,7 @@ import { useDashboardStore } from "../stores/dashboardStore";
 import { useSettingsStore, availableCalendarYears, availableFiscalYears, fiscalYearLabel, currentFiscalYear } from "../stores/settingsStore";
 import api from "../api/client";
 import { formatDate } from "../utils/date";
+import i18n from "../i18n";
 
 export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
@@ -72,8 +73,7 @@ export default function Dashboard() {
   const todayPct = pct(today);
   const todayInYear = today >= yearStart && today <= yearEnd;
   // 月份刻度：所选年度内固定 12 个月（财年从 startMonth 起跨年），
-  // 标签定位在每格中心（首末格留空避免 AUG/JUL 被画框边缘裁掉）
-  const MONTHS_EN = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  // 标签定位在每格中心（首末格留空避免 JUL/AUG 被画框边缘裁掉）；月份词随语言
   const marks = (() => {
     const arr: { x: number; label: string }[] = [];
     const base = new Date(Date.parse(yearStart + "T00:00:00Z"));
@@ -87,7 +87,7 @@ export default function Dashboard() {
         e.setTime(Date.parse(yearEnd + "T00:00:00Z")); // 第 12 个月结束 = 年度末
       }
       // 标签取实际月份（财年从 startMonth 起，第一格是 4 月而非 1 月）
-      arr.push({ x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[s.getUTCMonth()] });
+      arr.push({ x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: i18n.t(`months.upper.${s.getUTCMonth()}`) });
     }
     return arr;
   })();

@@ -1,8 +1,7 @@
 /** 统一日期格式化 — 数据层始终 YYYY-MM-DD，仅展示层转换 */
+import i18n from "../i18n";
 
-const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-/** 将 YYYY-MM-DD 或 Date → M/D/YYYY */
+/** 将 YYYY-MM-DD 或 Date → M/D/YYYY（语言中立，全站统一） */
 export function formatDate(iso: string | Date | null | undefined): string {
   if (!iso) return "—";
   const d = typeof iso === "string" ? new Date(iso) : new Date(iso);
@@ -10,12 +9,14 @@ export function formatDate(iso: string | Date | null | undefined): string {
   return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 }
 
-/** 将 YYYY-MM-DD 或 Date → Aug 02 格式 */
+/** 将 YYYY-MM-DD 或 Date → 短日期（en: "Aug 02" / zh: "8月02日"），月份词随语言 */
 export function formatDateShort(iso: string | Date | null | undefined): string {
   if (!iso) return "";
   const d = typeof iso === "string" ? new Date(iso) : new Date(iso);
   if (isNaN(d.getTime())) return String(iso).slice(0, 10);
-  return `${MONTHS_SHORT[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`;
+  const m = d.getMonth();
+  const day = String(d.getDate()).padStart(2, "0");
+  return i18n.t("date.shortFormat", { month: i18n.t(`months.short.${m}`), day });
 }
 
 /** 将任意日期值标准化为 YYYY-MM-DD（用于 API 调用） */

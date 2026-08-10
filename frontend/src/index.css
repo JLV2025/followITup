@@ -92,3 +92,25 @@ button,
 input {
   font-family: inherit;
 }
+
+/* 标题栏语言切换：中/EN 两段式小按钮 */
+.lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 8px;
+}
+
+.lang-btn {
+  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  opacity: 0.65;
+}
+
+.lang-btn.lang-active {
+  opacity: 1;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: underline;
+}
