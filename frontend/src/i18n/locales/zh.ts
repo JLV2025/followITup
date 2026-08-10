@@ -103,6 +103,7 @@ export default {
     copyTitle: "复制项目（含任务与依赖）",
     detail: "详情 →",
     dueBy: "截止: {{date}}",
+    etaBy: "预计: {{date}}",
     deleteTitle: "删除项目（可在首页回收站恢复）",
     confirmDeleteProject: "确认删除项目「{{name}}」？\n\n项目内任务不会被删除，删除后可在首页「回收站」恢复。",
     deleted: "项目「{{name}}」已删除，可在「回收站」恢复",

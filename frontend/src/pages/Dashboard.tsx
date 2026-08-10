@@ -399,7 +399,12 @@ export default function Dashboard() {
                     </div>
                     {/* 恒渲染占位：保证有无截止日期时进度条长度统一 */}
                     <span className="project-card-end">
-                      {p.end_date ? t("dashboard.dueBy", { date: formatDate(p.end_date) }) : ""}
+                      {/* 倒排(锚点)= 截止 DL / 正排(推导)= 预计 ETA */}
+                      {p.end_date
+                        ? p.schedule_direction === "backward"
+                          ? t("dashboard.dueBy", { date: formatDate(p.end_date) })
+                          : t("dashboard.etaBy", { date: formatDate(p.end_date) })
+                        : ""}
                     </span>
                   </div>
                 </Link>
@@ -418,7 +423,7 @@ export default function Dashboard() {
                       }
                     }}
                   >
-                    {t("dashboard.delete")}
+                    {t("common.delete")}
                   </button>
                 )}
                 </div>

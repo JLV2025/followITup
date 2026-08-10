@@ -19,6 +19,7 @@ interface ProjectSummary {
   start_date: string;
   end_date: string;
   status: string;
+  schedule_direction: string;
   task_count: number;
   completed_count: number;
   progress: number;
