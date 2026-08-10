@@ -538,23 +538,25 @@ export default function Dashboard() {
           <p className="text-secondary">{t("dashboard.milestonesEmpty")}</p>
         </div>
         <div className="dashboard-bottom-col">
-          <h3 className="section-title">{t("dashboard.sectionTodo")}</h3>
-          {isLoggedIn && (
-            <div className="todo-view-switch">
-              <button
-                className={`todo-view-btn${todoView === "task" ? " active" : ""}`}
-                onClick={() => setTodoView("task")}
-              >
-                {t("dashboard.todoViewTask")}
-              </button>
-              <button
-                className={`todo-view-btn${todoView === "project" ? " active" : ""}`}
-                onClick={() => setTodoView("project")}
-              >
-                {t("dashboard.todoViewProject")}
-              </button>
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <h3 className="section-title" style={{ marginBottom: 0 }}>{t("dashboard.sectionTodo")}</h3>
+            {isLoggedIn && (
+              <div className="todo-view-switch">
+                <button
+                  className={`todo-view-btn${todoView === "task" ? " active" : ""}`}
+                  onClick={() => setTodoView("task")}
+                >
+                  {t("dashboard.todoViewTask")}
+                </button>
+                <button
+                  className={`todo-view-btn${todoView === "project" ? " active" : ""}`}
+                  onClick={() => setTodoView("project")}
+                >
+                  {t("dashboard.todoViewProject")}
+                </button>
+              </div>
+            )}
+          </div>
           {!isLoggedIn ? (
             <p className="text-secondary">{t("dashboard.todoLogin")}</p>
           ) : myTodo.mine.length === 0 && myTodo.starting.length === 0 ? (
