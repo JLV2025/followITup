@@ -384,6 +384,7 @@ export default {
     forward: "Forward",
     backward: "Backward",
     dirLockedHint: "Schedule direction is locked once tasks have progress",
+    owner: "Project owner(s)",
   },
   resources: {
     unassigned: "Unassigned",

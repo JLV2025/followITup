@@ -384,6 +384,7 @@ export default {
     forward: "正排",
     backward: "倒排",
     dirLockedHint: "项目已有任务进度，排程方向不可修改",
+    owner: "项目负责人",
   },
   resources: {
     unassigned: "未分配",

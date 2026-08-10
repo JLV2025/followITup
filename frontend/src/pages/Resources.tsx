@@ -36,13 +36,16 @@ export default function Resources() {
   const isParent = (id: number) => tasks.some((c) => c.parent_id === id);
   const isLeaf = (t: TaskRow) => !isParent(t.id);
 
-  // 分组：负责人 → 叶子任务列表
+  // 分组:负责人(分号拆分,多值在每个分组重复)→ 叶子任务列表
   const groups = new Map<string, TaskRow[]>();
   for (const t of tasks) {
     if (!isLeaf(t)) continue; // 父任务不重复计入
-    const key = t.assignee || i18n.t("resources.unassigned");
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(t);
+    const owners = t.assignee ? t.assignee.split(";").map((s) => s.trim()).filter(Boolean) : [];
+    if (owners.length === 0) owners.push(i18n.t("resources.unassigned"));
+    for (const o of owners) {
+      if (!groups.has(o)) groups.set(o, []);
+      groups.get(o)!.push(t);
+    }
   }
   const sorted = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0], i18n.language));
 

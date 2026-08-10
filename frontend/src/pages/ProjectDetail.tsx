@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link, NavLink, Outlet } from "react-router-dom";
 import api from "../api/client";
+import MultiUserSelect from "../components/MultiUserSelect";
 
 interface Project {
   id: number;
   name: string;
   description: string;
   owner: string;
+  owner_ids?: number[];
   start_date: string;
   end_date: string;
   status: string;
@@ -20,11 +22,16 @@ export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [hasProgress, setHasProgress] = useState(false);
-  // 用户列表（所有者下拉，可手输兜底）
-  const [userOptions, setUserOptions] = useState<{ display_name: string; email: string }[]>([]);
+  const [ownerIds, setOwnerIds] = useState<number[]>([]);
+  // 用户列表（多选负责人组件下拉列表）
+  const [userOptions, setUserOptions] = useState<{ id: number; display_name: string }[]>([]);
 
   useEffect(() => {
-    api.get(`/api/projects/${id}`).then((res) => setProject(res.data.data));
+    api.get(`/api/projects/${id}`).then((res) => {
+      const p = res.data.data;
+      setProject(p);
+      setOwnerIds(p.owner_ids || []);
+    });
     // 并行请求任务列表，检查是否有进度 > 0 的任务
     api.get(`/api/projects/${id}/tasks`).then((res) => {
       const tasks: any[] = res.data?.data?.tasks || [];
@@ -108,27 +115,23 @@ export default function ProjectDetail() {
             />
           </label>
         )}
-        {/* 项目所有者：仅可挑选系统用户（邮件通知用）；修改后未开始任务自动改派 */}
+        {/* 项目负责人：多选系统用户；每次变更即提交 */}
         <label className="direction-date direction-owner">
-          项目所有者
-          <select
-            value={project.owner}
-            onChange={async (e) => {
-              const owner = e.target.value;
+          {t("projectDetail.owner")}
+          <MultiUserSelect
+            users={userOptions}
+            selectedIds={ownerIds}
+            onChange={async (ids) => {
+              setOwnerIds(ids);
               try {
-                await api.put(`/api/projects/${id}`, { ...project, owner });
-                setProject({ ...project, owner });
+                await api.put(`/api/projects/${id}`, { ...project, owner_ids: ids });
+                setProject({ ...project, owner_ids: ids });
               } catch (err: any) {
                 alert(getErrorMessage(err, "common.unknownError"));
+                setOwnerIds(project.owner_ids || []);
               }
             }}
-          >
-            {userOptions.map((u) => (
-              <option key={u.email} value={u.display_name || u.email}>
-                {u.display_name || u.email}
-              </option>
-            ))}
-          </select>
+          />
         </label>
       </div>
 
