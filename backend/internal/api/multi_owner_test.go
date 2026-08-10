@@ -526,6 +526,50 @@ func TestUpdateProjectReassignsTasks(t *testing.T) {
 	}
 }
 
+// UpdateProject 相同 owner 集合 + 改日期:不触发改派,任务 assignee/version 不变(回归 C1)
+func TestUpdateProjectSameOwnerDoesNotReassign(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	ph := &ProjectHandler{db: conn}
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
+	var uid1, uid2 int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='a@x.com'`).Scan(&uid1)
+	conn.QueryRow(`SELECT id FROM users WHERE email='b@x.com'`).Scan(&uid2)
+
+	// 建项目:owner=张三+李四
+	r1, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, owner) VALUES ('相同集合测试','2026-08-01','2026-08-31','active','张三; 李四')`)
+	pid, _ := r1.LastInsertId()
+	saveProjectOwners(conn, pid, []int64{uid1, uid2})
+	// 建 open 任务:assignee=张三(任务级特意设置,不应被覆盖)
+	r2, _ := conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order, version) VALUES (?, 'open任务','task','open','张三','2026-08-03','2026-08-10',5,0,0,1)`, pid)
+	tid, _ := r2.LastInsertId()
+	saveTaskAssignees(conn, tid, []int64{uid1})
+
+	r := chi.NewRouter()
+	r.Put("/api/projects/{id}", ph.UpdateProject)
+	// 发送相同 owner_ids + 修改 start_date(触发前端 ProjectDetail saveDate 场景)
+	body, _ := json.Marshal(map[string]interface{}{
+		"name": "相同集合测试", "start_date": "2026-08-05", "end_date": "2026-08-31",
+		"owner_ids": []int64{uid1, uid2}, "status": "active",
+	})
+	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/projects/%d", pid), bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("更新状态码 = %d, body=%s", w.Code, w.Body.String())
+	}
+
+	// 任务 assignee 应保持张三(不被项目 owner 集合覆盖)
+	var snap string
+	var ver int
+	conn.QueryRow(`SELECT assignee, version FROM tasks WHERE id=?`, tid).Scan(&snap, &ver)
+	if snap != "张三" {
+		t.Errorf("相同owner集合改日期后快照 = %q, want 张三(不应被覆盖)", snap)
+	}
+	if ver != 1 {
+		t.Errorf("相同owner集合改日期后 version = %d, want 1(不应递增)", ver)
+	}
+}
+
 // UpdateProject 清空 owner_ids:空数组清空项目负责人 + open 任务改派为空
 func TestUpdateProjectClearOwnerIDs(t *testing.T) {
 	conn, _ := testTaskHandler(t)

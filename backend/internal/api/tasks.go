@@ -278,12 +278,20 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	var assigneeIDs []int64
 	var missing []string
 	if len(t.AssigneeIDs) > 0 {
-		// 请求体直接传入 assignee_ids 数组(去重)
+		// 请求体直接传入 assignee_ids 数组(去重 + 校验活跃用户)
 		seen := map[int64]bool{}
 		for _, id := range t.AssigneeIDs {
 			if !seen[id] {
 				assigneeIDs = append(assigneeIDs, id)
 				seen[id] = true
+			}
+		}
+		for _, uid := range assigneeIDs {
+			var n int
+			h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE id=? AND is_active=1`, uid).Scan(&n)
+			if n == 0 {
+				writeError(w, http.StatusBadRequest, "INVALID_OWNER", "负责人必须是现有活跃用户")
+				return
 			}
 		}
 	} else if strings.TrimSpace(t.Assignee) != "" {
@@ -694,7 +702,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var assigneeIDs []int64
 	if _, ok := fieldCheck["assignee_ids"]; ok {
 		json.Unmarshal(fieldCheck["assignee_ids"], &assigneeIDs)
-		// 去重(与 CreateTask 一致)
+		// 去重 + 校验活跃用户(与 CreateTask 一致)
 		seen := map[int64]bool{}
 		var deduped []int64
 		for _, id := range assigneeIDs {
@@ -704,6 +712,14 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		assigneeIDs = deduped
+		for _, uid := range assigneeIDs {
+			var n int
+			h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE id=? AND is_active=1`, uid).Scan(&n)
+			if n == 0 {
+				writeError(w, http.StatusBadRequest, "INVALID_OWNER", "负责人必须是现有活跃用户")
+				return
+			}
+		}
 	} else if _, ok := fieldCheck["assignee"]; ok {
 		var missing []string
 		assigneeIDs, missing = resolveUserIDs(h.db, splitOwnerNames(t.Assignee))
@@ -1023,6 +1039,27 @@ func ownerNamesOf(db *sql.DB, ids []int64) []string {
 		}
 	}
 	return out
+}
+
+// int64SetEqual 比较两个 int64 切片是否包含相同元素(集合语义,顺序无关)
+func int64SetEqual(a, b []int64) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	if len(a) == 0 {
+		return true
+	}
+	set := make(map[int64]int, len(a))
+	for _, v := range a {
+		set[v]++
+	}
+	for _, v := range b {
+		if set[v] == 0 {
+			return false
+		}
+		set[v]--
+	}
+	return true
 }
 
 // DeleteTask 软删除任务，同时清理关联的依赖关系

@@ -117,7 +117,8 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 	query := `SELECT p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.is_public,
 		COALESCE(p.baseline_created_at, '') as baseline_created_at,
 		COALESCE(p.baseline_created_by, '') as baseline_created_by,
-			p.schedule_direction, COALESCE(p.owner, '') as owner,
+			p.schedule_direction,
+		COALESCE((SELECT GROUP_CONCAT(u.display_name, '; ') FROM project_owners po JOIN users u ON u.id = po.user_id WHERE po.project_id = p.id), '') as owner,
 		COALESCE((SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = p.id), '') as owner_ids
 		FROM projects p WHERE p.deleted_at IS NULL ORDER BY p.created_at ASC, p.id ASC`
 
@@ -484,6 +485,16 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		// owner_ids 键存在(含空数组=清空)
 		var ids []int64
 		json.Unmarshal(fieldCheck["owner_ids"], &ids)
+		// 去重(与 saveTaskAssignees 一致,防快照列出现 "张三; 张三")
+		seen := map[int64]bool{}
+		var deduped []int64
+		for _, uid := range ids {
+			if !seen[uid] {
+				deduped = append(deduped, uid)
+				seen[uid] = true
+			}
+		}
+		ids = deduped
 		for _, uid := range ids {
 			var n int
 			h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE id=? AND is_active=1`, uid).Scan(&n)
@@ -492,16 +503,24 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		ownerChanged = true
+		// 与旧集合比较(集合语义,顺序无关),仅真正变化时才触发改派
+		oldIDs, _ := loadProjectOwners(h.db, id)
+		if !int64SetEqual(ids, oldIDs) {
+			ownerChanged = true
+		}
 		ownerIDs = ids
 	} else if _, provided := fieldCheck["owner"]; provided {
-		// owner 文本键存在
-		ownerChanged = true
-		ownerIDs, _ = resolveUserIDs(h.db, splitOwnerNames(p.Owner))
-		if len(splitOwnerNames(p.Owner)) != len(ownerIDs) {
+		// owner 文本键存在:与旧集合比较,仅真正变化时才触发改派
+		newIDs, _ := resolveUserIDs(h.db, splitOwnerNames(p.Owner))
+		if len(splitOwnerNames(p.Owner)) != len(newIDs) {
 			writeError(w, http.StatusBadRequest, "INVALID_OWNER", "项目所有者必须从现有用户中选择")
 			return
 		}
+		oldIDs, _ := loadProjectOwners(h.db, id)
+		if !int64SetEqual(newIDs, oldIDs) {
+			ownerChanged = true
+		}
+		ownerIDs = newIDs
 	} else {
 		ownerIDs, _ = loadProjectOwners(h.db, id) // 都未携带:保留旧值
 	}
@@ -581,7 +600,9 @@ func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	var isPublic int
 	var ownerIDsStr string
 	err := h.db.QueryRow(
-		`SELECT id, name, description, owner, start_date, end_date, status, is_public, schedule_direction,
+		`SELECT id, name, description,
+		COALESCE((SELECT GROUP_CONCAT(u.display_name, '; ') FROM project_owners po JOIN users u ON u.id = po.user_id WHERE po.project_id = projects.id), '') as owner,
+		start_date, end_date, status, is_public, schedule_direction,
 		COALESCE((SELECT GROUP_CONCAT(po.user_id, ',') FROM project_owners po WHERE po.project_id = projects.id), '') as owner_ids
 		FROM projects WHERE id = ? AND deleted_at IS NULL`,
 		id,
