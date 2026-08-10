@@ -1,7 +1,9 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../api/client";
 import { useAuthStore } from "../stores/authStore";
+import i18n from "../i18n";
 
 interface User {
   id: number;
@@ -14,6 +16,7 @@ interface User {
 }
 
 export default function UserManagement() {
+  const { t } = useTranslation();
   const isAdmin = useAuthStore((s) => s.user?.is_admin);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +45,7 @@ export default function UserManagement() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!email) { setError("邮箱不能为空"); return; }
+    if (!email) { setError(i18n.t("usersPage.emailRequired")); return; }
     setCreating(true);
     try {
       const res = await api.post("/api/admin/users", {
@@ -52,12 +55,12 @@ export default function UserManagement() {
       });
       const d = res.data?.data;
       setMessage(d?.initial_password
-        ? `${d.message}（初始密码：${d.initial_password}）`
-        : d?.message || "用户创建成功");
+        ? i18n.t("usersPage.createdWithPwd", { message: d.message, pwd: d.initial_password })
+        : d?.message || i18n.t("usersPage.created"));
       setEmail(""); setDisplayName(""); setIsAdminChecked(false); setShowForm(false);
       fetchUsers();
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || "创建失败");
+      setError(getErrorMessage(err, "usersPage.errCreate"));
     }
     setCreating(false);
   };
@@ -72,7 +75,7 @@ export default function UserManagement() {
   };
 
   const handleDelete = async (u: User) => {
-    if (!confirm(`确认删除用户「${u.display_name || u.email}」？\n\n历史项目和任务上的名字保留备查。`)) return;
+    if (!confirm(i18n.t("usersPage.confirmDelete", { name: u.display_name || u.email }))) return;
     try {
       await api.delete(`/api/admin/users/${u.id}`);
       fetchUsers();
@@ -90,8 +93,8 @@ export default function UserManagement() {
       });
       const d = res.data?.data;
       setMessage(d?.initial_password
-        ? `${d.message}（新密码：${d.initial_password}）`
-        : d?.message || "密码已重置");
+        ? i18n.t("usersPage.resetWithPwd", { message: d.message, pwd: d.initial_password })
+        : d?.message || i18n.t("usersPage.resetDone"));
       setResetTarget(null);
     } catch (err: any) {
       alert(getErrorMessage(err, "common.unknownError"));
@@ -105,29 +108,29 @@ export default function UserManagement() {
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
       <div className="dashboard-header-row" style={{ marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 4 }}>用户管理</h1>
-          <p className="text-secondary">管理本地账号，LDAP 用户自动同步</p>
+          <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 4 }}>{t("usersPage.title")}</h1>
+          <p className="text-secondary">{t("usersPage.subtitle")}</p>
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? "取消" : "+ 添加用户"}
+          {showForm ? t("usersPage.cancel") : t("usersPage.addUser")}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleCreate} style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 20, marginBottom: 20 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>新建本地用户</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>{t("usersPage.formTitle")}</h3>
           <p className="text-secondary" style={{ marginBottom: 12, fontSize: 13 }}>
             密码由系统随机生成，通过邮件发送至用户邮箱；首次登录需修改密码。
           </p>
           {error && <div className="form-error">{error}</div>}
           <div className="form-row">
             <div className="form-group">
-              <label>邮箱（登录名）</label>
+              <label>{t("usersPage.emailLabel")}</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" autoFocus />
             </div>
             <div className="form-group">
-              <label>显示名称（留空自动从邮箱推导）</label>
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="如 john.doe → John Doe" />
+              <label>{t("usersPage.displayName")}</label>
+              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t("usersPage.namePlaceholder")} />
             </div>
           </div>
           {isAdmin && (
@@ -139,22 +142,22 @@ export default function UserManagement() {
               </label>
             </div>
           )}
-          <button className="btn btn-primary" type="submit" disabled={creating}>{creating ? "创建中..." : "创建用户"}</button>
+          <button className="btn btn-primary" type="submit" disabled={creating}>{creating ? t("usersPage.creating") : t("usersPage.createUser")}</button>
         </form>
       )}
 
       {loading ? (
-        <p className="text-secondary">加载中...</p>
+        <p className="text-secondary">{t("common.loading")}</p>
       ) : (
         <table className="task-table" style={{ marginTop: 16 }}>
           <thead>
             <tr>
               <th style={{ width: 50 }}>ID</th>
-              <th>显示名称</th>
-              <th>邮箱</th>
-              <th style={{ width: 80 }}>来源</th>
-              <th style={{ width: 80 }}>角色</th>
-              {isAdmin && <th style={{ width: 200 }}>操作</th>}
+              <th>{t("usersPage.colName")}</th>
+              <th>{t("usersPage.colEmail")}</th>
+              <th style={{ width: 80 }}>{t("usersPage.colSource")}</th>
+              <th style={{ width: 80 }}>{t("usersPage.colRole")}</th>
+              {isAdmin && <th style={{ width: 200 }}>{t("usersPage.colActions")}</th>}
             </tr>
           </thead>
           <tbody>
@@ -163,12 +166,12 @@ export default function UserManagement() {
                 <td className="cell-id">{u.id}</td>
                 <td style={{ fontWeight: 500 }}>{u.display_name || u.email}</td>
                 <td className="text-secondary">{u.email}</td>
-                <td><span className="status-badge" style={{ background: u.auth_source === "local" ? "var(--surface-alt)" : "rgba(8, 145, 178, 0.1)", color: u.auth_source === "local" ? "var(--text-secondary)" : "var(--accent)" }}>{u.auth_source === "local" ? "本地" : "LDAP"}</span></td>
-                <td>{u.is_admin ? "管理员" : "成员"}</td>
+                <td><span className="status-badge" style={{ background: u.auth_source === "local" ? "var(--surface-alt)" : "rgba(8, 145, 178, 0.1)", color: u.auth_source === "local" ? "var(--text-secondary)" : "var(--accent)" }}>{u.auth_source === "local" ? t("usersPage.sourceLocal") : t("usersPage.sourceLdap")}</span></td>
+                <td>{u.is_admin ? t("usersPage.roleAdmin") : t("usersPage.roleMember")}</td>
                 {isAdmin && (
                   <td>
                     <button className="btn btn-ghost btn-sm" onClick={() => handleRole(u)}>
-                      {u.is_admin ? "取消管理员" : "设为管理员"}
+                      {u.is_admin ? t("usersPage.toggleAdminOff") : t("usersPage.toggleAdminOn")}
                     </button>{" "}
                     <button className="btn btn-ghost btn-sm"
                       onClick={() => { setResetMustChange(true); setResetTarget(u); }}>
@@ -182,7 +185,7 @@ export default function UserManagement() {
               </tr>
             ))}
             {users.length === 0 && (
-              <tr><td colSpan={isAdmin ? 6 : 5} className="text-secondary" style={{ textAlign: "center", padding: 32 }}>暂无用户</td></tr>
+              <tr><td colSpan={isAdmin ? 6 : 5} className="text-secondary" style={{ textAlign: "center", padding: 32 }}>{t("usersPage.empty")}</td></tr>
             )}
           </tbody>
         </table>
@@ -194,7 +197,7 @@ export default function UserManagement() {
         <div className="modal-overlay" onClick={() => setResetTarget(null)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-title">
-              <h2>重置密码 · {resetTarget.display_name || resetTarget.email}</h2>
+              <h2>{t("usersPage.resetTitle", { name: resetTarget.display_name || resetTarget.email })}</h2>
               <button className="btn btn-ghost btn-sm" onClick={() => setResetTarget(null)}>×</button>
             </div>
             <div className="modal-body">
@@ -208,10 +211,10 @@ export default function UserManagement() {
               </label>
             </div>
             <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={() => setResetTarget(null)}>取消</button>
+              <button className="btn btn-ghost" onClick={() => setResetTarget(null)}>{t("usersPage.cancel")}</button>
               <button className="btn btn-primary" disabled={resetting}
                 onClick={handleResetPassword}>
-                {resetting ? "重置中..." : "确认重置"}
+                {resetting ? t("usersPage.resetting") : t("usersPage.confirmReset")}
               </button>
             </div>
           </div>

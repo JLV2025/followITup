@@ -1,9 +1,12 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import i18n from "../i18n";
 
 export default function Login() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,7 +19,7 @@ export default function Login() {
     setError("");
 
     if (!email || !password) {
-      setError("请输入邮箱和密码");
+      setError(i18n.t("loginPage.errEmpty"));
       return;
     }
 
@@ -35,10 +38,10 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1 className="login-title">登录</h1>
+        <h1 className="login-title">{t("loginPage.title")}</h1>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">邮箱</label>
+            <label htmlFor="email">{t("loginPage.email")}</label>
             <input
               id="email"
               type="email"
@@ -50,7 +53,7 @@ export default function Login() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="password">密码</label>
+            <label htmlFor="password">{t("loginPage.password")}</label>
             <input
               id="password"
               type="password"
@@ -61,7 +64,7 @@ export default function Login() {
           </div>
           {error && <div className="form-error">{error}</div>}
           <button type="submit" disabled={loading} className="btn btn-primary btn-block">
-            {loading ? "登录中..." : "登录"}
+            {loading ? t("loginPage.loggingIn") : t("loginPage.login")}
           </button>
         </form>
       </div>

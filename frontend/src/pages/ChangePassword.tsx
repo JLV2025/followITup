@@ -1,10 +1,13 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { useAuthStore } from "../stores/authStore";
+import i18n from "../i18n";
 
 export default function ChangePassword() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setToken = useAuthStore((s) => s.setToken);
   const [oldPassword, setOldPassword] = useState("");
@@ -17,7 +20,7 @@ export default function ChangePassword() {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("两次输入的新密码不一致");
+      setError(i18n.t("changePassword.errMismatch"));
       return;
     }
     setSubmitting(true);
@@ -28,7 +31,7 @@ export default function ChangePassword() {
       });
       // 用新 token 替换（原 token 带首登标记）
       setToken(res.data?.data?.token);
-      alert("密码修改成功");
+      alert(i18n.t("changePassword.success"));
       navigate("/", { replace: true });
     } catch (err: any) {
       setError(getErrorMessage(err, "common.unknownError"));
@@ -40,11 +43,11 @@ export default function ChangePassword() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1 className="login-title">首次登录：请修改密码</h1>
-        <p className="text-secondary">为保障账号安全，请设置你的新密码。</p>
+        <h1 className="login-title">{t("changePassword.title")}</h1>
+        <p className="text-secondary">{t("changePassword.subtitle")}</p>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="old-password">初始密码</label>
+            <label htmlFor="old-password">{t("changePassword.oldPwd")}</label>
             <input
               id="old-password"
               type="password"
@@ -56,7 +59,7 @@ export default function ChangePassword() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="new-password">新密码</label>
+            <label htmlFor="new-password">{t("changePassword.newPwd")}</label>
             <input
               id="new-password"
               type="password"
@@ -67,7 +70,7 @@ export default function ChangePassword() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="confirm-password">确认新密码</label>
+            <label htmlFor="confirm-password">{t("changePassword.confirmPwd")}</label>
             <input
               id="confirm-password"
               type="password"
@@ -79,7 +82,7 @@ export default function ChangePassword() {
           </div>
           {error && <div className="form-error">{error}</div>}
           <button type="submit" disabled={submitting} className="btn btn-primary btn-block">
-            {submitting ? "提交中..." : "修改密码"}
+            {submitting ? t("changePassword.submitting") : t("changePassword.submit")}
           </button>
         </form>
       </div>

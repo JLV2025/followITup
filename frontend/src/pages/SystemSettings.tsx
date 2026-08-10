@@ -1,6 +1,8 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../api/client";
+import i18n from "../i18n";
 
 interface Holiday {
   id: number;
@@ -10,6 +12,7 @@ interface Holiday {
 }
 
 export default function SystemSettings() {
+  const { t } = useTranslation();
   // SMTP 配置
   const [smtp, setSmtp] = useState({ smtp_host: "", smtp_port: "25", smtp_username: "", smtp_password: "", smtp_sender: "" });
   // 财年 + 密码策略
@@ -31,7 +34,7 @@ export default function SystemSettings() {
       const res = await api.get("/api/calendar");
       setHolidays(res.data?.data || []);
     } catch {
-      setMessage("加载节假日失败");
+      setMessage(i18n.t("settingsPage.loadHolidayFail"));
     }
   };
 
@@ -49,7 +52,7 @@ export default function SystemSettings() {
       setPasswordMinLength(Number(d.password_min_length) || 8);
       setDueReminderOn(d.due_reminder_enabled === "1");
       setDueReminderDays(Number(d.due_reminder_days) || 3);
-    }).catch(() => setMessage("加载配置失败"));
+    }).catch(() => setMessage(i18n.t("settingsPage.loadConfigFail")));
     fetchHolidays();
   }, []);
 
@@ -63,27 +66,27 @@ export default function SystemSettings() {
   };
 
   const testEmail = async () => {
-    const to = window.prompt("输入测试收件邮箱：");
+    const to = window.prompt(i18n.t("settingsPage.promptTestEmail"));
     if (!to) return;
     try {
       await api.post("/api/settings/test-email", { to });
-      setMessage("测试邮件已发送");
+      setMessage(i18n.t("settingsPage.testSent"));
     } catch (err: any) {
-      setMessage("发送失败: " + (getErrorMessage(err, "common.unknownError")));
+      setMessage(getErrorMessage(err, "settingsPage.sendFail"));
     }
   };
 
   const runReminder = async () => {
     try {
       await api.post("/api/settings/reminder/run", {});
-      setMessage("到期提醒已扫描并发送（见服务端日志）");
+      setMessage(i18n.t("settingsPage.reminderSent"));
     } catch (err: any) {
-      setMessage("提醒发送失败: " + (getErrorMessage(err, "common.unknownError")));
+      setMessage(getErrorMessage(err, "settingsPage.reminderFail"));
     }
   };
 
   const addHolidayRange = async () => {
-    if (!holidayStart) { setMessage("请选择开始日期"); return; }
+    if (!holidayStart) { setMessage(i18n.t("settingsPage.pickStartDate")); return; }
     try {
       const res = await api.post("/api/calendar", {
         start_date: holidayStart,
@@ -91,7 +94,7 @@ export default function SystemSettings() {
         type: holidayType,
         label: holidayLabel,
       });
-      setMessage(res.data?.data?.message || "已添加");
+      setMessage(res.data?.data?.message || i18n.t("settingsPage.added"));
       setHolidayStart(""); setHolidayEnd(""); setHolidayLabel("");
       fetchHolidays();
     } catch (err: any) {
@@ -108,51 +111,51 @@ export default function SystemSettings() {
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
       <div className="dashboard-header-row" style={{ marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 2 }}>系统设置</h1>
-          <p className="text-secondary" style={{ fontSize: 13 }}>SMTP 邮件、财年、节假日与密码策略（仅管理员）</p>
+          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 2 }}>{t("settingsPage.title")}</h1>
+          <p className="text-secondary" style={{ fontSize: 13 }}>{t("settingsPage.subtitle")}</p>
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {/* SMTP */}
         <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>邮件通知（SMTP）</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>{t("settingsPage.sectionSmtp")}</h3>
           <div className="form-row" style={{ gap: 10 }}>
             <div className="form-group" style={{ marginBottom: 8, flex: 2 }}>
-              <label style={{ fontSize: 13 }}>服务器地址</label>
+              <label style={{ fontSize: 13 }}>{t("settingsPage.smtpHost")}</label>
               <input style={inputStyle} value={smtp.smtp_host}
                 onChange={(e) => setSmtp({ ...smtp, smtp_host: e.target.value })} placeholder="smtp.example.com" />
             </div>
             <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
-              <label style={{ fontSize: 13 }}>端口</label>
+              <label style={{ fontSize: 13 }}>{t("settingsPage.smtpPort")}</label>
               <input style={inputStyle} value={smtp.smtp_port}
                 onChange={(e) => setSmtp({ ...smtp, smtp_port: e.target.value })} />
             </div>
           </div>
           <div className="form-row" style={{ gap: 10 }}>
             <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
-              <label style={{ fontSize: 13 }}>发件人</label>
+              <label style={{ fontSize: 13 }}>{t("settingsPage.smtpSender")}</label>
               <input style={inputStyle} value={smtp.smtp_sender}
                 onChange={(e) => setSmtp({ ...smtp, smtp_sender: e.target.value })} placeholder="FollowITup@qorvo.com" />
             </div>
             <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
-              <label style={{ fontSize: 13 }}>认证用户名（留空 = 无需登录）</label>
+              <label style={{ fontSize: 13 }}>{t("settingsPage.smtpUser")}</label>
               <input style={inputStyle} value={smtp.smtp_username}
                 onChange={(e) => setSmtp({ ...smtp, smtp_username: e.target.value })} />
             </div>
           </div>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 13 }}>认证密码</label>
+            <label style={{ fontSize: 13 }}>{t("settingsPage.smtpPass")}</label>
             <input style={inputStyle} type="password" value={smtp.smtp_password}
               onChange={(e) => setSmtp({ ...smtp, smtp_password: e.target.value })} />
           </div>
           <div className="form-row">
-            <button className="btn btn-primary" onClick={() => saveSettings(smtp, "SMTP 配置已保存")}>保存</button>
-            <button className="btn btn-ghost" onClick={testEmail}>测试发送</button>
+            <button className="btn btn-primary" onClick={() => saveSettings(smtp, i18n.t("settingsPage.smtpSaved"))}>{t("settingsPage.save")}</button>
+            <button className="btn btn-ghost" onClick={testEmail}>{t("settingsPage.testSend")}</button>
           </div>
           {/* 到期提醒 */}
           <hr style={{ border: "none", borderTop: "1px solid var(--card-border)", margin: "14px 0" }} />
-          <div style={{ fontSize: 13, marginBottom: 8 }}>任务到期提醒（每日 9:00 扫描，按负责人汇总发送）</div>
+          <div style={{ fontSize: 13, marginBottom: 8 }}>{t("settingsPage.dueReminder")}</div>
           <div className="form-row" style={{ gap: 10, alignItems: "center" }}>
             <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
               <input
@@ -160,7 +163,7 @@ export default function SystemSettings() {
                 checked={dueReminderOn}
                 onChange={(e) => {
                   setDueReminderOn(e.target.checked);
-                  saveSettings({ due_reminder_enabled: e.target.checked ? "1" : "0" }, e.target.checked ? "到期提醒已开启" : "到期提醒已关闭");
+                  saveSettings({ due_reminder_enabled: e.target.checked ? "1" : "0" }, e.target.checked ? i18n.t("settingsPage.reminderOn") : i18n.t("settingsPage.reminderOff"));
                 }}
               />
               开启提醒
@@ -175,36 +178,36 @@ export default function SystemSettings() {
                 value={dueReminderDays}
                 onChange={(e) => {
                   setDueReminderDays(Number(e.target.value) || 3);
-                  saveSettings({ due_reminder_days: String(Number(e.target.value) || 3) }, "提前天数已保存");
+                  saveSettings({ due_reminder_days: String(Number(e.target.value) || 3) }, i18n.t("settingsPage.daysSaved"));
                 }}
               />
               天
             </label>
-            <button className="btn btn-ghost btn-sm" onClick={runReminder} title="立即扫描并发送一次(验证用)">立即发送一次</button>
+            <button className="btn btn-ghost btn-sm" onClick={runReminder} title={t("settingsPage.runNowTitle")}>{t("settingsPage.runNow")}</button>
           </div>
         </div>
 
         {/* 财年 + 密码策略 */}
         <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>财年与密码</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>{t("settingsPage.sectionFiscal")}</h3>
           <div className="form-row" style={{ gap: 10 }}>
             <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
-              <label style={{ fontSize: 13 }}>财年起始月份（首页只读）</label>
+              <label style={{ fontSize: 13 }}>{t("settingsPage.fiscalMonth")}</label>
               <select style={inputStyle} value={fiscalStartMonth}
                 onChange={(e) => setFiscalStartMonth(Number(e.target.value))}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
-                  <option key={m} value={m}>{m} 月起始</option>
+                  <option key={m} value={m}>{t("settingsPage.monthStart", { m })}</option>
                 ))}
               </select>
             </div>
             <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
-              <label style={{ fontSize: 13 }}>密码最小长度</label>
+              <label style={{ fontSize: 13 }}>{t("settingsPage.pwdMinLen")}</label>
               <input style={inputStyle} type="number" min={6} max={32} value={passwordMinLength}
                 onChange={(e) => setPasswordMinLength(Number(e.target.value))} />
             </div>
           </div>
           <button className="btn btn-primary"
-            onClick={() => saveSettings({ fiscal_start_month: fiscalStartMonth, password_min_length: passwordMinLength }, "财年与密码设置已保存")}>
+            onClick={() => saveSettings({ fiscal_start_month: fiscalStartMonth, password_min_length: passwordMinLength }, i18n.t("settingsPage.fiscalSaved"))}>
             保存
           </button>
         </div>
@@ -212,42 +215,42 @@ export default function SystemSettings() {
 
       {/* 节假日与补班 */}
       <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14, marginTop: 14 }}>
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>节假日与补班（假日排除工作日 / 补班周末计工作日）</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>{t("settingsPage.sectionHoliday")}</h3>
         <div className="form-row" style={{ gap: 8 }}>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 13 }}>开始日期</label>
+            <label style={{ fontSize: 13 }}>{t("settingsPage.holidayStart")}</label>
             <input style={inputStyle} type="date" value={holidayStart}
               onChange={(e) => setHolidayStart(e.target.value)} />
           </div>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 13 }}>结束日期</label>
+            <label style={{ fontSize: 13 }}>{t("settingsPage.holidayEnd")}</label>
             <input style={inputStyle} type="date" value={holidayEnd}
               onChange={(e) => setHolidayEnd(e.target.value)} />
           </div>
           <div className="form-group" style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 13 }}>类型</label>
+            <label style={{ fontSize: 13 }}>{t("settingsPage.holidayType")}</label>
             <select style={inputStyle} value={holidayType}
               onChange={(e) => setHolidayType(e.target.value)}>
-              <option value="holiday">假日（排除工作日）</option>
-              <option value="workday">补班（周末计工作日）</option>
+              <option value="holiday">{t("settingsPage.holidayTypeHoliday")}</option>
+              <option value="workday">{t("settingsPage.holidayTypeWorkday")}</option>
             </select>
           </div>
           <div className="form-group" style={{ marginBottom: 8, flex: 1 }}>
-            <label style={{ fontSize: 13 }}>名称</label>
-            <input style={inputStyle} placeholder="如：春节" value={holidayLabel}
+            <label style={{ fontSize: 13 }}>{t("settingsPage.holidayName")}</label>
+            <input style={inputStyle} placeholder={t("settingsPage.holidayNamePlaceholder")} value={holidayLabel}
               onChange={(e) => setHolidayLabel(e.target.value)} />
           </div>
           <div className="form-group" style={{ marginBottom: 8, alignSelf: "flex-end" }}>
-            <button className="btn btn-primary" onClick={addHolidayRange}>添加</button>
+            <button className="btn btn-primary" onClick={addHolidayRange}>{t("settingsPage.holidayAdd")}</button>
           </div>
         </div>
         <table className="task-table" style={{ marginTop: 8 }}>
           <thead>
             <tr>
-              <th>日期</th>
-              <th style={{ width: 70 }}>类型</th>
-              <th>名称</th>
-              <th style={{ width: 80 }}>操作</th>
+              <th>{t("settingsPage.colDate")}</th>
+              <th style={{ width: 70 }}>{t("settingsPage.colType")}</th>
+              <th>{t("settingsPage.colName")}</th>
+              <th style={{ width: 80 }}>{t("settingsPage.colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -259,7 +262,7 @@ export default function SystemSettings() {
                     style={h.type === "workday"
                       ? { background: "rgba(8, 145, 178, 0.1)", color: "var(--accent)" }
                       : { background: "var(--surface-alt)", color: "var(--text-secondary)" }}>
-                    {h.type === "workday" ? "补班" : "假日"}
+                    {h.type === "workday" ? t("settingsPage.typeWorkday") : t("settingsPage.typeHoliday")}
                   </span>
                 </td>
                 <td>{h.label || "—"}</td>
@@ -271,12 +274,12 @@ export default function SystemSettings() {
                     } catch (err: any) {
                       setMessage(getErrorMessage(err, "common.unknownError"));
                     }
-                  }}>删除</button>
+                  }}>{t("common.delete")}</button>
                 </td>
               </tr>
             ))}
             {holidays.length === 0 && (
-              <tr><td colSpan={4} className="text-secondary">暂无节假日</td></tr>
+              <tr><td colSpan={4} className="text-secondary">{t("settingsPage.holidayEmpty")}</td></tr>
             )}
           </tbody>
         </table>

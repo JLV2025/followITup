@@ -1,7 +1,9 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, Link, NavLink, Outlet } from "react-router-dom";
 import api from "../api/client";
+import i18n from "../i18n";
 
 interface Project {
   id: number;
@@ -15,6 +17,7 @@ interface Project {
 }
 
 export default function ProjectDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [hasProgress, setHasProgress] = useState(false);
@@ -45,13 +48,13 @@ export default function ProjectDetail() {
     }
   };
 
-  if (!project) return <p className="text-secondary">加载中...</p>;
+  if (!project) return <p className="text-secondary">{t("common.loading")}</p>;
 
   return (
     <div className="project-detail">
       {/* 项目头部 */}
       <div className="project-header">
-        <Link to="/" className="back-link">← 看板</Link>
+        <Link to="/" className="back-link">{t("projectDetail.back")}</Link>
         <div>
           <h1>{project.name}</h1>
           <p className="text-secondary">{project.description}</p>
@@ -61,9 +64,9 @@ export default function ProjectDetail() {
       {/* 排程方向 */}
       <div className="project-direction-row">
         {project.schedule_direction === "backward" ? (
-          <span className="badge badge-blue">倒排（基于完成日期）</span>
+          <span className="badge badge-blue">{t("projectDetail.badgeBackward")}</span>
         ) : (
-          <span className="badge">正排（基于开始日期）</span>
+          <span className="badge">{t("projectDetail.badgeForward")}</span>
         )}
         <select
           className="direction-select"
@@ -80,11 +83,11 @@ export default function ProjectDetail() {
             }
           }}
         >
-          <option value="forward">正排</option>
-          <option value="backward">倒排</option>
+          <option value="forward">{t("projectDetail.forward")}</option>
+          <option value="backward">{t("projectDetail.backward")}</option>
         </select>
         {hasProgress && (
-          <span className="direction-hint">项目已有任务进度，排程方向不可修改</span>
+          <span className="direction-hint">{t("projectDetail.dirLockedHint")}</span>
         )}
         {/* 项目锚点日期：正排编辑开始日期，倒排编辑结束日期（保存后全项目重排） */}
         {project.schedule_direction === "forward" ? (

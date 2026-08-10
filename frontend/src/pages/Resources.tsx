@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../api/client";
 import { formatDate } from "../utils/date";
 import { statusLabel } from "../utils/labels";
@@ -20,6 +21,7 @@ interface TaskRow {
 
 /** 资源视图：按负责人分组汇总任务（叶子任务计入，父任务由子任务汇总不重复） */
 export default function Resources() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,7 @@ export default function Resources() {
   const groups = new Map<string, TaskRow[]>();
   for (const t of tasks) {
     if (!isLeaf(t)) continue; // 父任务不重复计入
-    const key = t.assignee || "未分配";
+    const key = t.assignee || i18n.t("resources.unassigned");
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(t);
   }
@@ -55,16 +57,16 @@ export default function Resources() {
   return (
     <div className="resources">
       <div className="section-title-row" style={{ marginBottom: 12 }}>
-        <h2 className="section-title">资源视图</h2>
+        <h2 className="section-title">{t("resources.title")}</h2>
         <span className="text-secondary" style={{ fontSize: 13 }}>
-          共 {sorted.length} 位负责人 · {tasks.filter(isLeaf).length} 个叶子任务
+          {t("resources.count", { owners: sorted.length, leaves: tasks.filter(isLeaf).length })}
         </span>
       </div>
 
       {loading ? (
-        <p className="text-secondary">加载中...</p>
+        <p className="text-secondary">{t("common.loading")}</p>
       ) : sorted.length === 0 ? (
-        <p className="text-secondary">暂无任务</p>
+        <p className="text-secondary">{t("resources.empty")}</p>
       ) : (
         <div className="resource-grid">
           {sorted.map(([owner, list]) => {
@@ -74,7 +76,7 @@ export default function Resources() {
                 <div className="resource-card-header">
                   <span className="resource-avatar">👤</span>
                   <span className="resource-name">{owner}</span>
-                  <span className="resource-summary">{list.length} 项 · {totalDays}d</span>
+                  <span className="resource-summary">{t("resources.items", { n: list.length, days: totalDays })}</span>
                 </div>
                 <div className="resource-tasks">
                   {list.map((t) => (
