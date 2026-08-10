@@ -666,10 +666,21 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var assigneeIDs []int64
 	if _, ok := fieldCheck["assignee_ids"]; ok {
 		json.Unmarshal(fieldCheck["assignee_ids"], &assigneeIDs)
+		// 去重(与 CreateTask 一致)
+		seen := map[int64]bool{}
+		var deduped []int64
+		for _, id := range assigneeIDs {
+			if !seen[id] {
+				deduped = append(deduped, id)
+				seen[id] = true
+			}
+		}
+		assigneeIDs = deduped
 	} else if _, ok := fieldCheck["assignee"]; ok {
-		assigneeIDs, _ = resolveUserIDs(h.db, splitOwnerNames(t.Assignee))
-		if len(splitOwnerNames(t.Assignee)) > len(assigneeIDs) {
-			writeError(w, http.StatusBadRequest, "INVALID_OWNER", "负责人含非系统用户,请从现有用户中选择")
+		var missing []string
+		assigneeIDs, missing = resolveUserIDs(h.db, splitOwnerNames(t.Assignee))
+		if len(missing) > 0 {
+			writeError(w, http.StatusBadRequest, "INVALID_OWNER", "负责人["+strings.Join(missing, ",")+"]不是系统用户,请从现有用户中选择")
 			return
 		}
 	} else {

@@ -265,3 +265,51 @@ func TestCreateTaskDefaultsToProjectOwners(t *testing.T) {
 		t.Errorf("默认项目 owner 后关联行数 = %d, want 2", n)
 	}
 }
+
+// UpdateTask 传 assignee_ids 含重复 → 去重后写入,响应与快照无重复
+func TestUpdateTaskAssigneeIDsDedup(t *testing.T) {
+	conn, h := testTaskHandler(t)
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a','a@x.com','张三','x','local',1), ('b','b@x.com','李四','x','local',1)`)
+	pid := setupProject(t, conn)
+	tid := setupTask(t, conn, pid, "任务E", "", "")
+	var uid1, uid2 int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='a@x.com'`).Scan(&uid1)
+	conn.QueryRow(`SELECT id FROM users WHERE email='b@x.com'`).Scan(&uid2)
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"name": "任务E", "task_type": "task", "status": "open",
+		"start_date": "2026-08-03", "end_date": "2026-08-10", "duration_days": 5,
+		"assignee_ids": []int64{uid1, uid2, uid1}, "version": 1, // 含重复 uid1
+	})
+	r := chi.NewRouter()
+	r.Put("/api/projects/{id}/tasks/{taskID}", h.UpdateTask)
+	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/projects/%d/tasks/%d", pid, tid), bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("状态码 = %d, body=%s", w.Code, w.Body.String())
+	}
+	// 响应 assignee_ids 去重
+	var resp struct {
+		Data models.Task `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if len(resp.Data.AssigneeIDs) != 2 {
+		t.Errorf("响应 assignee_ids = %v, want 2 个(去重)", resp.Data.AssigneeIDs)
+	}
+	if resp.Data.Assignee != "张三; 李四" {
+		t.Errorf("响应快照 = %q, want %q", resp.Data.Assignee, "张三; 李四")
+	}
+	// DB 快照列无重复
+	var snap string
+	conn.QueryRow(`SELECT assignee FROM tasks WHERE id=?`, tid).Scan(&snap)
+	if snap != "张三; 李四" {
+		t.Errorf("DB 快照列 = %q, want %q", snap, "张三; 李四")
+	}
+	// 关联表去重
+	var n int
+	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees WHERE task_id=?`, tid).Scan(&n)
+	if n != 2 {
+		t.Errorf("关联表行数 = %d, want 2(去重)", n)
+	}
+}
