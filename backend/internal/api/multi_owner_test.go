@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"followitup/internal/auth"
@@ -430,5 +431,62 @@ func TestGetMyTasksViews(t *testing.T) {
 	}
 	if len(startingP) != 1 || startingP[0] != "项目任务2" {
 		t.Errorf("project视角 starting = %v, want [项目任务2]", startingP)
+	}
+}
+
+// CSV 导入:负责人列分号多值,解析失败归未分配+提示
+func TestImportTasksMultiAssignee(t *testing.T) {
+	conn, h := testTaskHandler(t)
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
+	pid := setupProject(t, conn)
+
+	csv := strings.Join([]string{
+		"任务名,WBS,工期,开始日期,负责人,进度,状态",
+		"需求,1,3,2026-08-03,张三;李四,50%,进行中",   // 双负责人
+		"编码,2,3,2026-08-10,张三;王五,0%,",          // 王五不存在 → 只留张三 + 提示
+	}, "\n")
+	body, _ := json.Marshal(map[string]string{"csv": csv})
+	r := chi.NewRouter()
+	r.Post("/api/projects/{id}/tasks/import", h.ImportTasks)
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/projects/%d/tasks/import", pid), bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("状态码 = %d, body=%s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		Data struct {
+			Imported int      `json:"imported"`
+			Errors   []string `json:"errors"`
+		} `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp.Data.Imported != 2 {
+		t.Fatalf("imported = %d, want 2", resp.Data.Imported)
+	}
+	// 需求任务:2 个负责人
+	var tid1 int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='需求'`, pid).Scan(&tid1)
+	var n int
+	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees WHERE task_id=?`, tid1).Scan(&n)
+	if n != 2 {
+		t.Errorf("需求负责人数 = %d, want 2", n)
+	}
+	// 编码任务:1 个负责人(王五被跳过)
+	var tid2 int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='编码'`, pid).Scan(&tid2)
+	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees WHERE task_id=?`, tid2).Scan(&n)
+	if n != 1 {
+		t.Errorf("编码负责人数 = %d, want 1", n)
+	}
+	// 提示含王五
+	found := false
+	for _, e := range resp.Data.Errors {
+		if strings.Contains(e, "王五") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("errors = %v, want 含王五提示", resp.Data.Errors)
 	}
 }

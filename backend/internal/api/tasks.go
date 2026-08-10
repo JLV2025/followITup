@@ -502,13 +502,24 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 		if row.startDate != "" && row.duration > 0 {
 			endDate = scheduler.AddWorkDays(nil, row.startDate, row.duration)
 		}
-		// 防呆:负责人空 → 项目 owner
-		assignee := row.assignee
-		if strings.TrimSpace(assignee) == "" {
-			var owner string
-			h.db.QueryRow(`SELECT COALESCE(owner, '') FROM projects WHERE id=? AND deleted_at IS NULL`, projectID).Scan(&owner)
-			assignee = owner
+		// 防呆:负责人空 → 项目全部 owner;非空 → 分号拆分为多值,逐个解析
+		assigneeIDs, missing := resolveUserIDs(h.db, splitOwnerNames(row.assignee))
+		if len(assigneeIDs) == 0 {
+			rows, err := h.db.Query(`SELECT po.user_id FROM project_owners po JOIN projects p ON p.id = po.project_id WHERE p.id = ? AND p.deleted_at IS NULL`, projectID)
+			if err == nil {
+				for rows.Next() {
+					var uid int64
+					if rows.Scan(&uid) == nil {
+						assigneeIDs = append(assigneeIDs, uid)
+					}
+				}
+				rows.Close()
+			}
 		}
+		for _, m := range missing {
+			skipReasons = append(skipReasons, fmt.Sprintf("行[%s %s]:负责人[%s]不是系统用户,已归未分配", row.wbs, row.name, m))
+		}
+		assigneeSnapshot := strings.Join(ownerNamesOf(h.db, assigneeIDs), "; ")
 		// 实际日期默认跟随计划（与 CreateTask 新语义一致：用户选择 > 系统默认）
 		actualStart, actualEnd := fillActualDates("", "", row.startDate, endDate)
 
@@ -518,7 +529,7 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 			 constraint_type, constraint_date, sort_order, actual_start, actual_end)
 			 VALUES (?, ?, ?, '', ?, ?, 'medium', ?, ?, ?, ?, ?, 0, '', '', ?, ?, ?)`,
 			projectID, parentID, row.name, row.taskType, row.status,
-			assignee, row.startDate, endDate, row.duration, row.progress,
+			assigneeSnapshot, row.startDate, endDate, row.duration, row.progress,
 			nextSort, actualStart, actualEnd,
 		)
 		if err != nil {
@@ -529,6 +540,7 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 		nextSort++
 		id, _ := result.LastInsertId()
 		wbsToID[row.wbs] = id
+		saveTaskAssignees(h.db, id, assigneeIDs)
 		imported++
 	}
 
