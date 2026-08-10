@@ -439,6 +439,14 @@ func TestImportTasksMultiAssignee(t *testing.T) {
 	conn, h := testTaskHandler(t)
 	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
 	pid := setupProject(t, conn)
+	// 种子:给项目补真实 project_owners(与 setupProject 文本 owner 对应)。
+	// 否则旧代码「全解析失败兜底项目 owner」查询返回 0 行,「测试负责人数 = 0」断言无回归判别力。
+	res, err := conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('owner@test.local','owner@test.local','项目负责人','x','local',1)`)
+	if err != nil {
+		t.Fatalf("建 owner 用户: %v", err)
+	}
+	ownerID, _ := res.LastInsertId()
+	saveProjectOwners(conn, pid, []int64{ownerID})
 
 	csv := strings.Join([]string{
 		"任务名,WBS,工期,开始日期,负责人,进度,状态",
