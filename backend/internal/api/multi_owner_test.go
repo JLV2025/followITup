@@ -2,12 +2,14 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"followitup/internal/auth"
 	"followitup/internal/models"
 
 	"github.com/go-chi/chi/v5"
@@ -204,7 +206,7 @@ func TestUpdateTaskPreservesOrOverwritesAssignees(t *testing.T) {
 	w2 := httptest.NewRecorder()
 	r.ServeHTTP(w2, req2)
 	if w2.Code != http.StatusOK {
-		t.Fatalf("覆盖写状态码 = %d, body=%s", w2.Code, w2.Body.String())
+		t.Fatalf("覆盖写状态码 = %d, body=%s", w2.Code, w.Body.String())
 	}
 	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees WHERE task_id=?`, tid).Scan(&n)
 	if n != 0 {
@@ -346,5 +348,87 @@ func TestListTasksReturnsAssigneeIDs(t *testing.T) {
 	}
 	if task.Assignee != "张三; 李四" {
 		t.Errorf("assignee = %q, want %q", task.Assignee, "张三; 李四")
+	}
+}
+
+// GetMyTasks 双视角:view=task(默认)我名下任务;view=project 我名下项目的任务
+func TestGetMyTasksViews(t *testing.T) {
+	conn, h := testTaskHandler(t)
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('me@x.com','me@x.com','Me User','x','local',1), ('a@x.com','a@x.com','Alpha','x','local',1), ('b@x.com','b@x.com','Beta','x','local',1)`)
+	var me, alpha int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='me@x.com'`).Scan(&me)
+	conn.QueryRow(`SELECT id FROM users WHERE email='a@x.com'`).Scan(&alpha)
+
+	// 项目1:owner = Me User;项目2:owner = Alpha
+	r1, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, owner) VALUES ('我的项目','2026-08-01','2026-08-31','active','Me User')`)
+	pid1, _ := r1.LastInsertId()
+	r2, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, owner) VALUES ('他人项目','2026-08-01','2026-08-31','active','Alpha')`)
+	pid2, _ := r2.LastInsertId()
+
+	// 建立 project_owners:pid1→me,pid2→alpha
+	saveProjectOwners(conn, pid1, []int64{me})
+	saveProjectOwners(conn, pid2, []int64{alpha})
+
+	// 我的项目里:任务1 进行中、assignee=Beta(不是我);任务2 open、明天开始
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '项目任务', 'task', 'in_progress', '2026-08-05', '2026-08-15', 5, 30, 0)`, pid1)
+	var t1 int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='项目任务'`, pid1).Scan(&t1)
+	var beta int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='b@x.com'`).Scan(&beta)
+	saveTaskAssignees(conn, t1, []int64{beta})
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '项目任务2', 'task', 'open', '2026-08-12', '2026-08-16', 5, 0, 1)`, pid1)
+	var t2 int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='项目任务2'`, pid1).Scan(&t2)
+	saveTaskAssignees(conn, t2, []int64{me}) // 我名下
+
+	// 他人项目里:任务3 进行中、assignee=我
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '他人项目任务', 'task', 'in_progress', '2026-08-05', '2026-08-15', 5, 30, 0)`, pid2)
+	var t3 int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='他人项目任务'`, pid2).Scan(&t3)
+	saveTaskAssignees(conn, t3, []int64{me})
+
+	do := func(view string) ([]string, []string) {
+		r := chi.NewRouter()
+		r.Get("/api/tasks/mine", h.GetMyTasks)
+		req := httptest.NewRequest(http.MethodGet, "/api/tasks/mine?view="+view, nil)
+		ctx := context.WithValue(req.Context(), auth.UserIDKey, me)
+		req = req.WithContext(ctx)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("view=%s 状态码 = %d, body=%s", view, w.Code, w.Body.String())
+		}
+		var resp struct {
+			Data struct {
+				Mine     []MyTaskItem `json:"mine"`
+				Starting []MyTaskItem `json:"starting"`
+			} `json:"data"`
+		}
+		json.Unmarshal(w.Body.Bytes(), &resp)
+		var m, s []string
+		for _, x := range resp.Data.Mine {
+			m = append(m, x.Name)
+		}
+		for _, x := range resp.Data.Starting {
+			s = append(s, x.Name)
+		}
+		return m, s
+	}
+
+	// task 视角:mine 只含我名下的(他人项目任务 in_progress);starting(12 天内)= 项目任务2
+	mineT, startingT := do("task")
+	if len(mineT) != 1 || mineT[0] != "他人项目任务" {
+		t.Errorf("task视角 mine = %v, want [他人项目任务]", mineT)
+	}
+	if len(startingT) != 1 || startingT[0] != "项目任务2" {
+		t.Errorf("task视角 starting = %v, want [项目任务2]", startingT)
+	}
+	// project 视角:mine = 我名下项目全部 in_progress(项目任务);starting = 我名下项目 open 即将开始(项目任务2)
+	mineP, startingP := do("project")
+	if len(mineP) != 1 || mineP[0] != "项目任务" {
+		t.Errorf("project视角 mine = %v, want [项目任务]", mineP)
+	}
+	if len(startingP) != 1 || startingP[0] != "项目任务2" {
+		t.Errorf("project视角 starting = %v, want [项目任务2]", startingP)
 	}
 }

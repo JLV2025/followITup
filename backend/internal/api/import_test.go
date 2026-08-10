@@ -191,14 +191,20 @@ func TestGetMyTasks(t *testing.T) {
 	var uid int64
 	conn.QueryRow(`SELECT id FROM users WHERE email='me@test.local'`).Scan(&uid)
 
-	// 我的任务:assignee=Me User,未完成,开始日期在过去(不在"即将开始"窗口)
+	// 我的任务:in_progress,开始日期在过去(不在"即将开始"窗口);通过 task_assignees 关联 me
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '我的任务A', 'task', 'in_progress', 'Me User', '2026-08-05', '2026-08-15', 5, 30, 0)`, pid)
-	// 已完成的任务不应出现
+	var tidA int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='我的任务A'`, pid).Scan(&tidA)
+	saveTaskAssignees(conn, tidA, []int64{uid})
+	// 已完成的任务不应出现(无关联表,也不该出现)
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '已完成任务', 'task', 'completed', 'Me User', '2026-08-01', '2026-08-05', 5, 100, 1)`, pid)
-	// 待开始的任务也不应出现在"我的任务"（只显示进行中）
+	// 待开始的任务也不应出现在"我的任务"(status=open 不进 mine;start 09-01 不在 7 天窗口,不进 starting)
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '待开始任务', 'task', 'open', 'Me User', '2026-09-01', '2026-09-05', 5, 0, 3)`, pid)
-	// 未来 7 天内开始的任务(assignee 是别人)
+	// 未来 7 天内开始的任务,通过 task_assignees 关联 me(旧行为 starting 不过滤 assignee,新行为 task 视角过滤)
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '即将开始B', 'task', 'open', 'Other', '2026-08-14', '2026-08-18', 5, 0, 2)`, pid)
+	var tidB int64
+	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='即将开始B'`, pid).Scan(&tidB)
+	saveTaskAssignees(conn, tidB, []int64{uid})
 
 	// 构造带 auth 上下文的请求（用 auth 包导出的 UserIDKey 注入）
 	r := chi.NewRouter()

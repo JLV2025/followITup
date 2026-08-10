@@ -562,17 +562,18 @@ type MyTaskItem struct {
 	Assignee    string `json:"assignee"`
 }
 
-// GetMyTasks 我的待办：① 当前登录用户作为负责人的进行中任务（跨项目，按结束日期排序）
-// ② 未来 N 天内开始的任务（全部项目，按开始日期排序；N 由 ?days= 指定，默认 7，上限 30）。
-// 纯读操作，无写库。待开始(open)任务不占"我的任务"——由"即将开始"按窗口覆盖。
+// GetMyTasks 我的待办：view=task(默认)我名下的任务;view=project 我名下项目的任务。
+// 每个视角两个分区:mine(进行中)+ starting(未来 N 天开始,未完成)。
 func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.GetUserID(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "请先登录")
 		return
 	}
-	var displayName, email string
-	h.db.QueryRow(`SELECT COALESCE(display_name, ''), COALESCE(email, '') FROM users WHERE id=? AND is_active=1`, userID).Scan(&displayName, &email)
+	view := r.URL.Query().Get("view")
+	if view != "project" {
+		view = "task"
+	}
 
 	days := 7
 	if d, err := strconv.Atoi(r.URL.Query().Get("days")); err == nil && d >= 1 && d <= 30 {
@@ -581,38 +582,44 @@ func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 	today := time.Now().Format("2006-01-02")
 	windowEnd := time.Now().AddDate(0, 0, days).Format("2006-01-02")
 
-	// 我的任务：assignee 匹配显示名或邮箱（与到期提醒同一套匹配），仅进行中
+	// 待办任务限定条件:task 视角=我负责的任务;project 视角=我负责的项目的任务
+	scope := `EXISTS (SELECT 1 FROM task_assignees ta WHERE ta.task_id = t.id AND ta.user_id = ?)`
+	scopeArg := userID
+	if view == "project" {
+		scope = `EXISTS (SELECT 1 FROM project_owners po JOIN projects pj ON pj.id = po.project_id WHERE po.project_id = t.project_id AND po.user_id = ? AND pj.deleted_at IS NULL)`
+	}
+
 	var mine []MyTaskItem
 	rows, err := h.db.Query(`
 		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct
 		FROM tasks t
 		JOIN projects p ON p.id = t.project_id AND p.deleted_at IS NULL
-		WHERE t.deleted_at IS NULL AND t.status = 'in_progress'
-		  AND (t.assignee = ? OR t.assignee = ?)
-		ORDER BY CASE WHEN t.end_date = '' THEN 1 ELSE 0 END, t.end_date`, displayName, email)
+		WHERE t.deleted_at IS NULL AND t.status = 'in_progress' AND `+scope+`
+		ORDER BY CASE WHEN t.end_date = '' THEN 1 ELSE 0 END, t.end_date`, scopeArg)
 	if err == nil {
 		for rows.Next() {
 			var it MyTaskItem
 			if rows.Scan(&it.ID, &it.Name, &it.ProjectName, &it.Status, &it.StartDate, &it.EndDate, &it.ProgressPct) == nil {
+				_, it.Assignee = loadTaskAssignees(h.db, it.ID)
 				mine = append(mine, it)
 			}
 		}
 		rows.Close()
 	}
 
-	// 即将开始：未来 N 天内开始的任务（按开始日期排序）
 	var starting []MyTaskItem
 	rows2, err := h.db.Query(`
-		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct, COALESCE(t.assignee, '')
+		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct
 		FROM tasks t
 		JOIN projects p ON p.id = t.project_id AND p.deleted_at IS NULL
-		WHERE t.deleted_at IS NULL AND t.status != 'completed'
+		WHERE t.deleted_at IS NULL AND t.status != 'completed' AND `+scope+`
 		  AND t.start_date >= ? AND t.start_date <= ?
-		ORDER BY t.start_date`, today, windowEnd)
+		ORDER BY t.start_date`, scopeArg, today, windowEnd)
 	if err == nil {
 		for rows2.Next() {
 			var it MyTaskItem
-			if rows2.Scan(&it.ID, &it.Name, &it.ProjectName, &it.Status, &it.StartDate, &it.EndDate, &it.ProgressPct, &it.Assignee) == nil {
+			if rows2.Scan(&it.ID, &it.Name, &it.ProjectName, &it.Status, &it.StartDate, &it.EndDate, &it.ProgressPct) == nil {
+				_, it.Assignee = loadTaskAssignees(h.db, it.ID)
 				starting = append(starting, it)
 			}
 		}
