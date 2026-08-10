@@ -203,16 +203,6 @@ func (h *ProjectHandler) buildTimeFilter(tableAlias string, year, fy string) (st
 	return "", nil
 }
 
-// ownerIsValidUser 校验所有者必须是已存在的活跃用户（display_name 或 email 精确匹配）
-// 项目 owner 用于后续邮件通知，必须是可解析出邮箱的系统用户
-func (h *ProjectHandler) ownerIsValidUser(owner string) bool {
-	if strings.TrimSpace(owner) == "" {
-		return false
-	}
-	var n int
-	err := h.db.QueryRow(`SELECT COUNT(*) FROM users WHERE is_active = 1 AND (display_name = ? OR email = ?)`, owner, owner).Scan(&n)
-	return err == nil && n > 0
-}
 
 // CreateProject 创建项目
 func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -531,8 +521,9 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		}
 			rows.Close()
 			for _, tid := range taskIDs {
-			saveTaskAssignees(h.db, tid, ownerIDs)
-		}
+				snap := saveTaskAssignees(h.db, tid, ownerIDs)
+				h.db.Exec(`UPDATE tasks SET assignee=?, version=version+1 WHERE id=?`, snap, tid)
+			}
 		}
 		// 新负责人加入项目成员(role=owner)
 		for _, uid := range ownerIDs {

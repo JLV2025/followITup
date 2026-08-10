@@ -476,6 +476,56 @@ func TestCreateProjectWithOwnerIDs(t *testing.T) {
 	}
 }
 
+// UpdateProject 改 owner:open 任务快照列与关联表同步,version 递增
+func TestUpdateProjectReassignsTasks(t *testing.T) {
+	conn, _ := testTaskHandler(t)
+	ph := &ProjectHandler{db: conn}
+	conn.Exec(`INSERT INTO users (login, email, display_name, password_hash, auth_source, is_active) VALUES ('a@x.com','a@x.com','张三','x','local',1), ('b@x.com','b@x.com','李四','x','local',1)`)
+	var uid1, uid2 int64
+	conn.QueryRow(`SELECT id FROM users WHERE email='a@x.com'`).Scan(&uid1)
+	conn.QueryRow(`SELECT id FROM users WHERE email='b@x.com'`).Scan(&uid2)
+
+	// 建项目:owner=张三
+	r1, _ := conn.Exec(`INSERT INTO projects (name, start_date, end_date, status, owner) VALUES ('改派测试','2026-08-01','2026-08-31','active','张三')`)
+	pid, _ := r1.LastInsertId()
+	saveProjectOwners(conn, pid, []int64{uid1})
+	// 建 open 任务:assignee=张三
+	r2, _ := conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order, version) VALUES (?, 'open任务','task','open','2026-08-03','2026-08-10',5,0,0,1)`, pid)
+	tid, _ := r2.LastInsertId()
+	saveTaskAssignees(conn, tid, []int64{uid1})
+
+	r := chi.NewRouter()
+	r.Put("/api/projects/{id}", ph.UpdateProject)
+	// 改 owner 为李四(owner_ids 数组)
+	body, _ := json.Marshal(map[string]interface{}{
+		"name": "改派测试", "start_date": "2026-08-01", "end_date": "2026-08-31",
+		"owner_ids": []int64{uid2}, "status": "active",
+	})
+	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/projects/%d", pid), bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("改派状态码 = %d, body=%s", w.Code, w.Body.String())
+	}
+
+	// 快照列已更新
+	var snap string
+	var ver int
+	conn.QueryRow(`SELECT assignee, version FROM tasks WHERE id=?`, tid).Scan(&snap, &ver)
+	if snap != "李四" {
+		t.Errorf("改派后快照 = %q, want 李四", snap)
+	}
+	if ver != 2 {
+		t.Errorf("改派后 version = %d, want 2(递增)", ver)
+	}
+	// 关联表同步
+	var n int
+	conn.QueryRow(`SELECT COUNT(*) FROM task_assignees WHERE task_id=?`, tid).Scan(&n)
+	if n != 1 {
+		t.Errorf("改派后关联表行数 = %d, want 1", n)
+	}
+}
+
 // 项目列表返回 owner_ids;CopyProject 复制两套关联表
 func TestProjectListAndCopyWithOwners(t *testing.T) {
 	conn, _ := testTaskHandler(t)
