@@ -69,7 +69,7 @@ python -c "import secrets; print(secrets.token_hex(32))"
 
 ```bat
 cd /d D:\FollowITup
-followitup.exe -config config.yaml
+followitup.exe config.yaml
 ```
 
 - 日志出现 `FollowITup v1.8.10 启动于 http://localhost:8081` 即成功
@@ -83,7 +83,7 @@ followitup.exe -config config.yaml
 cd /d D:\FollowITup
 
 :: 安装服务(参数:服务名、程序、参数)
-nssm install FollowITup "D:\FollowITup\followitup.exe" "-config D:\FollowITup\config.yaml"
+nssm install FollowITup "D:\FollowITup\followitup.exe" "D:\FollowITup\config.yaml"
 
 :: 工作目录(关键:数据库绝对路径已配置,目录正确性双保险)
 nssm set FollowITup AppDirectory "D:\FollowITup"
@@ -123,10 +123,12 @@ netsh advfirewall firewall add rule name="FollowITup 8081" dir=in action=allow p
 
 ```powershell
 $stamp = Get-Date -Format "yyyyMMdd-HHmm"
-Stop-Service FollowITup
-Start-Sleep 2
+# 服务存在且运行中才停启(前台调试等场景下脚本仍可安全执行)
+$svc = Get-Service FollowITup -ErrorAction SilentlyContinue
+$wasRunning = $svc -and $svc.Status -eq 'Running'
+if ($wasRunning) { Stop-Service FollowITup; Start-Sleep 2 }
 Copy-Item "D:\FollowITup\data" "D:\FollowITup\backup\data-$stamp" -Recurse
-Start-Service FollowITup
+if ($wasRunning) { Start-Service FollowITup }
 # 保留最近 30 份
 Get-ChildItem "D:\FollowITup\backup" -Directory | Sort-Object Name -Descending | Select-Object -Skip 30 | Remove-Item -Recurse -Force
 ```

@@ -41,7 +41,7 @@ copy config.yaml C:\followitup\
 # 2. Edit config.yaml — set jwt_secret to a random string
 
 # 3. Run
-C:\followitup\followitup.exe -config C:\followitup\config.yaml
+C:\followitup\followitup.exe C:\followitup\config.yaml
 
 # 4. Open browser
 # http://<server>:8080
@@ -52,7 +52,7 @@ C:\followitup\followitup.exe -config C:\followitup\config.yaml
 ### Run as Windows Service
 
 ```bash
-sc create FollowITup binPath= "C:\followitup\followitup.exe -config C:\followitup\config.yaml" start= auto
+sc create FollowITup binPath= "C:\followitup\followitup.exe C:\followitup\config.yaml" start= auto
 sc start FollowITup
 ```
 
@@ -99,6 +99,7 @@ followITup/
 - **Design requirements**: `docs/design-requirements.md`
 - **Implementation plan**: `.wolf/memory.md` and plan file
 - **API**: See `backend/internal/api/` for endpoint definitions
+- **Deployment (Windows Server 2022, offline)**: `docs/deployment-windows-server-2022.md`
 
 ## License
 
@@ -142,7 +143,7 @@ copy config.yaml C:\followitup\
 # 2. 修改 config.yaml — 将 jwt_secret 改为随机字符串
 
 # 3. 运行
-C:\followitup\followitup.exe -config C:\followitup\config.yaml
+C:\followitup\followitup.exe C:\followitup\config.yaml
 
 # 4. 打开浏览器
 # http://<服务器地址>:8080
@@ -153,7 +154,7 @@ C:\followitup\followitup.exe -config C:\followitup\config.yaml
 ### 注册为 Windows 服务
 
 ```bash
-sc create FollowITup binPath= "C:\followitup\followitup.exe -config C:\followitup\config.yaml" start= auto
+sc create FollowITup binPath= "C:\followitup\followitup.exe C:\followitup\config.yaml" start= auto
 sc start FollowITup
 ```
 
@@ -200,6 +201,7 @@ followITup/
 - **设计需求**：`docs/design-requirements.md`
 - **实施计划与进展**：`.wolf/memory.md` 及计划文件
 - **API 端点**：详见 `backend/internal/api/` 目录
+- **部署指南（Windows Server 2022 离线环境）**：`docs/deployment-windows-server-2022.md`
 
 ## 许可证
 
