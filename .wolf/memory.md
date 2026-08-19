@@ -3,6 +3,8 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+| 16:45 | Task 13 全量构建+后端测试+浏览器实测: 6/6 后端测试通过,前端类型检查+构建通过,浏览器实测 9/10 项通过(1 项 Playwright 兼容性无法验证),发现项目 owner 多选替换疑似 bug,测试数据已全部还原 | task-13-report.md | PASS with 1 concern | ~8000 |
+
 | 10:50 | 修复基线层 top 定位：bars_area 共享容器内基线条 top = line.offsetTop - 4、实际条 top = line.offsetTop + line.offsetHeight，前端构建+Go exe 构建成功 | frontend/src/pages/ProjectGantt.tsx | Playwright 验证：4 条基线 leftDiff=0、topDiff=-4、各自 top 不同，TS 无错误 | ~3k |
 | 11:15 | 修复基线菜单外部点击不关闭：useEffect + document click 监听 + stopPropagation，4 场景 Playwright 验证通过 | frontend/src/pages/ProjectGantt.tsx | TSC 无错误，前后端构建成功 | ~2k |
 
@@ -1924,3 +1926,300 @@ cd backend && followitup.exe config.yaml   # 启动
 | 12:34 | Session end: 239 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~121778 tok |
 | 12:38 | Session end: 239 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~121778 tok |
 | 13:00 | 版本号 v1.8.10(用户拍板,进入用户测试阶段;原0+月+日规则作废) | server.go/README | commit | ~50 |
+| 13:00 | Session end: 239 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~121778 tok |
+| 13:10 | 会话收工:用户测试阶段开始(v1.8.10)。今日共22个commit(审查修复/英文版i18n/数据清理/日期推导/截止预计/我的待办/精简/版本号),服务器运行中,工作区仅余OpenWolf元数据 | - | 收工 | ~100 |
+| 13:00 | Session end: 239 writes across 35 files (tasks.go, projects.go, reminder.go, server.go, settings.go) | 34 reads | ~121778 tok |
+
+## Session: 2026-08-10 13:01
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-08-10 13:03
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-08-10 13:04
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:38 | Created docs/superpowers/specs/2026-08-10-multi-owner-design.md | — | ~1277 |
+| 14:30 | 需求讨论:任务+项目多负责人设计确认(关联表/双视角待办/三行卡片),已提交 883908c | docs/superpowers/specs/2026-08-10-multi-owner-design.md | 设计已确认,待实施 | ~800 |
+| 13:39 | Session end: 1 writes across 1 files (2026-08-10-multi-owner-design.md) | 4 reads | ~22938 tok |
+| 13:51 | Created docs/superpowers/plans/2026-08-10-multi-owner.md | — | ~18364 |
+| 13:52 | Edited docs/superpowers/plans/2026-08-10-multi-owner.md | modified Next() | ~208 |
+| 13:52 | Edited docs/superpowers/plans/2026-08-10-multi-owner.md | 4→2 lines | ~51 |
+| 15:10 | 多负责人实施计划已提交(13任务,含迁移/API/前端/实测) | docs/superpowers/plans/2026-08-10-multi-owner.md | 计划就绪,待执行 | ~800 |
+| 13:52 | Session end: 4 writes across 2 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md) | 12 reads | ~81811 tok |
+| 13:53 | Edited docs/superpowers/plans/2026-08-10-multi-owner.md | reduced (-11 lines) | ~78 |
+| 13:53 | Edited docs/superpowers/plans/2026-08-10-multi-owner.md | modified len() | ~198 |
+| 13:55 | Session end: 6 writes across 2 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md) | 14 reads | ~82107 tok |
+| 13:56 | Created backend/internal/db/migration_test.go | — | ~748 |
+| 13:57 | Edited backend/internal/db/sqlite.go | expanded (+46 lines) | ~530 |
+| 13:57 | Edited backend/internal/db/migration_test.go | modified applyMigrationOnly() | ~111 |
+| 13:59 | Commit b880bff: 多负责人关联表迁移 v9(task_assignees/project_owners),RED(编译失败 applyMigrationOnly undefined)→GREEN(3 测试 PASS) | backend/internal/db/{sqlite.go,migration_test.go} | committed | ~2100 |
+| 13:59 | Created .superpowers/sdd/2026-08-10-multi-owner/task-1-report.md | — | ~632 |
+| 14:00 | Session end: 10 writes across 5 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 15 reads | ~84865 tok |
+| 14:04 | Session end: 10 writes across 5 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 16 reads | ~85394 tok |
+| 14:05 | Edited backend/internal/db/sqlite.go | 3→3 lines | ~47 |
+| 14:05 | Edited backend/internal/db/sqlite.go | 3→3 lines | ~49 |
+| 14:05 | Edited .superpowers/sdd/2026-08-10-multi-owner/task-1-report.md | expanded (+22 lines) | ~217 |
+| 14:02 | Commit 5bb6889: F1 修复(v9 快照回填 GROUP_CONCAT 加 ORDER BY u.id),3 测试 PASS | backend/internal/db/sqlite.go | committed | ~400 |
+| 14:06 | Session end: 13 writes across 5 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 16 reads | ~85730 tok |
+| 14:07 | Session end: 13 writes across 5 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 18 reads | ~85909 tok |
+| 14:10 | Created backend/internal/api/multi_owner_test.go | — | ~670 |
+| 14:10 | Edited backend/internal/models/models.go | 1→2 lines | ~32 |
+| 14:10 | Edited backend/internal/models/models.go | 1→2 lines | ~36 |
+| 14:10 | Edited backend/internal/api/tasks.go | modified splitOwnerNames() | ~1010 |
+| 14:12 | Task2:模型 ids 字段(AssigneeIDs/OwnerIDs)+ tasks.go 负责人辅助函数(拆分/解析/保存/加载)+ 测试 | models.go tasks.go multi_owner_test.go | 12 测试全过,commit 5a30fbd | ~3k |
+| 14:12 | Created .superpowers/sdd/2026-08-10-multi-owner/task-2-report.md | — | ~1045 |
+| 14:13 | Session end: 18 writes across 9 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 20 reads | ~91197 tok |
+| 14:15 | Session end: 18 writes across 9 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 21 reads | ~92177 tok |
+| 14:15 | Edited backend/internal/api/tasks.go | modified resolveUserIDs() | ~145 |
+| 14:16 | Edited backend/internal/api/tasks.go | modified ownerNamesOf() | ~212 |
+| 14:16 | Edited backend/internal/api/multi_owner_test.go | modified TestResolveUserIDsEmailPriority() | ~462 |
+| 14:20 | Task2 fix round:resolveUserIDs email 优先两步查询 + ownerNamesOf + 2 测试 | tasks.go multi_owner_test.go | 14 测试全过,commit 008f1b0 | ~1.5k |
+| 14:17 | Session end: 21 writes across 9 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 22 reads | ~93054 tok |
+| 14:18 | Session end: 21 writes across 9 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 22 reads | ~93054 tok |
+| 14:19 | Edited backend/internal/api/multi_owner_test.go | expanded (+9 lines) | ~40 |
+| 14:20 | Edited backend/internal/api/multi_owner_test.go | modified TestCreateTaskWithAssigneeIDs() | ~1642 |
+| 14:20 | Edited backend/internal/api/tasks.go | modified Next() | ~232 |
+| 14:22 | Edited backend/internal/api/tasks.go | 4→2 lines | ~25 |
+| 14:22 | Edited backend/internal/api/tasks.go | 5→10 lines | ~54 |
+| 14:23 | Edited backend/internal/api/tasks.go | modified len() | ~198 |
+| 14:23 | Edited backend/internal/api/tasks.go | 2→5 lines | ~46 |
+| 14:23 | Edited backend/internal/api/tasks.go | expanded (+7 lines) | ~94 |
+| 14:24 | Edited backend/internal/api/tasks.go | modified Next() | ~250 |
+| 14:26 | Created .superpowers/sdd/2026-08-10-multi-owner/task-3-report.md | — | ~774 |
+| 14:30 | Task 3 完成: CreateTask/UpdateTask 多负责人接入 + 4 新测试 PASS + 全量回归通过 | tasks.go multi_owner_test.go | commit 0411527 | ~1200 |
+| 14:27 | Session end: 31 writes across 10 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 24 reads | ~99434 tok |
+| 14:31 | Session end: 31 writes across 10 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 26 reads | ~100504 tok |
+| 14:31 | Edited backend/internal/api/tasks.go | expanded (+11 lines) | ~213 |
+| 14:32 | Edited backend/internal/api/multi_owner_test.go | modified TestUpdateTaskAssigneeIDsDedup() | ~506 |
+| 14:33 | Edited .superpowers/sdd/2026-08-10-multi-owner/task-3-report.md | expanded (+30 lines) | ~269 |
+| 14:33 | Session end: 34 writes across 10 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 26 reads | ~103659 tok |
+| 14:34 | Session end: 34 writes across 10 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 28 reads | ~103880 tok |
+| 14:35 | Edited backend/internal/api/multi_owner_test.go | modified TestListTasksReturnsAssigneeIDs() | ~360 |
+| 14:36 | Edited backend/internal/api/tasks.go | 6→8 lines | ~56 |
+| 14:36 | Edited backend/internal/api/tasks.go | 6→8 lines | ~55 |
+| 14:36 | Edited backend/internal/api/tasks.go | 3→4 lines | ~46 |
+| 14:36 | Edited backend/internal/api/tasks.go | 5→8 lines | ~57 |
+| 14:37 | Created .superpowers/sdd/2026-08-10-multi-owner/task-4-report.md | — | ~579 |
+
+| 14:40 | Task4:任务读路径回填 assignee_ids(ListTasks/GetTask/ListDeletedTasks)+测试 | backend/internal/api/tasks.go, multi_owner_test.go | e66c4d6 提交 | ~300 |
+| 14:38 | Session end: 40 writes across 11 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 31 reads | ~105213 tok |
+| 14:40 | Session end: 40 writes across 11 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 32 reads | ~105847 tok |
+| 14:42 | Edited backend/internal/api/multi_owner_test.go | 12→14 lines | ~50 |
+| 14:44 | Created backend/internal/api/multi_owner_test.go | — | ~4556 |
+| 14:45 | Edited backend/internal/api/import_test.go | modified TestGetMyTasks() | ~751 |
+| 14:46 | Edited backend/internal/api/tasks.go | modified GetMyTasks() | ~660 |
+| 14:46 | Edited backend/internal/api/tasks.go | inline fix | ~13 |
+| 14:47 | Created .superpowers/sdd/2026-08-10-multi-owner/task-5-report.md | — | ~629 |
+| 14:48 | Task 5: GetMyTasks 双视角(view=task\|project) 实现+测试,20/20 全量通过 | tasks.go, multi_owner_test.go, import_test.go | commit 9d79d4b | ~300 |
+| 14:48 | Session end: 46 writes across 13 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 32 reads | ~113411 tok |
+| 14:51 | Session end: 46 writes across 13 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 34 reads | ~114000 tok |
+| 14:53 | Edited .superpowers/sdd/2026-08-10-multi-owner/task-5-report.md | expanded (+21 lines) | ~179 |
+| 14:54 | Session end: 47 writes across 13 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 34 reads | ~115205 tok |
+| 14:55 | Session end: 47 writes across 13 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 36 reads | ~115362 tok |
+| 14:56 | Edited backend/internal/api/multi_owner_test.go | 14→15 lines | ~53 |
+| 14:56 | Edited backend/internal/api/tasks.go | modified Next() | ~187 |
+| 14:57 | Edited backend/internal/api/tasks.go | 13→14 lines | ~118 |
+| 14:58 | Task6:CSV导入负责人列分号多值+解析失败提示,INSERT实参换快照+saveTaskAssignees | backend/internal/api/tasks.go, multi_owner_test.go | 22测试全过 | ~6k |
+| 14:58 | Created .superpowers/sdd/2026-08-10-multi-owner/task-6-report.md | — | ~692 |
+| 14:59 | Session end: 51 writes across 14 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 38 reads | ~116655 tok |
+| 15:01 | Session end: 51 writes across 14 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 38 reads | ~117304 tok |
+| 15:01 | Edited backend/internal/api/tasks.go | 3→4 lines | ~60 |
+| 15:01 | Edited backend/internal/api/multi_owner_test.go | 24→25 lines | ~244 |
+| 15:02 | Edited backend/internal/api/multi_owner_test.go | modified Contains() | ~173 |
+| 15:05 | 审查修复:ImportTasks兜底条件加len(missing)==0,全解析失败归未分配+双提示测试 | backend/internal/api/tasks.go, multi_owner_test.go | 22测试全过 | ~2k |
+| 15:03 | Session end: 54 writes across 14 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 38 reads | ~117814 tok |
+| 15:05 | Session end: 54 writes across 14 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 39 reads | ~118618 tok |
+| 15:05 | Edited backend/internal/api/multi_owner_test.go | expanded (+8 lines) | ~191 |
+| 15:05 | Edited backend/internal/api/tasks.go | inline fix | ~14 |
+| 15:06 | Edited backend/internal/api/tasks.go | inline fix | ~14 |
+| 15:10 | M6复审:测试补project_owners种子(判别力),临时改回旧条件验证FAIL后恢复 | backend/internal/api/multi_owner_test.go | 22全过 | ~2k |
+| 15:07 | Session end: 57 writes across 14 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 39 reads | ~118850 tok |
+| 15:09 | Session end: 57 writes across 14 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 40 reads | ~118966 tok |
+| 15:11 | Edited backend/internal/api/multi_owner_test.go | modified TestCreateProjectWithOwnerIDs() | ~1095 |
+| 15:12 | Edited backend/internal/api/projects.go | modified len() | ~524 |
+| 15:12 | Edited backend/internal/api/projects.go | 5→6 lines | ~124 |
+| 15:13 | Edited backend/internal/api/projects.go | modified splitOwnerNames() | ~102 |
+| 15:13 | Edited backend/internal/api/projects.go | 3→4 lines | ~68 |
+| 15:14 | Edited backend/internal/api/projects.go | modified splitOwnerNames() | ~203 |
+| 15:14 | Edited backend/internal/api/projects.go | modified len() | ~531 |
+| 15:15 | Edited backend/internal/api/projects.go | 3→7 lines | ~54 |
+| 15:17 | Edited backend/internal/api/projects.go | 2→5 lines | ~40 |
+| 15:20 | Edited backend/internal/api/multi_owner_test.go | 6→9 lines | ~59 |
+| 15:25 | Task 7: 项目多负责人五处改造完成(owner_ids+文本兼容+改派+复制+成员同步) | projects.go, multi_owner_test.go | 24 tests pass | ~6000 |
+| 15:22 | Created .superpowers/sdd/2026-08-10-multi-owner/task-7-report.md | — | ~735 |
+| 15:23 | Session end: 68 writes across 16 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 41 reads | ~123437 tok |
+| 15:32 | Session end: 68 writes across 16 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 44 reads | ~124126 tok |
+| 15:33 | Edited backend/internal/api/projects.go | 5→6 lines | ~52 |
+| 15:33 | Edited backend/internal/api/multi_owner_test.go | modified TestUpdateProjectReassignsTasks() | ~567 |
+| 15:34 | Edited .superpowers/sdd/2026-08-10-multi-owner/task-7-report.md | expanded (+30 lines) | ~246 |
+| 15:35 | Session end: 71 writes across 16 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 45 reads | ~124971 tok |
+| 15:37 | Session end: 71 writes across 16 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 45 reads | ~125188 tok |
+| 15:38 | Edited backend/internal/mail/reminder.go | 17→14 lines | ~140 |
+| 15:39 | Task 8:到期提醒改 JOIN task_assignees(替换文本匹配查询) | backend/internal/mail/reminder.go | commit dec8e7b, build+test 全过 | ~200 |
+| 15:39 | Created .superpowers/sdd/2026-08-10-multi-owner/task-8-report.md | — | ~603 |
+| 15:40 | Session end: 73 writes across 18 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 48 reads | ~125984 tok |
+| 15:41 | Session end: 73 writes across 18 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 49 reads | ~126511 tok |
+| 15:42 | Created frontend/src/components/MultiUserSelect.tsx | — | ~678 |
+| 15:42 | Edited frontend/src/styles/components.css | expanded (+26 lines) | ~430 |
+| 15:43 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 import(s) | ~105 |
+| 15:43 | Edited frontend/src/components/TaskDetailModal.tsx | 2→3 lines | ~20 |
+| 15:43 | Edited frontend/src/components/TaskDetailModal.tsx | inline fix | ~18 |
+| 15:43 | Edited frontend/src/components/TaskDetailModal.tsx | inline fix | ~14 |
+| 15:43 | Edited frontend/src/components/TaskDetailModal.tsx | inline fix | ~10 |
+| 15:43 | Edited frontend/src/components/TaskDetailModal.tsx | 12→8 lines | ~70 |
+| 15:43 | Edited frontend/src/i18n/locales/zh.ts | 2→4 lines | ~21 |
+| 15:43 | Edited frontend/src/i18n/locales/zh.ts | 1→2 lines | ~21 |
+| 15:43 | Edited frontend/src/i18n/locales/en.ts | 2→4 lines | ~25 |
+| 15:44 | Edited frontend/src/i18n/locales/en.ts | 1→2 lines | ~35 |
+| 15:44 | Task 9: MultiUserSelect 组件 + TaskDetailModal 接入多负责人 | MultiUserSelect.tsx, TaskDetailModal.tsx, zh.ts, en.ts, components.css | tsc pass, committed f6d3c6f | ~650 |
+| 15:44 | Created .superpowers/sdd/2026-08-10-multi-owner/task-9-report.md | — | ~496 |
+| 15:45 | Session end: 86 writes across 24 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 52 reads | ~140050 tok |
+| 15:47 | Session end: 86 writes across 24 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 54 reads | ~140515 tok |
+| 15:47 | Edited frontend/src/components/MultiUserSelect.tsx | inline fix | ~5 |
+| 15:48 | Edited .superpowers/sdd/2026-08-10-multi-owner/task-9-report.md | expanded (+9 lines) | ~60 |
+| 15:49 | Session end: 88 writes across 24 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 55 reads | ~141262 tok |
+| 15:52 | Re-review Task9 fix round1: I1 ADDRESSED (x→×, 3a382f8), no new breakage | review-f6d3c6f..3a382f8.diff | verdict: all addressed | ~150 |
+| 15:50 | Session end: 88 writes across 24 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 56 reads | ~141311 tok |
+| 15:52 | Edited frontend/src/pages/Dashboard.tsx | added 1 import(s) | ~188 |
+| 15:52 | Edited frontend/src/pages/Dashboard.tsx | ", owner: " → ", owner_ids: [] as number" | ~48 |
+| 15:52 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~27 |
+| 15:52 | Edited frontend/src/pages/Dashboard.tsx | 2→3 lines | ~63 |
+| 15:52 | Edited frontend/src/pages/Dashboard.tsx | ", owner: " → ", owner_ids: [], start_da" | ~36 |
+| 15:52 | Edited frontend/src/pages/Dashboard.tsx | modified if() | ~35 |
+| 15:53 | Edited frontend/src/pages/Dashboard.tsx | CSS: owner_ids | ~97 |
+| 15:53 | Edited frontend/src/pages/Dashboard.tsx | "/api/tasks/mine?days=${to" → "/api/tasks/mine?days=${to" | ~44 |
+| 15:53 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~36 |
+| 15:53 | Edited frontend/src/pages/Dashboard.tsx | removed 7 lines | ~8 |
+| 15:53 | Edited frontend/src/pages/Dashboard.tsx | 2→7 lines | ~123 |
+| 15:53 | Edited frontend/src/pages/Dashboard.tsx | CSS: owner_ids | ~164 |
+| 15:54 | Edited frontend/src/pages/Dashboard.tsx | expanded (+16 lines) | ~201 |
+| 15:54 | Edited frontend/src/styles/components.css | CSS: gap, margin-bottom, max-width | ~97 |
+| 15:54 | Edited frontend/src/styles/components.css | expanded (+8 lines) | ~184 |
+| 15:54 | Edited frontend/src/i18n/locales/zh.ts | 1→3 lines | ~29 |
+| 15:54 | Edited frontend/src/i18n/locales/en.ts | 1→3 lines | ~35 |
+| 15:57 | Edited frontend/src/index.css | CSS: --border | ~14 |
+| 15:58 | Task 10: 创建弹窗多选owner+卡片三行布局+待办双视角切换 | Dashboard.tsx/components.css/zh.ts/en.ts/index.css | tsc通过,提交 a6cf17a | ~800 |
+| 15:58 | Created .superpowers/sdd/2026-08-10-multi-owner/task-10-report.md | — | ~626 |
+| 16:00 | Session end: 107 writes across 27 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 58 reads | ~146950 tok |
+| 16:02 | Session end: 107 writes across 27 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 60 reads | ~147536 tok |
+| 16:03 | Edited frontend/src/pages/Dashboard.tsx | 17→19 lines | ~242 |
+| 16:03 | Edited .superpowers/sdd/2026-08-10-multi-owner/task-10-report.md | expanded (+6 lines) | ~83 |
+| 16:04 | Session end: 109 writes across 27 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 61 reads | ~147867 tok |
+| 16:06 | Session end: 109 writes across 27 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 61 reads | ~147897 tok |
+| 16:07 | Edited frontend/src/pages/ProjectDetail.tsx | added 1 import(s) | ~88 |
+| 16:07 | Edited frontend/src/pages/ProjectDetail.tsx | 10→11 lines | ~59 |
+| 16:07 | Edited frontend/src/pages/ProjectDetail.tsx | CSS: id | ~85 |
+| 16:07 | Edited frontend/src/pages/ProjectDetail.tsx | 1→5 lines | ~43 |
+| 16:08 | Edited frontend/src/pages/ProjectDetail.tsx | map() → setOwnerIds() | ~195 |
+| 16:08 | Edited frontend/src/pages/Resources.tsx | added 1 condition(s) | ~125 |
+| 16:08 | Edited frontend/src/i18n/locales/zh.ts | 8→9 lines | ~59 |
+| 16:08 | Edited frontend/src/i18n/locales/en.ts | 8→9 lines | ~88 |
+| 16:09 | Created .superpowers/sdd/2026-08-10-multi-owner/task-11-report.md | — | ~437 |
+| 16:09 | Session end: 118 writes across 30 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 62 reads | ~149186 tok |
+| 16:14 | Session end: 118 writes across 30 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 64 reads | ~149595 tok |
+| 16:14 | Edited backend/internal/api/projects.go | 6→7 lines | ~22 |
+| 16:15 | Edited backend/internal/api/projects.go | modified UpdateProject() | ~139 |
+| 16:18 | Edited backend/internal/api/multi_owner_test.go | modified TestUpdateProjectClearOwnerIDs() | ~1264 |
+| 16:21 | Edited .superpowers/sdd/2026-08-10-multi-owner/task-11-report.md | expanded (+35 lines) | ~415 |
+| 16:22 | Session end: 122 writes across 30 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 64 reads | ~153246 tok |
+| 16:24 | Session end: 122 writes across 30 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 65 reads | ~153628 tok |
+| 16:26 | Edited frontend/src/pages/TaskListView.tsx | removed 4 lines | ~6 |
+| 16:26 | Edited frontend/src/pages/TaskListView.tsx | removed 20 lines | ~32 |
+| 16:26 | Edited frontend/src/pages/ProjectGantt.tsx | 5→5 lines | ~59 |
+| 16:26 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: s | ~53 |
+| 16:26 | Edited frontend/src/pages/ProjectGantt.tsx | CSS: font-size | ~93 |
+| 16:27 | Edited frontend/src/pages/ProjectGantt.tsx | reduced (-10 lines) | ~36 |
+| 16:27 | Edited frontend/src/components/ImportModal.tsx | modified join() | ~171 |
+| 16:27 | Edited frontend/src/components/ImportModal.tsx | CSS: fontSize, marginBottom | ~67 |
+| 16:28 | Edited frontend/src/i18n/locales/zh.ts | 2→3 lines | ~32 |
+| 16:28 | Edited frontend/src/i18n/locales/en.ts | 2→3 lines | ~61 |
+| 16:30 | Created .superpowers/sdd/2026-08-10-multi-owner/task-12-report.md | — | ~589 |
+| 16:30 | Session end: 133 writes across 34 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 67 reads | ~156912 tok |
+| 16:32 | Session end: 133 writes across 34 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 69 reads | ~157464 tok |
+| 16:41 | Created tmp_import_body.json | — | ~60 |
+| 16:42 | Created tmp_import_body.json | — | ~45 |
+| 16:45 | Created tmp_fix.json | — | ~110 |
+| 16:46 | Created .superpowers/sdd/2026-08-10-multi-owner/task-13-report.md | — | ~959 |
+| 16:54 | Session end: 137 writes across 37 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 71 reads | ~159605 tok |
+| 16:55 | Edited backend/internal/api/projects.go | inline fix | ~32 |
+| 16:55 | Edited backend/internal/api/projects.go | inline fix | ~34 |
+| 16:55 | Edited frontend/src/styles/components.css | inline fix | ~42 |
+| 17:18 | Edited frontend/src/components/MultiUserSelect.tsx | 4→5 lines | ~76 |
+| 17:18 | Edited frontend/src/pages/ProjectDetail.tsx | 2→3 lines | ~42 |
+| 17:23 | Edited frontend/src/components/MultiUserSelect.tsx | expanded (+7 lines) | ~350 |
+| 17:24 | Edited frontend/src/pages/ProjectDetail.tsx | 3→2 lines | ~20 |
+| 17:25 | Edited frontend/src/styles/components.css | expanded (+7 lines) | ~153 |
+| 17:31 | Edited frontend/src/components/MultiUserSelect.tsx | added 1 condition(s) | ~187 |
+| 17:34 | Session end: 146 writes across 37 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 73 reads | ~162556 tok |
+| 17:39 | Session end: 146 writes across 37 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 76 reads | ~163753 tok |
+| 17:43 | Edited backend/internal/api/projects.go | modified int64SetEqual() | ~369 |
+| 17:44 | Edited backend/internal/api/tasks.go | modified int64SetEqual() | ~97 |
+| 17:44 | Edited backend/internal/api/tasks.go | expanded (+8 lines) | ~139 |
+| 17:44 | Edited backend/internal/api/tasks.go | expanded (+8 lines) | ~166 |
+| 17:44 | Edited backend/internal/api/projects.go | 3→4 lines | ~101 |
+| 17:44 | Edited backend/internal/api/projects.go | 6→8 lines | ~160 |
+| 17:45 | Edited backend/internal/api/multi_owner_test.go | modified TestUpdateProjectSameOwnerDoesNotReassign() | ~571 |
+| 17:46 | Edited backend/internal/api/multi_owner_test.go | 4→4 lines | ~95 |
+| 17:48 | Created .superpowers/sdd/2026-08-10-multi-owner/final-fix-report.md | — | ~648 |
+| 17:46 | final-review修复: C1(owner改派集合比较+去重)、I1(assignee_ids校验)、I2(owner读路径JOIN)、新增回归测试 | projects.go, tasks.go, multi_owner_test.go | 29/29 测试通过, TSC=0 | ~3k |
+| 17:49 | Session end: 155 writes across 38 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 76 reads | ~166310 tok |
+| 17:50 | 多负责人功能完成(25 commit):关联表迁移/写读路径/双视角待办/CSV/提醒/前端组件/三行卡片;最终审查修复 C1(改派集合比较门控)+I1(assignee_ids校验)+I2(项目owner JOIN);bug-237(MultiUserSelect 误触删除)交互重构:标签区仅显示删除+独立添加按钮+坐标校验 | backend+frontend 多文件 | 完成,浏览器实测通过 | ~800 |
+| 17:52 | Session end: 155 writes across 38 files (2026-08-10-multi-owner-design.md, 2026-08-10-multi-owner.md, migration_test.go, sqlite.go, task-1-report.md) | 78 reads | ~166917 tok |
+
+## Session: 2026-08-14 12:27
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-08-14 12:28
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 18:10 | 会话收工:多负责人功能完成(25 commit,6c43c691..bdc9e86),服务器运行中(v1.8.10),工作区仅余OpenWolf元数据 | - | 收工 | ~100 |
+
+## Session: 2026-08-17 17:15
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-08-17 17:16
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 17:27 | Created docs/deployment-windows-server-2022.md | — | ~1187 |
+| 18:40 | 部署研究:Win2022离线部署文档(端口8081/NSSM/本地账号+内网SMTP/备份脚本),用户决策确认 | docs/deployment-windows-server-2022.md | 文档已交付 | ~300 |
+| 17:27 | Session end: 1 writes across 1 files (deployment-windows-server-2022.md) | 2 reads | ~1272 tok |
+| 17:29 | Edited README.md | 5→6 lines | ~77 |
+| 17:30 | Edited README.md | 3→4 lines | ~54 |
+| 17:32 | Edited README.md | inline fix | ~15 |
+| 17:34 | Edited docs/deployment-windows-server-2022.md | added 2 condition(s) | ~141 |
+| 17:40 | 部署模拟演练:发现文档bug(程序不支持-config标志,仅位置参数,README/部署文档共6处已修正)+备份脚本健壮化(服务存在判断,模拟验证通过)+README部署链接;模拟目录已清理 | README.md + docs/deployment-windows-server-2022.md | 19a470b | ~400 |
+| 17:35 | Session end: 5 writes across 2 files (deployment-windows-server-2022.md, README.md) | 4 reads | ~4432 tok |
+| 17:37 | Session end: 5 writes across 2 files (deployment-windows-server-2022.md, README.md) | 4 reads | ~4432 tok |
+| 17:42 | Session end: 5 writes across 2 files (deployment-windows-server-2022.md, README.md) | 4 reads | ~4432 tok |
+
+## Session: 2026-08-19 08:57
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 09:03 | 排查"收工"技能缺失:技能文件完好,实为 work-wrap-up,位于 ndm 项目(.claude/skills/+workflows/,已提交推送远程),不属 followITup;pull followITup 无此技能属正常,非缺文件 | ndm/.claude/skills/work-wrap-up/SKILL.md | 无缺失,定位澄清 | ~2K |
+| 09:04 | "收工"技能升级用户级:复制 ndm/.claude/skills/work-wrap-up/SKILL.md → ~/.claude/skills/work-wrap-up/(diff 校验一致);ndm 副本保留(项目级优先不冲突) | ~/.claude/skills/work-wrap-up/SKILL.md | 全局生效,新会话可用 | ~1K |
+| 09:06 | Edited README.md | 1→2 lines | ~70 |
+| 09:06 | README"相关文档"加开发机技能配置说明(收工技能→全局目录路径) | README.md | 已加中文区一行 | ~200 |
+| 09:08 | Edited README.md | 1→3 lines | ~96 |
+| 09:08 | README技能说明升级为可照做命令(clone复制 + raw下载两种), 确认收工技能已在 ndm 远程仓库 | README.md | 完成 | ~300 |
+| 09:09 | Session end: 2 writes across 1 files (README.md) | 7 reads | ~2004 tok |
+| 09:10 | Session end: 2 writes across 1 files (README.md) | 7 reads | ~2004 tok |
+| 09:12 | Session end: 2 writes across 1 files (README.md) | 9 reads | ~2004 tok |
+| 09:15 | Created C:/Users/jingl/.claude/skills/work-wrap-up/SKILL.md | — | ~700 |
+| 09:15 | Session end: 3 writes across 2 files (README.md, SKILL.md) | 9 reads | ~2754 tok |
+| 09:15 | 删除废弃 workflow 文件(与 SKILL.md 前台执行矛盾, 硬编码 master 分支) | ndm/.claude/workflows/work-wrap-up.js | 已删, ndm 工作区含删除未提交 | ~200 |
+| 09:20 | Session end: 3 writes across 2 files (README.md, SKILL.md) | 9 reads | ~2754 tok |
+| 09:26 | Created C:/Users/jingl/.claude/skills/work-wrap-up/SKILL.md | — | ~626 |
+| 09:25 | 收工技能 v3:按用户拍板删除测试/构建阶段(要快要完整,代码有错直接上传), 描述写明下班交接场景; 收工时发现 TestGetMyTasks 失败(测试fixture用绝对日期2026-08-14, 今日08-19已过窗口→starting为空), 用户决策:不修复直接上传 | SKILL.md(全局+ndm), import_test.go | 技能v3生效, 测试坑已记录 | ~1K |

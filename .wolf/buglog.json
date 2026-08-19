@@ -2,6 +2,40 @@
   "version": 1,
   "bugs": [
     {
+      "id": "bug-238",
+      "timestamp": "2026-08-10T17:46:00.000Z",
+      "error_message": "UpdateProject ownerChanged 仅凭键存在判定 true,每次改日期/方向都会静默把全部 open/delayed 任务负责人改写成项目 owner 集合并 version+1",
+      "file": "backend/internal/api/projects.go",
+      "root_cause": "ownerChanged 仅检查 fieldCheck 是否含 owner_ids/owner 键,不比较新旧集合;前端展开 project 对象时总是携带 owner_ids → 每次 saveDate/方向切换都触发改派",
+      "fix": "加入集合比较(int64SetEqual)+owner_ids 去重,新旧集合相同则 ownerChanged=false",
+      "tags": [
+        "multi-owner",
+        "UpdateProject",
+        "regression",
+        "data-loss"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T17:46:00.000Z"
+    },
+    {
+      "id": "bug-237",
+      "timestamp": "2026-08-10T08:44:00.000Z",
+      "error_message": "项目详情页 MultiUserSelect 勾选第二个负责人后,API 保存结果只保留第二个而非追加两人",
+      "file": "frontend/src/pages/ProjectDetail.tsx",
+      "root_cause": "待排查:可能是 ownerIds state 在 onChange 触发时未传递完整列表,或 MultiUserSelect 组件 toggle 逻辑与 PUT 请求存在竞态",
+      "fix": "未修复,需进一步排查",
+      "tags": [
+        "multi-owner",
+        "project-detail",
+        "MultiUserSelect",
+        "potential-bug"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:44:00.000Z"
+    },
+    {
       "id": "bug-001",
       "timestamp": "2026-08-03T00:38:35.356Z",
       "error_message": "Significant refactor of ",
@@ -2792,6 +2826,1112 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-10"
+    },
+    {
+      "id": "bug-174",
+      "timestamp": "2026-08-10T00:59:08.069Z",
+      "error_message": "Missing guard clause",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "No early return/throw for edge case: readonlyRef.current",
+      "fix": "Added guard clause: if (readonlyRef.current)",
+      "tags": [
+        "auto-detected",
+        "guard-clause",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T00:59:17.778Z"
+    },
+    {
+      "id": "bug-175",
+      "timestamp": "2026-08-10T00:59:27.235Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T00:59:27.235Z"
+    },
+    {
+      "id": "bug-176",
+      "timestamp": "2026-08-10T01:00:08.754Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T01:00:08.754Z"
+    },
+    {
+      "id": "bug-177",
+      "timestamp": "2026-08-10T01:00:22.204Z",
+      "error_message": "Wrong operator: !== should be ===",
+      "file": "frontend/src/pages/Resources.tsx",
+      "root_cause": "Used \"!==\" instead of \"===\"",
+      "fix": "Changed operator !== → ===",
+      "tags": [
+        "auto-detected",
+        "operator-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T01:00:22.204Z"
+    },
+    {
+      "id": "bug-178",
+      "timestamp": "2026-08-10T01:52:51.508Z",
+      "error_message": "Missing import: ./i18n",
+      "file": "frontend/src/main.tsx",
+      "root_cause": "Module(s) not imported: ./i18n",
+      "fix": "Added import(s) for ./i18n",
+      "tags": [
+        "auto-detected",
+        "missing-import",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T01:52:51.508Z"
+    },
+    {
+      "id": "bug-179",
+      "timestamp": "2026-08-10T01:53:55.055Z",
+      "error_message": "CSS fix: x",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[s.getUTCMonth()] → (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: i18n.t(`months.upper.${s.getUTCMonth()",
+      "fix": "Changed x: (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: MONTHS_EN[s.getUTCMonth()] → (pct(s.toISOString().slice(0, 10)) + pct(e.toISOString().slice(0, 10))) / 2, label: i18n.t(`months.upper.${s.getUTCMonth()",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T01:53:55.055Z"
+    },
+    {
+      "id": "bug-180",
+      "timestamp": "2026-08-10T01:55:53.430Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "6 lines replaced/restructured",
+      "fix": "Rewrote 9→3 lines (6 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T01:55:53.430Z"
+    },
+    {
+      "id": "bug-181",
+      "timestamp": "2026-08-10T01:56:08.851Z",
+      "error_message": "Wrong reference: STATUS_LABELS should be statusLabel",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Used \"STATUS_LABELS\" instead of \"statusLabel\"",
+      "fix": "Changed STATUS_LABELS → statusLabel",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T01:56:14.449Z"
+    },
+    {
+      "id": "bug-182",
+      "timestamp": "2026-08-10T01:56:18.577Z",
+      "error_message": "Wrong reference: STATUS_MAP should be statusLabel",
+      "file": "frontend/src/pages/TaskListView.tsx",
+      "root_cause": "Used \"STATUS_MAP\" instead of \"statusLabel\"",
+      "fix": "Changed STATUS_MAP → statusLabel",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T01:56:18.577Z"
+    },
+    {
+      "id": "bug-183",
+      "timestamp": "2026-08-10T01:56:58.131Z",
+      "error_message": "CSS fix: s",
+      "file": "frontend/src/pages/Resources.tsx",
+      "root_cause": "s: string) => ({ open: \"未开始\", in_progress: \"进行中\", completed: \"已完成\", delayed: \"延迟\" → string) => statusLabel(s)",
+      "fix": "Changed s: string) => ({ open: \"未开始\", in_progress: \"进行中\", completed: \"已完成\", delayed: \"延迟\" → string) => statusLabel(s)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T01:56:58.131Z"
+    },
+    {
+      "id": "bug-184",
+      "timestamp": "2026-08-10T01:58:00.389Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "4 lines replaced/restructured",
+      "fix": "Rewrote 5→5 lines (4 removed) | Also: <option value=\"open\">未开始</option>; <option value=\"in_progress\">进行中</option>",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T01:58:05.881Z"
+    },
+    {
+      "id": "bug-185",
+      "timestamp": "2026-08-10T02:00:53.366Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/Login.tsx",
+      "root_cause": "Had \"登录失败，请重试\"",
+      "fix": "Changed to \"common.unknownError\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:00:53.366Z"
+    },
+    {
+      "id": "bug-186",
+      "timestamp": "2026-08-10T02:03:17.146Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 10→10 lines (3 removed) | Also: title={displayMode === \"fiscal\" ? \"切换为自然年\" : \"切换为财; {displayMode === \"fiscal\" ? \"📅 财年\" : \"🗓 自然年\"}",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T02:04:13.922Z"
+    },
+    {
+      "id": "bug-187",
+      "timestamp": "2026-08-10T02:03:22.157Z",
+      "error_message": "Wrong reference: button should be t",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Used \"button\" instead of \"t\"",
+      "fix": "Changed button → t",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 9,
+      "last_seen": "2026-08-10T02:06:52.215Z"
+    },
+    {
+      "id": "bug-188",
+      "timestamp": "2026-08-10T02:04:48.952Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Had `截止: ${formatDate(p.end_date)}`",
+      "fix": "Changed to \"dashboard.dueBy\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 5,
+      "last_seen": "2026-08-10T02:07:25.148Z"
+    },
+    {
+      "id": "bug-189",
+      "timestamp": "2026-08-10T02:08:37.474Z",
+      "error_message": "Type error",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:08:37.474Z"
+    },
+    {
+      "id": "bug-190",
+      "timestamp": "2026-08-10T02:09:09.275Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Had \"%m月\"",
+      "fix": "Changed to \"%M\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 12,
+      "last_seen": "2026-08-10T02:13:40.342Z"
+    },
+    {
+      "id": "bug-191",
+      "timestamp": "2026-08-10T02:09:36.620Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 6→6 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:09:36.620Z"
+    },
+    {
+      "id": "bug-192",
+      "timestamp": "2026-08-10T02:09:41.217Z",
+      "error_message": "CSS fix: failed",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "failed: string[] = [] → failed.length, detail: failed.join(\"、\")",
+      "fix": "Changed failed: string[] = [] → failed.length, detail: failed.join(\"、\")",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:09:41.217Z"
+    },
+    {
+      "id": "bug-193",
+      "timestamp": "2026-08-10T02:10:05.147Z",
+      "error_message": "Wrong condition in logic",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Condition was: if (window.confirm(`删除这 ${group.length} 条依赖关系？`)",
+      "fix": "Changed to: if (window.confirm(i18n.t(\"gantt.confirmDeleteLinks\", )",
+      "tags": [
+        "auto-detected",
+        "logic-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:10:05.147Z"
+    },
+    {
+      "id": "bug-194",
+      "timestamp": "2026-08-10T02:11:10.551Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:11:10.551Z"
+    },
+    {
+      "id": "bug-195",
+      "timestamp": "2026-08-10T02:11:15.443Z",
+      "error_message": "Wrong reference: option should be t",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Used \"option\" instead of \"t\"",
+      "fix": "Changed option → t",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 5,
+      "last_seen": "2026-08-10T02:12:54.153Z"
+    },
+    {
+      "id": "bug-196",
+      "timestamp": "2026-08-10T02:18:51.214Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/components/ImportModal.tsx",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 16→23 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:18:51.214Z"
+    },
+    {
+      "id": "bug-197",
+      "timestamp": "2026-08-10T02:18:55.473Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/components/ImportModal.tsx",
+      "root_cause": "Had \"modal-section-title\"",
+      "fix": "Changed to \"importModal.title\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:18:55.473Z"
+    },
+    {
+      "id": "bug-198",
+      "timestamp": "2026-08-10T02:20:31.121Z",
+      "error_message": "Wrong reference: button should be t",
+      "file": "frontend/src/components/RecycleBinModal.tsx",
+      "root_cause": "Used \"button\" instead of \"t\"",
+      "fix": "Changed button → t",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:20:31.121Z"
+    },
+    {
+      "id": "bug-199",
+      "timestamp": "2026-08-10T02:21:24.649Z",
+      "error_message": "CSS fix: date",
+      "file": "frontend/src/components/RecycleBinModal.tsx",
+      "root_cause": "date: t.deleted_at?.slice(0, 10) → dt.deleted_at?.slice(0, 10)",
+      "fix": "Changed date: t.deleted_at?.slice(0, 10) → dt.deleted_at?.slice(0, 10)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:21:24.649Z"
+    },
+    {
+      "id": "bug-200",
+      "timestamp": "2026-08-10T02:22:48.556Z",
+      "error_message": "Wrong reference: useTranslation should be tr",
+      "file": "frontend/src/pages/TaskListView.tsx",
+      "root_cause": "Used \"useTranslation\" instead of \"tr\"",
+      "fix": "Changed useTranslation → tr",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:22:48.556Z"
+    },
+    {
+      "id": "bug-201",
+      "timestamp": "2026-08-10T02:24:41.590Z",
+      "error_message": "Type error",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation | Also: holidayType: \"Type\",; holidayTypeHoliday: \"Holiday (excluded from workdays)\",",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T02:27:08.066Z"
+    },
+    {
+      "id": "bug-202",
+      "timestamp": "2026-08-10T02:29:33.445Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/mail/mail.go",
+      "root_cause": "14 lines replaced/restructured",
+      "fix": "Rewrote 29→29 lines (14 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:29:33.445Z"
+    },
+    {
+      "id": "bug-203",
+      "timestamp": "2026-08-10T02:32:58.763Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/i18n/locales/zh.ts",
+      "root_cause": "Had \": \"",
+      "fix": "Changed to \", \"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:32:58.763Z"
+    },
+    {
+      "id": "bug-204",
+      "timestamp": "2026-08-10T02:33:03.836Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "Had \"3days\"",
+      "fix": "Changed to \"3d\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:33:03.836Z"
+    },
+    {
+      "id": "bug-205",
+      "timestamp": "2026-08-10T02:33:08.460Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Had `gantt.zoom.${ZOOM_LEVELS[zoomLevel].name}`",
+      "fix": "Changed to `gantt.zoom.${zoomLevel}`",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T02:37:02.448Z"
+    },
+    {
+      "id": "bug-206",
+      "timestamp": "2026-08-10T02:35:36.537Z",
+      "error_message": "Wrong reference: zoom should be errors",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "Used \"zoom\" instead of \"errors\"",
+      "fix": "Changed zoom → errors",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:35:36.537Z"
+    },
+    {
+      "id": "bug-207",
+      "timestamp": "2026-08-10T02:40:09.498Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Had \"2, 3, 5\"",
+      "fix": "Changed to \"taskDetail.quickAddHint\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T02:40:09.498Z"
+    },
+    {
+      "id": "bug-208",
+      "timestamp": "2026-08-10T02:40:13.953Z",
+      "error_message": "Wrong reference: button should be t",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Used \"button\" instead of \"t\"",
+      "fix": "Changed button → t",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 4,
+      "last_seen": "2026-08-10T02:41:02.154Z"
+    },
+    {
+      "id": "bug-209",
+      "timestamp": "2026-08-10T03:18:22.419Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/scheduler/scheduler_test.go",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 8→9 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T03:18:22.419Z"
+    },
+    {
+      "id": "bug-210",
+      "timestamp": "2026-08-10T03:34:05.369Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Had \"dashboard.delete\"",
+      "fix": "Changed to \"common.delete\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T03:34:05.369Z"
+    },
+    {
+      "id": "bug-211",
+      "timestamp": "2026-08-10T04:08:57.002Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "Had \"Due: {{date}}\"",
+      "fix": "Changed to \"DL: {{date}}\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:08:57.002Z"
+    },
+    {
+      "id": "bug-212",
+      "timestamp": "2026-08-10T04:22:55.441Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:22:55.441Z"
+    },
+    {
+      "id": "bug-213",
+      "timestamp": "2026-08-10T04:23:00.318Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:23:00.318Z"
+    },
+    {
+      "id": "bug-214",
+      "timestamp": "2026-08-10T04:24:10.141Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Had \"../i18n\"",
+      "fix": "Changed to \"../utils/labels\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:24:10.141Z"
+    },
+    {
+      "id": "bug-215",
+      "timestamp": "2026-08-10T04:26:30.341Z",
+      "error_message": "Incorrect value in code",
+      "file": "backend/internal/api/import_test.go",
+      "root_cause": "Had `INSERT INTO tasks (project_id, name, task_type, s",
+      "fix": "Changed to \"即将开始\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:26:30.341Z"
+    },
+    {
+      "id": "bug-216",
+      "timestamp": "2026-08-10T04:31:24.371Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/i18n/locales/zh.ts",
+      "root_cause": "Had \"即将开始（未来 7 天）\"",
+      "fix": "Changed to \"即将开始（未来 {{days}} 天）\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:31:24.371Z"
+    },
+    {
+      "id": "bug-217",
+      "timestamp": "2026-08-10T04:31:29.297Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "Had \"Starting Soon (next 7 days)\"",
+      "fix": "Changed to \"Starting Soon (next {{days}} days)\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:31:29.297Z"
+    },
+    {
+      "id": "bug-218",
+      "timestamp": "2026-08-10T04:31:34.282Z",
+      "error_message": "Wrong reference: span should be days",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Used \"span\" instead of \"days\"",
+      "fix": "Changed span → days",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T04:31:34.282Z"
+    },
+    {
+      "id": "bug-219",
+      "timestamp": "2026-08-10T05:53:35.600Z",
+      "error_message": "Significant refactor of ",
+      "file": "docs/superpowers/plans/2026-08-10-multi-owner.md",
+      "root_cause": "5 lines replaced/restructured",
+      "fix": "Rewrote 21→10 lines (5 removed) | Also: // 负责人解析:owner_ids 优先,其次 owner 文本(分号/逗号分隔);每项必须是活跃; ownerIDs = p.OwnerIDs",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "md"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T05:53:40.874Z"
+    },
+    {
+      "id": "bug-220",
+      "timestamp": "2026-08-10T06:20:39.063Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "5 lines replaced/restructured",
+      "fix": "Rewrote 6→25 lines (5 removed) | Also: // 解析负责人:旧 assignee 文本(分号/逗号分隔)逐名解析;未指定时默认取项目全部 ow; if strings.TrimSpace(t.Assignee) != \"\" {",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-10T06:24:52.311Z"
+    },
+    {
+      "id": "bug-221",
+      "timestamp": "2026-08-10T06:31:53.475Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 14→25 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T06:31:53.475Z"
+    },
+    {
+      "id": "bug-222",
+      "timestamp": "2026-08-10T06:56:55.076Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "6 lines replaced/restructured",
+      "fix": "Rewrote 7→18 lines (6 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T06:56:55.076Z"
+    },
+    {
+      "id": "bug-223",
+      "timestamp": "2026-08-10T07:12:44.297Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/projects.go",
+      "root_cause": "4 lines replaced/restructured",
+      "fix": "Rewrote 36→62 lines (4 removed) | Also: \"SELECT id, name, description, owner, start_date, ; ).Scan(&p.ID, &p.Name, &p.Description, &p.Owner, & | Also: if p.Owner == \"\" {; p.Owner = oldOwner // 未携带时保留旧值",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 3,
+      "last_seen": "2026-08-10T07:14:59.423Z"
+    },
+    {
+      "id": "bug-224",
+      "timestamp": "2026-08-10T07:20:56.353Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/multi_owner_test.go",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 6→9 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T07:20:56.353Z"
+    },
+    {
+      "id": "bug-225",
+      "timestamp": "2026-08-10T07:43:37.978Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "9 lines replaced/restructured",
+      "fix": "Rewrote 12→8 lines (9 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T07:43:37.978Z"
+    },
+    {
+      "id": "bug-226",
+      "timestamp": "2026-08-10T07:52:26.047Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Had \", owner: \"",
+      "fix": "Changed to \", owner_ids: [] as number[], start_date: \"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 3,
+      "last_seen": "2026-08-10T07:53:12.924Z"
+    },
+    {
+      "id": "bug-227",
+      "timestamp": "2026-08-10T07:52:57.005Z",
+      "error_message": "Wrong condition in logic",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Condition was: if (!createForm.owner.trim()",
+      "fix": "Changed to: if (createForm.owner_ids.length === 0)",
+      "tags": [
+        "auto-detected",
+        "logic-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T07:52:57.005Z"
+    },
+    {
+      "id": "bug-228",
+      "timestamp": "2026-08-10T07:53:53.658Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "12 lines replaced/restructured",
+      "fix": "Rewrote 16→10 lines (12 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T07:53:53.658Z"
+    },
+    {
+      "id": "bug-229",
+      "timestamp": "2026-08-10T07:54:05.430Z",
+      "error_message": "Type error",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T07:54:05.430Z"
+    },
+    {
+      "id": "bug-230",
+      "timestamp": "2026-08-10T07:54:14.546Z",
+      "error_message": "CSS fix: width",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "width: 72px → 18px",
+      "fix": "Changed width: 72px → 18px",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T07:54:14.546Z"
+    },
+    {
+      "id": "bug-231",
+      "timestamp": "2026-08-10T08:00:00.000Z",
+      "error_message": "CSS variable --border not defined in index.css, used by MultiUserSelect (.mus-tags, .mus-dropdown) and todo-view-btn",
+      "file": "frontend/src/index.css",
+      "root_cause": "Task 9 introduced MultiUserSelect with var(--border) but never added the CSS variable to :root",
+      "fix": "Added --border: #E8E5E0 to index.css :root (mirrors existing --card-border value)",
+      "tags": [
+        "css",
+        "missing-variable",
+        "multi-owner"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:00:00.000Z"
+    },
+    {
+      "id": "bug-232",
+      "timestamp": "2026-08-10T08:08:12.757Z",
+      "error_message": "Wrong operator: || should be ===",
+      "file": "frontend/src/pages/Resources.tsx",
+      "root_cause": "Used \"||\" instead of \"===\"",
+      "fix": "Changed operator || → ===",
+      "tags": [
+        "auto-detected",
+        "operator-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:08:12.757Z"
+    },
+    {
+      "id": "bug-233",
+      "timestamp": "2026-08-10T08:26:41.400Z",
+      "error_message": "Wrong condition in logic",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Condition was: if (ownerFilter !== \"all\" && (task.assignee || \"\")",
+      "fix": "Changed to: if (ownerFilter !== \"all\")",
+      "tags": [
+        "auto-detected",
+        "logic-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:26:41.400Z"
+    },
+    {
+      "id": "bug-234",
+      "timestamp": "2026-08-10T08:26:50.140Z",
+      "error_message": "CSS fix: name, template",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "name: \"assignee_col\", label: t(\"gantt.colAssignee\"), width: 72, align: \"center\", → \"assignee_col\", label: t(\"gantt.colAssignee\"), width: 90, align: \"center\",; template: function (task: Record<string, any>) { → (task: any) => task.assignee",
+      "fix": "Changed name: \"assignee_col\", label: t(\"gantt.colAssignee\"), width: 72, align: \"center\", → \"assignee_col\", label: t(\"gantt.colAssignee\"), width: 90, align: \"center\",; template: function (task: Record<string, any>) { → (task: any) => task.assignee",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:26:50.140Z"
+    },
+    {
+      "id": "bug-235",
+      "timestamp": "2026-08-10T08:28:43.455Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/i18n/locales/zh.ts",
+      "root_cause": "Had \"进度(%)\"",
+      "fix": "Changed to \"负责人支持多人，分号分隔(如 张三;李四)，需为系统用户\"",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:28:43.455Z"
+    },
+    {
+      "id": "bug-236",
+      "timestamp": "2026-08-10T08:28:47.977Z",
+      "error_message": "Incorrect value in code",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "Had \"Progress (%)\"",
+      "fix": "Changed to \"Assignee supports multiple people, separated by ;",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:28:47.977Z"
+    },
+    {
+      "id": "bug-238",
+      "timestamp": "2026-08-10T08:55:58.323Z",
+      "error_message": "Wrong reference: 2px should be 5px",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "Used \"2px\" instead of \"5px\"",
+      "fix": "Changed 2px → 5px",
+      "tags": [
+        "auto-detected",
+        "wrong-reference",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T08:55:58.323Z"
+    },
+    {
+      "id": "bug-239",
+      "timestamp": "2026-08-10T09:25:27.970Z",
+      "error_message": "CSS fix: padding, border",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "padding: 4px 8px → 6px 10px; border: 1px solid var(--border) → 1px dashed var(--border)",
+      "fix": "Changed padding: 4px 8px → 6px 10px; border: 1px solid var(--border) → 1px dashed var(--border)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T09:25:27.970Z"
+    },
+    {
+      "id": "bug-237",
+      "timestamp": "2026-08-10T17:40:00",
+      "error_message": "项目详情页 owner 多选:勾选第二个负责人时替换而非追加;点击标签区即删除负责人",
+      "file": "frontend/src/components/MultiUserSelect.tsx",
+      "root_cause": "两层:(1) 标签区 onClick 同时承担'打开下拉',真实环境对一次点击派发两个 click(第二个错位命中 × 按钮)→ 误触移除;(2) 移除(清空)走即改即存立即落库,误删后级联改派清空所有 open 任务 assignee,放大损失",
+      "fix": "(1) 交互重构:标签区(.mus-tags)只负责显示与删除,移除 onClick;新增独立'＋ 添加'按钮(.mus-add-btn)展开勾选列表;(2) × 按钮 onClick 加坐标校验(getBoundingClientRect 比对),错位双派发的 click 坐标不在按钮内则拒绝移除;(3) 顺带修复 owner_ids 子查询缺 COALESCE(空 owner 项目 NULL scan 报错致看板消失/详情404,见 d1be7d1)",
+      "tags": [
+        "multi-owner",
+        "MultiUserSelect",
+        "misclick",
+        "COALESCE",
+        "interaction"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10"
+    },
+    {
+      "id": "bug-241",
+      "timestamp": "2026-08-10T09:43:47.520Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/projects.go",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 28→46 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-10T09:43:47.520Z"
+    },
+    {
+      "id": "bug-243",
+      "timestamp": "2026-08-17T09:34:28.327Z",
+      "error_message": "Significant refactor of ",
+      "file": "docs/deployment-windows-server-2022.md",
+      "root_cause": "3 lines replaced/restructured",
+      "fix": "Rewrote 9→11 lines (3 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "md"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-17T09:34:28.327Z"
+    },
+    {
+      "id": "bug-244",
+      "timestamp": "2026-08-19T01:08:52.875Z",
+      "error_message": "Incorrect value in code",
+      "file": "README.md",
+      "root_cause": "Had `ndm`",
+      "fix": "Changed to `git clone git@github.com:JLV2025/ndm.git`",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "md"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-19T01:08:52.875Z"
     }
   ]
 }

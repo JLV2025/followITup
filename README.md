@@ -202,6 +202,9 @@ followITup/
 - **实施计划与进展**：`.wolf/memory.md` 及计划文件
 - **API 端点**：详见 `backend/internal/api/` 目录
 - **部署指南（Windows Server 2022 离线环境）**：`docs/deployment-windows-server-2022.md`
+- **开发机技能配置**：新电脑如需使用「收工」技能（`work-wrap-up`，用户级，不随本仓库同步），该技能已上传至 ndm 仓库，二选一：
+  - 方式一（推荐）：`git clone git@github.com:JLV2025/ndm.git` 后，把 `ndm\.claude\skills\work-wrap-up\SKILL.md` 复制到 `C:\Users\<用户名>\.claude\skills\work-wrap-up\`
+  - 方式二（ndm 为公开仓库时）：浏览器打开 `https://raw.githubusercontent.com/JLV2025/ndm/master/.claude/skills/work-wrap-up/SKILL.md`，另存为上述全局路径同名文件
 
 ## 许可证
 

@@ -16,6 +16,8 @@
 
 <!-- Mistakes made and corrected. Each entry prevents the same mistake recurring. -->
 <!-- Format: [YYYY-MM-DD] Description of what went wrong and what to do instead. -->
+- **[2026-08-10] fieldCheck 键存在判定过宽导致静默数据覆盖**：`fieldCheck["xxx"]` 仅凭键存在就执行副作用(改派/写关联表),不比较新旧值是否一致——前端展开对象时总是携带所有键,导致每次无关字段变更都触发副作用(bug-238)。修改集合性字段(owner_ids/assignee_ids)时**必须先取旧值比较(集合语义),仅真正变化时才执行副作用**。
+- **[2026-08-10] INSERT...SELECT 空表静默 0 行**：`INSERT INTO t (...) SELECT ... FROM src WHERE ...` 在 src 无匹配行时插入 0 行且 Exec 不报错（err=nil），计数假增数据全丢（bug-173，CSV 导入空项目）。凡插入依赖源表行数的写法，源表可能为空时改用 VALUES 直插 + 单独查基数（如 MAX(sort_order)）。
 - **[2026-07-29] 财年范围计算**：`FiscalYearRange()` 中，自然年（startMonth=1）的起始日历年 = `2000+fiscalYear`（FY27→2027），跨年财年（startMonth>1）的起始日历年 = `2000+fiscalYear-1`（FY27→2026）。自然年的结束日期是同年 12-31 而非次年。`FiscalYearFromDate()` 中，自然年直接 `year-2000`，不因月份做 +1 调整。
 - **[2026-07-29] 排程多前置取max**：`forwardPass()` 中遍历后继依赖时，原先用 `candidateStart == succ.StartDate` 判断是否跳过，多前置场景下后处理的早期前置会覆盖先处理的晚期前置的结果。修复为 `candidateStart > succ.StartDate` 才更新（只推后不拉前），且队列入队移到 if 外确保始终传播。
 - **[2026-07-29] 约束倒推排程**：tasks 表新增 `constraint_type`（''/start_no_earlier_than/finish_no_later_than）和 `constraint_date` 列。前向传播整合 SNET 约束（候选日期取 max(前置候选, 约束日期)）。后向传播从叶子任务和 deadline 约束出发逆推 LS/LF。TF = LS - ES，TF < 0 表示约束冲突。calcPredecessorLF 根据 4 种依赖类型反推前驱必须满足的完成/开始日期。
@@ -57,6 +59,9 @@
 ## Key Learnings
 - gitnexus detect_changes 对新增 handler/符号常报行号偏移误报（把相邻函数标为 touched，风险 HIGH/MEDIUM）：新增代码不修改既有符号时，先人工核对 diff 再决定是否警示，不要盲信风险等级（2026-08-05，回收站 Task 1/4 两次出现）
 - SDD 审查中发现"Important 但实为文档建议"的项：协调者可按审查者自析结论裁决为 Minor deferred，不必为无真实缺陷的建议跑完整 fix loop（2026-08-05，Task 2 RestoreProject auto-commit 时序）
+- **[2026-08-10] 部分更新保护模式**：PUT 全量语义下某字段"零值=合法值"时（如 actual_* 空串），先 io.ReadAll 整读 body → 两次 json.Unmarshal（struct + map[string]json.RawMessage）→ 键缺失时查 DB 旧值保留，防零值静默覆盖用户数据。
+- **[2026-08-10] i18next 三个坑**：(1) init 完成时不触发 languageChanged 事件，html lang/title 同步须在 init 后手动调一次；(2) 数字开头的对象键（如 `zoom.3days`）会被 i18next 解析异常返回键名，改用数组索引键（`zoom.1`）；(3) dhtmlx-gantt 的 `%a` 是 am/pm 标记而非星期缩写，星期用 `%D`（locale days_short 驱动）。另外：Git Bash heredoc 会把 `\\n` 折叠成 `\n`，python 脚本里匹配含反斜杠的文本要用 r-string 或 chr(92)；React 组件里 map 回调参数与 useTranslation 的 t 同名会遮蔽（TS2349），翻译函数改名 tr。
+- **[2026-08-10] i18n 架构决策**：用户选定 i18next + react-i18next；语言切换后整页 reload（gantt 初始化时固化 scale/tooltip/缩放标签，无干净二次初始化路径）；后端错误消息保持中文，前端按 error.code 映射（getErrorMessage 回退链：errors.<CODE> → 后端 message → 网络 err.message → fallbackKey）；邮件模板只用英文；localStorage key "followitup-lang"。
 
 ## Do-Not-Repeat
 - **[2026-08-05] go build 嵌入目录 + 管道吞退出码**：embed 指令 `//go:embed all:frontend-dist` 在 `backend/cmd/server/main.go`，嵌入目录是 `backend/cmd/server/frontend-dist`（相对 .go 文件），不是 `backend/frontend-dist`！前端产物必须复制到 `cmd/server/frontend-dist`。构建命令严禁 `go build | tail` 之类管道（管道退出码是 tail 的，go build 失败被静默）；exe 被运行进程占用时 Windows 下构建会失败，必须先杀进程再 build。
@@ -69,7 +74,8 @@
   - 硬约束：任何线段不得侵入甘特条（贴边/端点接触允许）。空隙中央选择 = 所有条 y 区间并集补集（空隙带）中，最接近 (lo+hi)/2 且所有线段不穿条的中央。
   - 实现要点：垂直段 x 是单点、水平段 y 是单点，侵入检测对单点必须用"严格在条内"（区间真重叠对单点失效）；多前置共享箭头，双击删除整组依赖。
 
-- **[2026-08-05] 版本号规则(用户定义)**：版本号 = 0 + 月 + 日，当前为开发版。如 8月5日 = v0.8.5，9月15日 = v0.9.15。代码位置：backend/internal/server/server.go 日志 + README.md 顶部。
+- **[2026-08-05] 版本号规则(用户定义，2026-08-10 作废)**：版本号 = 0 + 月 + 日，当前为开发版。如 8月5日 = v0.8.5，9月15日 = v0.9.15。代码位置：backend/internal/server/server.go 日志 + README.md 顶部。
+- **[2026-08-10] 版本号规则 v2(用户定义)**：进入用户测试阶段，版本号改为 **v1.8.10**(主版本 1 + 原日期号)，不再每日递增。位置：server.go 日志 + README.md 英/中两处。后续发版递增规则待用户定义。
 
 - **[2026-08-06] 项目锚点日期(用户定义)**：项目开始(正排)/结束(倒排)日期是**唯一锚点**,放在项目详情页页首方向选择旁编辑,保存后全项目重排。正排链头(无显式+隐式前置、非 manual、非父)start 恒 = max(项目开始日期, 约束日期);倒排链尾 end 恒 = 项目结束日期。任务弹窗日期保持只读。前端联动:ProjectDetail 保存后 refreshKey 递增 → 甘特图 useOutletContext 监听重新 fetchData。UpdateProject 未携带字段保留旧值。
 
@@ -80,3 +86,14 @@
 - **[2026-08-06] 关键路径实现要点**：ComputeTotalFloat 导出函数(复用 forwardPass/rollup/backwardPass,不写库),ListTasks 返回 critical_ids,前端 task_class 红色左缘。倒推必须与正推语义对称(显式前置存在则隐式失效)、必须用工作日语义(SubWorkDays,非 shiftDate)。
 - **[2026-08-06] dhtmlx-gantt GPL 无 marker 插件**：addMarker/plugins({marker:true}) 在 GPL 版不存在(静默 undefined)。今日线用 posFromDate(new Date()) 自绘 SVG 竖线(挂 drawMergedLinks 重绘)。
 - **[2026-08-06] 批次1交付**：关键路径高亮、状态/进度联动防呆(completed↔100%、>0%→进行中、0%→待开始)、时长列(甘特图+列表)、今日线自绘。
+
+## Decision Log
+- **[2026-08-10] 项目详情公开只读(用户拍板)**：GET /api/projects/{id} 移出 RequireAuth 组，未登录可浏览项目页（甘特图/任务列表/过滤只读，与 /tasks 公开一致）；项目 CRUD 写操作仍需登录。前端 readonly 守卫（勾选框/批量条/复制粘贴/添加导入按钮）即此场景的防线。
+- **[2026-08-10] 项目日期随任务推导(用户定义)**：正排项目 end_date 自动 = 最晚任务结束；倒排项目 start_date 自动 = 最早任务开始。锚点仍分别是正排 start / 倒排 end（用户设定，rollup 不覆盖）。实现要点：rollup 调用必须在「写库循环之后」取重排结果（提前返回分支前的那次取 DB 旧值，仅兜底 changes==0 场景），且两个分支各需一次——只放一处会在另一分支失效（本次踩坑：先删了写库后的调用导致项目日期停留在旧值）。
+- **[2026-08-19] 收工技能升级用户级(用户拍板)**：work-wrap-up 从 ndm 项目复制到 ~/.claude/skills/，全局所有项目可用。内容通用(.wolf 记录 + git 提交推送，无项目特定路径)，ndm 内副本保留(项目级同名技能优先，不冲突)。缺点：全局目录不随 git 同步，其他电脑需手动复制一份。
+
+## Key Learnings
+- **[2026-08-10] 多选组件交互职责分离**：MultiUserSelect 教训——"点击标签区展开下拉"与"×按钮删除"在同一区域时,真实环境一次点击可能派发两个 click(第二个错位命中删除按钮)导致误删,且即改即存放大损失(清空 owner 级联改派清空任务负责人)。正确模式:标签区只负责显示与删除(×),展开列表走独立按钮;删除按钮加坐标校验(getBoundingClientRect 比对 clientX/Y)拦截错位事件。
+- **[2026-08-10] 改派触发必须集合比较**：UpdateProject 的 ownerChanged 不能凭"请求体含 owner_ids 键"判定——前端 {...project} 展开使每次改日期/方向都携带 owner_ids,会静默改派所有 open/delayed 任务并 version+1。必须 loadProjectOwners 取旧集合与请求 ids 做集合比较(空集相等、顺序无关),仅真正变化才触发。
+- **[2026-08-10] owner_ids 子查询必须 COALESCE**：GROUP_CONCAT 空集返回 NULL,Go 把 SQL NULL scan 到 string 报错 → ProjectList 的 continue 静默剔除项目(看板消失)+ GetProject 404。凡子查询返回标量的列都要 COALESCE(...,'')。
+- **[2026-08-19] "收工"技能定位**：收工技能真实文件名 `work-wrap-up`，位于 F:\projects\ndm\.claude\skills\work-wrap-up\（另有 .claude/workflows/work-wrap-up.js），已 git 提交并推送到远程，文件完整。它**不属于 followITup 仓库**——本项目 .claude/skills/ 仅 gitnexus/ldap-sync/project-status。followITup 会话里的"收工"是 memory.md 惯例（提交→推送→记 memory），非技能调用。排查技能缺失先想"它在哪个项目/全局"。
