@@ -2321,3 +2321,15 @@ cd backend && followitup.exe config.yaml   # 启动
 | 20:07 | Session end: 32 writes across 7 files (TaskDetailModal.tsx, components.css, zh.ts, en.ts, SystemSettings.tsx) | 14 reads | ~26456 tok |
 | 20:07 | 系统设置 tab 分页(邮件/财年/节假日)消除滚动 + 部署网址 base_url 字段(后端 gate:未填不发邮件,邮件带登录地址) + 布局收窄 800 居中 | SystemSettings.tsx, zh/en.ts, settings.go, mail.go | 编译+浏览器+API 实测通过 | ~20k |
 | 20:10 | Edited README.md | inline fix | ~54 |
+| 20:13 | Session end: 33 writes across 8 files (TaskDetailModal.tsx, components.css, zh.ts, en.ts, SystemSettings.tsx) | 15 reads | ~26514 tok |
+| 20:15 | Edited docs/deployment-windows-server-2022.md | 1→5 lines | ~62 |
+| 20:16 | Edited docs/deployment-windows-server-2022.md | 1→2 lines | ~15 |
+| 20:16 | Edited README.md | 1→3 lines | ~62 |
+| 20:16 | Edited README.md | 1→3 lines | ~33 |
+| 20:17 | Session end: 37 writes across 9 files (TaskDetailModal.tsx, components.css, zh.ts, en.ts, SystemSettings.tsx) | 16 reads | ~26697 tok |
+| 20:19 | Session end: 37 writes across 9 files (TaskDetailModal.tsx, components.css, zh.ts, en.ts, SystemSettings.tsx) | 16 reads | ~26697 tok |
+| 20:20 | Edited ../../../../.claude/skills/work-wrap-up/SKILL.md | expanded (+14 lines) | ~96 |
+| 20:21 | Session end: 38 writes across 10 files (TaskDetailModal.tsx, components.css, zh.ts, en.ts, SystemSettings.tsx) | 16 reads | ~26800 tok |
+| 20:22 | Edited README.md | 3→1 lines | ~35 |
+| 20:23 | Session end: 39 writes across 10 files (TaskDetailModal.tsx, components.css, zh.ts, en.ts, SystemSettings.tsx) | 16 reads | ~26838 tok |
+| 20:20 | 版本号升 v2.8.20(7处) + 部署文档/README 补 base_url 说明 + 修正 README work-wrap-up 过时说明 + gitnexus analyze 建索引 + 收工技能加 Phase 5 gitnexus 索引 | server.go,README.md,docs/*,package*.json,index/components.css,SKILL.md(全局) | 完成 | ~8k |

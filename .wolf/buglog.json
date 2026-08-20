@@ -4247,6 +4247,22 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-20T12:05:23.370Z"
+    },
+    {
+      "id": "bug-264",
+      "timestamp": "2026-08-20T12:22:18.555Z",
+      "error_message": "Incorrect value in code",
+      "file": "README.md",
+      "root_cause": "Had `git clone git@github.com:JLV2025/ndm.git`",
+      "fix": "Changed to `C:\\Users\\<用户名>\\.claude\\skills\\work-wrap-up\\SKILL.",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "md"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T12:22:18.555Z"
     }
   ]
 }

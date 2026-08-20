@@ -1,14 +1,18 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-20T12:10:12.612Z
-> Files: 8 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-20T12:22:18.537Z
+> Files: 10 tracked | Anatomy hits: 0 | Misses: 0
+
+## ../../../../.claude/skills/work-wrap-up/
+
+- `SKILL.md` — 收工 (~693 tok)
 
 ## ../../tmp/
 
 
 ## ./
 
-- `README.md` — Project documentation (~1930 tok)
+- `README.md` — Project documentation (~1879 tok)
 
 ## .claude/
 
@@ -92,6 +96,7 @@
 
 ## docs/
 
+- `deployment-windows-server-2022.md` — FollowITup 部署指南(Windows Server 2022 离线环境) (~1190 tok)
 
 ## docs/superpowers/plans/
 
