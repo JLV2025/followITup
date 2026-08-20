@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"followitup/internal/auth"
 	"followitup/internal/models"
@@ -377,7 +378,10 @@ func TestGetMyTasksViews(t *testing.T) {
 	var beta int64
 	conn.QueryRow(`SELECT id FROM users WHERE email='b@x.com'`).Scan(&beta)
 	saveTaskAssignees(conn, t1, []int64{beta})
-	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '项目任务2', 'task', 'open', '2026-08-12', '2026-08-16', 5, 0, 1)`, pid1)
+	// 项目任务2 的日期用相对今天（+3 天）而非固定日期：starting 窗口 = [今天, 今天+7]，固定日期会随运行时间过期（2026-08-20 起原固定值 08-12 落入过去导致测试失败）
+	startDay := time.Now().AddDate(0, 0, 3).Format("2006-01-02")
+	endDay := time.Now().AddDate(0, 0, 6).Format("2006-01-02")
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '项目任务2', 'task', 'open', ?, ?, 5, 0, 1)`, pid1, startDay, endDay)
 	var t2 int64
 	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='项目任务2'`, pid1).Scan(&t2)
 	saveTaskAssignees(conn, t2, []int64{me}) // 我名下

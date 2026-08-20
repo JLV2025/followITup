@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"followitup/internal/auth"
 	"followitup/internal/db"
@@ -198,10 +199,15 @@ func TestGetMyTasks(t *testing.T) {
 	saveTaskAssignees(conn, tidA, []int64{uid})
 	// 已完成的任务不应出现(无关联表,也不该出现)
 	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '已完成任务', 'task', 'completed', 'Me User', '2026-08-01', '2026-08-05', 5, 100, 1)`, pid)
-	// 待开始的任务也不应出现在"我的任务"(status=open 不进 mine;start 09-01 不在 7 天窗口,不进 starting)
-	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '待开始任务', 'task', 'open', 'Me User', '2026-09-01', '2026-09-05', 5, 0, 3)`, pid)
-	// 未来 7 天内开始的任务,通过 task_assignees 关联 me(旧行为 starting 不过滤 assignee,新行为 task 视角过滤)
-	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '即将开始B', 'task', 'open', 'Other', '2026-08-14', '2026-08-18', 5, 0, 2)`, pid)
+	// 日期用相对今天而非固定值(窗口 = [今天, 今天+7],固定日期会随运行时间过期):
+	// 待开始的任务也不应出现在"我的任务"(status=open 不进 mine;start +10 天不在 7 天窗口,不进 starting)
+	farStart := time.Now().AddDate(0, 0, 10).Format("2006-01-02")
+	farEnd := time.Now().AddDate(0, 0, 13).Format("2006-01-02")
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '待开始任务', 'task', 'open', 'Me User', ?, ?, 5, 0, 3)`, pid, farStart, farEnd)
+	// 未来 7 天内开始的任务(+3 天,在窗口内),通过 task_assignees 关联 me(旧行为 starting 不过滤 assignee,新行为 task 视角过滤)
+	soonStart := time.Now().AddDate(0, 0, 3).Format("2006-01-02")
+	soonEnd := time.Now().AddDate(0, 0, 6).Format("2006-01-02")
+	conn.Exec(`INSERT INTO tasks (project_id, name, task_type, status, assignee, start_date, end_date, duration_days, progress_pct, sort_order) VALUES (?, '即将开始B', 'task', 'open', 'Other', ?, ?, 5, 0, 2)`, pid, soonStart, soonEnd)
 	var tidB int64
 	conn.QueryRow(`SELECT id FROM tasks WHERE project_id=? AND name='即将开始B'`, pid).Scan(&tidB)
 	saveTaskAssignees(conn, tidB, []int64{uid})
