@@ -1,6 +1,6 @@
 # FollowITup
 
-> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v1.8.10
+> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v2.8.20
 
 ## Languages
 
@@ -48,6 +48,8 @@ C:\followitup\followitup.exe C:\followitup\config.yaml
 ```
 
 **First-run admin account:** `admin@followitup.local` / `admin123`
+
+**Before email works:** log in as admin, then set the deployment URL and SMTP under *System Settings → Email*. Emails are not sent until the deployment URL is set.
 
 ### Run as Windows Service
 
@@ -109,7 +111,7 @@ dhtmlx-gantt is GPL v2. This project is for internal use.
 
 # FollowITup（中文）
 
-> 类 SmartSheet 项目管理工具 · 单文件部署 · 甘特图驱动 · v1.8.10
+> 类 SmartSheet 项目管理工具 · 单文件部署 · 甘特图驱动 · v2.8.20
 
 ## 这是什么？
 
@@ -150,6 +152,8 @@ C:\followitup\followitup.exe C:\followitup\config.yaml
 ```
 
 **首次运行管理员账号：** `admin@followitup.local` / `admin123`
+
+**邮件发送前需先配置：** 以管理员登录后，在 *系统设置 → 邮件通知* 里设置部署网址和 SMTP。未设置部署网址时不发送邮件。
 
 ### 注册为 Windows 服务
 
@@ -202,9 +206,7 @@ followITup/
 - **实施计划与进展**：`.wolf/memory.md` 及计划文件
 - **API 端点**：详见 `backend/internal/api/` 目录
 - **部署指南（Windows Server 2022 离线环境）**：`docs/deployment-windows-server-2022.md`
-- **开发机技能配置**：新电脑如需使用「收工」技能（`work-wrap-up`，用户级，不随本仓库同步），该技能已上传至 ndm 仓库，二选一：
-  - 方式一（推荐）：`git clone git@github.com:JLV2025/ndm.git` 后，把 `ndm\.claude\skills\work-wrap-up\SKILL.md` 复制到 `C:\Users\<用户名>\.claude\skills\work-wrap-up\`
-  - 方式二（ndm 为公开仓库时）：浏览器打开 `https://raw.githubusercontent.com/JLV2025/ndm/master/.claude/skills/work-wrap-up/SKILL.md`，另存为上述全局路径同名文件
+- **开发机技能配置**：「收工」技能（`work-wrap-up`）是用户级技能，位于 `C:\Users\<用户名>\.claude\skills\work-wrap-up\SKILL.md`，不随本仓库同步。新电脑需手动从原电脑复制该文件到上述全局路径。
 
 ## 许可证
 
