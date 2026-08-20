@@ -610,7 +610,8 @@ func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 		scope = `EXISTS (SELECT 1 FROM project_owners po JOIN projects pj ON pj.id = po.project_id WHERE po.project_id = t.project_id AND po.user_id = ? AND pj.deleted_at IS NULL)`
 	}
 
-	var mine []MyTaskItem
+	// 用空 slice 而非 nil，保证 JSON 序列化为 [] 而不是 null（前端 .length 直读，null 会崩溃）
+	mine := make([]MyTaskItem, 0)
 	rows, err := h.db.Query(`
 		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct
 		FROM tasks t
@@ -628,7 +629,7 @@ func (h *TaskHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 		rows.Close()
 	}
 
-	var starting []MyTaskItem
+	starting := make([]MyTaskItem, 0)
 	rows2, err := h.db.Query(`
 		SELECT t.id, t.name, p.name, t.status, COALESCE(t.start_date, ''), COALESCE(t.end_date, ''), t.progress_pct
 		FROM tasks t

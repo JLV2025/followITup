@@ -134,8 +134,12 @@ export default function Dashboard() {
     // 全量项目（不带年度参数）：时间线按排期日期过滤所选年度
     api.get("/api/dashboard/projects").then((res) => setTimelineProjects(res.data.data || [])).catch(() => {});
     // 我的待办（需登录，窗口天数变化时重新拉取）
+    // 注意：后端空结果时 mine/starting 可能为 null（Go nil slice 序列化），逐字段兜底防渲染崩溃
     if (isLoggedIn) {
-      api.get(`/api/tasks/mine?days=${todoDays}&view=${todoView}`).then((res) => setMyTodo(res.data?.data || { mine: [], starting: [] })).catch(() => {});
+      api.get(`/api/tasks/mine?days=${todoDays}&view=${todoView}`).then((res) => setMyTodo({
+        mine: res.data?.data?.mine ?? [],
+        starting: res.data?.data?.starting ?? [],
+      })).catch(() => {});
     }
   }, [loadFromStorage, fetchStats, fetchProjects, displayMode, fiscalStartMonth, setPeriod, isLoggedIn, todoDays, todoView]);
 

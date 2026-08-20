@@ -141,7 +141,8 @@ func (h *ProjectHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 		DelayDays      int     `json:"delay_days"`
 	}
 
-	var projects []ProjectSummary
+	// 空 slice 而非 nil：无项目时 JSON 输出 [] 而不是 null（前端 .map/.length 直读，null 会静默吞数据或崩溃）
+	projects := make([]ProjectSummary, 0)
 	for rows.Next() {
 		var p ProjectSummary
 		var isPublic int
