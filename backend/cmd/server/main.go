@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strings"
 
 	"followitup/internal/server"
 )
@@ -13,9 +14,13 @@ import (
 var frontendDist embed.FS
 
 func main() {
+	// 兼容两种参数形式：`-config <path>`（README/服务注册常用）与裸参数 `<path>`
 	cfgPath := "config.yaml"
-	if len(os.Args) > 1 {
-		cfgPath = os.Args[1]
+	args := os.Args[1:]
+	if len(args) >= 2 && (args[0] == "-config" || args[0] == "--config") {
+		cfgPath = args[1]
+	} else if len(args) >= 1 && !strings.HasPrefix(args[0], "-") {
+		cfgPath = args[0]
 	}
 
 	// 尝试加载嵌入式前端文件
