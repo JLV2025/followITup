@@ -2223,3 +2223,49 @@ cd backend && followitup.exe config.yaml   # 启动
 | 09:20 | Session end: 3 writes across 2 files (README.md, SKILL.md) | 9 reads | ~2754 tok |
 | 09:26 | Created C:/Users/jingl/.claude/skills/work-wrap-up/SKILL.md | — | ~626 |
 | 09:25 | 收工技能 v3:按用户拍板删除测试/构建阶段(要快要完整,代码有错直接上传), 描述写明下班交接场景; 收工时发现 TestGetMyTasks 失败(测试fixture用绝对日期2026-08-14, 今日08-19已过窗口→starting为空), 用户决策:不修复直接上传 | SKILL.md(全局+ndm), import_test.go | 技能v3生效, 测试坑已记录 | ~1K |
+| 09:28 | Session end: 4 writes across 2 files (README.md, SKILL.md) | 9 reads | ~3425 tok |
+| 15:59 | Edited frontend/src/pages/Dashboard.tsx | added nullish coalescing | ~97 |
+| 15:59 | Edited backend/internal/api/tasks.go | 2→3 lines | ~34 |
+| 15:59 | Edited backend/internal/api/tasks.go | 2→2 lines | ~17 |
+| 15:59 | Edited backend/cmd/server/main.go | modified main() | ~80 |
+| 15:59 | Edited backend/cmd/server/main.go | 8→9 lines | ~23 |
+| 16:01 | Edited backend/internal/api/multi_owner_test.go | 4→5 lines | ~17 |
+| 16:01 | Edited backend/internal/api/multi_owner_test.go | 1→4 lines | ~116 |
+| 16:03 | Edited backend/internal/api/import_test.go | 4→5 lines | ~17 |
+| 16:03 | Edited backend/internal/api/import_test.go | 4→9 lines | ~246 |
+| 16:06 | Edited backend/internal/api/projects.go | modified Next() | ~37 |
+| 16:10 | 修复部署白板:GetMyTasks/ProjectList nil slice→null + 前端 ?? 兜底 + -config 参数兼容 + 2 个时间敏感测试改相对日期;本地复现→修复→Playwright 验证通过 | backend/internal/api/tasks.go,projects.go,backend/cmd/server/main.go,frontend/src/pages/Dashboard.tsx,multi_owner_test.go,import_test.go | 已修复并验证 | ~15000 |
+| 16:11 | Session end: 14 writes across 8 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 29 reads | ~54019 tok |
+| 16:17 | Session end: 14 writes across 8 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 29 reads | ~54019 tok |
+| 16:38 | Session end: 14 writes across 8 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 32 reads | ~54019 tok |
+| 16:39 | Session end: 14 writes across 8 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 32 reads | ~54019 tok |
+| 16:41 | Edited frontend/src/i18n/locales/zh.ts | inline fix | ~28 |
+| 16:41 | Edited frontend/src/i18n/locales/en.ts | inline fix | ~41 |
+| 16:41 | Edited frontend/src/pages/UserManagement.tsx | CSS: display, gap | ~97 |
+| 16:42 | Edited frontend/src/pages/UserManagement.tsx | added 1 import(s) | ~86 |
+| 16:42 | Edited frontend/src/pages/SystemSettings.tsx | added 1 import(s) | ~71 |
+| 16:42 | Edited frontend/src/pages/SystemSettings.tsx | 6→7 lines | ~116 |
+| 16:44 | 管理页加返回看板按钮(用户管理/系统设置+nav.backDashboard i18n) | UserManagement.tsx,SystemSettings.tsx,zh.ts,en.ts | 已修复并验证 | ~4000 |
+| 16:44 | Session end: 20 writes across 12 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 34 reads | ~60851 tok |
+| 16:47 | Edited frontend/src/styles/components.css | expanded (+10 lines) | ~244 |
+| 16:48 | MultiUserSelect 下拉改多列网格(auto-fill 180px/列,checkbox+名字同行,ellipsis) | components.css | 已修复并验证 | ~3000 |
+| 16:48 | Session end: 21 writes across 13 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 36 reads | ~61963 tok |
+| 16:51 | Edited frontend/src/styles/components.css | 19→20 lines | ~260 |
+| 16:51 | Edited frontend/src/styles/components.css | 5→4 lines | ~40 |
+| 16:52 | Edited frontend/src/styles/components.css | 1→5 lines | ~68 |
+| 16:53 | Edited frontend/src/styles/components.css | CSS: right | ~135 |
+| 16:56 | Edited frontend/src/styles/components.css | CSS: font-weight, margin-bottom | ~141 |
+| 16:57 | MultiUserSelect 下拉布局彻底修复:checkbox 14px(覆盖全局input拉伸)+选择器特异性(.mus-dropdown .mus-option)压过 .form-group label block+恢复 right:0 多列+固定150px列宽 | components.css | 已修复并验证(display flex/gap 6/14px/2列) | ~6000 |
+| 16:57 | Session end: 26 writes across 13 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 37 reads | ~73170 tok |
+| 16:59 | Edited frontend/src/styles/components.css | CSS: margin-top | ~85 |
+| 17:00 | 补 .form-hint 定义(12px muted,之前是死类渲染默认14px) | components.css | 已修复并验证 | ~1500 |
+| 17:00 | Session end: 27 writes across 13 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 37 reads | ~73255 tok |
+| 17:13 | Edited frontend/src/components/TaskDetailModal.tsx | 8→9 lines | ~77 |
+| 17:13 | Edited frontend/src/components/TaskDetailModal.tsx | inline fix | ~37 |
+| 17:13 | Edited frontend/src/components/TaskDetailModal.tsx | 5→7 lines | ~82 |
+| 17:13 | Edited frontend/src/pages/ProjectGantt.tsx | 1→2 lines | ~39 |
+| 17:13 | Edited frontend/src/pages/ProjectGantt.tsx | 2→3 lines | ~51 |
+| 17:13 | Edited frontend/src/pages/ProjectGantt.tsx | 3→4 lines | ~37 |
+| 17:16 | 新建任务默认日期=项目开始日期(projectStartDate prop 链),非写死今天;实测弹窗/排程一致 | TaskDetailModal.tsx,ProjectGantt.tsx | 已修复并验证 | ~4000 |
+| 17:16 | Session end: 33 writes across 15 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 39 reads | ~97443 tok |
+| 17:25 | Session end: 33 writes across 15 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 41 reads | ~106666 tok |

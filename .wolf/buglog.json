@@ -3890,8 +3890,8 @@
       "timestamp": "2026-08-10T09:43:47.520Z",
       "error_message": "Significant refactor of ",
       "file": "backend/internal/api/projects.go",
-      "root_cause": "3 lines replaced/restructured",
-      "fix": "Rewrote 28→46 lines (3 removed)",
+      "root_cause": "三层叠加:(1) .form-group input {width:100%;padding:10px 12px} 全局拉伸下拉里的 checkbox 到 134px,人名被挤没;(2) .form-group label {display:block} 特异性(0,1,1)高于 .mus-option(0,1,0),flex 布局被覆盖成 block,checkbox 与名字间距丢失;(3) 下拉容器 auto-fill 在 shrink-to-fit(仅 left 无 right)时只生成 1 列",
+      "fix": "(1) .mus-option input[type=checkbox] 显式 14x14+padding 0 覆盖全局拉伸;(2) 选择器改 .mus-dropdown .mus-option(0,2,0) 压过 .form-group label,并覆盖 font-weight/margin-bottom 继承;(3) 恢复 right:0 撑满容器;列宽固定 150px 不拉伸(弃用 1fr)",
       "tags": [
         "auto-detected",
         "refactor",
@@ -3932,6 +3932,187 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-19T01:08:52.875Z"
+    },
+    {
+      "id": "bug-245",
+      "timestamp": "2026-08-20T07:59:02.876Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T07:59:02.876Z"
+    },
+    {
+      "id": "bug-246",
+      "timestamp": "2026-08-20T07:59:30.634Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/cmd/server/main.go",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 5→9 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T07:59:30.634Z"
+    },
+    {
+      "id": "bug-247",
+      "timestamp": "2026-08-20T08:03:20.777Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/api/import_test.go",
+      "root_cause": "4 lines replaced/restructured",
+      "fix": "Rewrote 4→9 lines (4 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T08:03:20.777Z"
+    },
+    {
+      "id": "bug-239",
+      "timestamp": "2026-08-20T16:10:00.000Z",
+      "error_message": "新部署后默认账户登录成功即白板(页面内容一闪后全白)。浏览器报 TypeError: Cannot read properties of null (reading length)",
+      "file": "backend/internal/api/tasks.go GetMyTasks + frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Go nil slice(var mine []MyTaskItem)JSON 序列化为 null。新部署后 admin 无待办任务 → /api/tasks/mine 返回 {mine:null, starting:null} → Dashboard 渲染 myTodo.mine.length 读 null.length → TypeError → React 18 无错误边界卸载整棵组件树 → 白板。开发库有数据时不触发,新部署必现",
+      "fix": "后端 GetMyTasks mine/starting 改 make([]MyTaskItem,0) 返回 [] 而非 null;同修 ProjectList 的 var projects []ProjectSummary;前端 setMyTodo 逐字段 ?? [] 兜底(双保险)。另修复两个时间敏感测试(multi_owner_test/import_test 硬编码起始日期 2026-08-12/14 已过 7 天窗口)",
+      "tags": [
+        "nil-slice",
+        "json-null",
+        "dashboard",
+        "白板",
+        "deployment",
+        "react-crash"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T16:10:00.000Z"
+    },
+    {
+      "id": "bug-240",
+      "timestamp": "2026-08-20T16:45:00.000Z",
+      "error_message": "用户管理页(创建用户界面)没有返回首页的按钮,仅顶部 logo 可回",
+      "file": "frontend/src/pages/UserManagement.tsx + SystemSettings.tsx",
+      "root_cause": "两个管理页(用户管理/系统设置)头部只有标题+操作按钮,无返回首页入口;Navbar logo 入口不明显",
+      "fix": "两页头部右侧加 Link to=\"/\" 的\"← 返回看板\"按钮(btn btn-ghost btn-sm),i18n 键 nav.backDashboard(zh/en)",
+      "tags": [
+        "ui",
+        "navigation",
+        "usability"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T16:45:00.000Z"
+    },
+    {
+      "id": "bug-250",
+      "timestamp": "2026-08-20T08:47:12.232Z",
+      "error_message": "CSS fix: border-radius",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "border-radius: 6px → 4px",
+      "fix": "Changed border-radius: 6px → 4px",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-20T08:51:01.441Z"
+    },
+    {
+      "id": "bug-241",
+      "timestamp": "2026-08-20T16:50:00.000Z",
+      "error_message": "创建项目弹窗的负责人下拉单列长列表,checkbox+名字独占一行,宽弹窗右侧大量空白浪费空间",
+      "file": "frontend/src/styles/components.css (.mus-dropdown/.mus-option)",
+      "root_cause": "下拉选项 flex 单列布局,弹窗宽(~860px)时每行仅 checkbox+名字,剩余空间全空",
+      "fix": ".mus-dropdown 改 grid + repeat(auto-fill, minmax(180px,1fr)) 多列自适应(宽容器自动多列,窄容器回退单列);.mus-option 加 white-space:nowrap + span ellipsis 防换行;TaskDetailModal 等其它使用处自动受益",
+      "tags": [
+        "ui",
+        "MultiUserSelect",
+        "dropdown",
+        "layout"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T16:50:00.000Z"
+    },
+    {
+      "id": "bug-252",
+      "timestamp": "2026-08-20T08:59:51.316Z",
+      "error_message": "CSS fix: font-size, color",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "font-size: 14px → 12px; color: var(--text-primary) → var(--text-muted)",
+      "fix": "Changed font-size: 14px → 12px; color: var(--text-primary) → var(--text-muted)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T08:59:51.316Z"
+    },
+    {
+      "id": "bug-242",
+      "timestamp": "2026-08-20T17:00:00.000Z",
+      "error_message": "创建项目弹窗所有者下拉下方的说明文字字体太大、风格与全站不统一",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": ".form-hint 类只被 Dashboard.tsx 使用但从未定义(死类),渲染为浏览器默认 14px 深色,与全站 hint 风格(12px text-muted)不一致",
+      "fix": "补 .form-hint 定义:12px + var(--text-muted) + display:block + margin-top 4px,与 direction-hint/gantt-toolbar-hint 统一",
+      "tags": [
+        "ui",
+        "css",
+        "dead-class"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T17:00:00.000Z"
+    },
+    {
+      "id": "bug-254",
+      "timestamp": "2026-08-20T09:13:14.879Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 5→7 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T09:13:14.879Z"
+    },
+    {
+      "id": "bug-243",
+      "timestamp": "2026-08-20T17:15:00.000Z",
+      "error_message": "新建任务弹窗默认开始日期写死为今天(8/20),与用户设定的项目开始日期不符;保存后排程引擎会把任务排到项目开始日期,造成弹窗显示与甘特图不一致的错觉(第二任务弹窗又显示今天)",
+      "file": "frontend/src/components/TaskDetailModal.tsx + frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "TaskDetailModal 新建分支 setStartDate(new Date().toISOString().slice(0,10)) 写死今天;props 无项目开始日期",
+      "fix": "Props 加 projectStartDate;ProjectGantt 从 /api/projects/{id} fetch 中取 start_date 传入;新建默认 = projectStartDate || today,结束日期同值(工期1天,保存后引擎重算)",
+      "tags": [
+        "task-create",
+        "default-date",
+        "scheduling",
+        "ui"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T17:15:00.000Z"
     }
   ]
 }

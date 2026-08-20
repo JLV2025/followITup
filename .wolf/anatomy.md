@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-19T01:26:46.358Z
-> Files: 94 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-20T09:13:36.784Z
+> Files: 95 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
@@ -81,6 +81,7 @@
 
 ## backend/cmd/server/
 
+- `main.go` (~199 tok)
 
 ## backend/internal/api/
 
@@ -88,12 +89,12 @@
 - `baseline_test.go` — TestFillActualDates, TestCreateBaselineSnapshot, TestBaselineAggregates, TestClearBaseline (~1509 tok)
 - `calendar.go` — Struct: CalendarHandler (~1106 tok)
 - `helpers.go` — HTTP handlers: writeJSON, writeError (~303 tok)
-- `import_test.go` — TestImportTasksStatusWordsAndGuards, TestUpdateTaskPartialUpdateKeepsActual, TestUpdateTaskInvalidAc (~2409 tok)
+- `import_test.go` — TestImportTasksStatusWordsAndGuards, TestUpdateTaskPartialUpdateKeepsActual, TestUpdateTaskInvalidAc (~2491 tok)
 - `import_test.go` — TestImportTasksStatusWordsAndGuards, TestUpdateTaskPartialUpdateKeepsActual, TestUpdateTaskInvalidAc (~1637 tok)
-- `multi_owner_test.go` — TestSplitOwnerNames, TestResolveAndSaveAssignees, TestResolveAndSaveProjectOwners, TestResolveUserID (~9416 tok)
-- `projects.go` — Struct: ProjectHandler (~6722 tok)
+- `multi_owner_test.go` — TestSplitOwnerNames, TestResolveAndSaveAssignees, TestResolveAndSaveProjectOwners, TestResolveUserID (~9479 tok)
+- `projects.go` — Struct: ProjectHandler (~6745 tok)
 - `settings.go` — Struct: SettingsHandler (~1026 tok)
-- `tasks.go` — Struct: TaskHandler (~10302 tok)
+- `tasks.go` — Struct: TaskHandler (~10324 tok)
 
 ## backend/internal/auth/
 
@@ -177,7 +178,7 @@
 - `MultiUserSelect.tsx` — 多选负责人:已选用户标签(可点 x 移除)+ 下拉勾选列表(点击 toggle,去重) (~868 tok)
 - `Navbar.tsx` — 切换语言后整页刷新：gantt 的 scale/tooltip/缩放标签在初始化时固化，reload 是最稳妥的二次初始化 (~616 tok)
 - `RecycleBinModal.tsx` — RecycleBinModal (~1112 tok)
-- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~7201 tok)
+- `TaskDetailModal.tsx` — 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 (~7266 tok)
 
 ## frontend/src/i18n/
 
@@ -188,20 +189,20 @@
 
 ## frontend/src/i18n/locales/
 
-- `en.ts` — English translation table (~4812 tok)
-- `zh.ts` — 中文翻译表(简体中文,默认语言) (~3444 tok)
+- `en.ts` — English translation table (~4948 tok)
+- `zh.ts` — 中文翻译表(简体中文,默认语言) (~3576 tok)
 
 ## frontend/src/pages/
 
 - `ChangePassword.tsx` — ChangePassword — renders form (~826 tok)
-- `Dashboard.tsx` — Dashboard (~9962 tok)
+- `Dashboard.tsx` — Dashboard (~9999 tok)
 - `Login.tsx` — Login — renders form (~601 tok)
 - `ProjectDetail.tsx` — ProjectDetail (~1541 tok)
-- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~16664 tok)
+- `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~16720 tok)
 - `Resources.tsx` — 资源视图：按负责人分组汇总任务（叶子任务计入，父任务由子任务汇总不重复） (~1368 tok)
-- `SystemSettings.tsx` — SystemSettings — renders table (~3942 tok)
+- `SystemSettings.tsx` — SystemSettings — renders table (~3979 tok)
 - `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3425 tok)
-- `UserManagement.tsx` — UserManagement — renders form, table (~2451 tok)
+- `UserManagement.tsx` — UserManagement — renders form, table (~2810 tok)
 
 ## frontend/src/stores/
 
@@ -212,7 +213,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 93 rules, 1 vars (~10410 tok)
+- `components.css` — Styles: 93 rules, 1 vars (~10666 tok)
 
 ## frontend/src/utils/
 

@@ -16,6 +16,7 @@
 
 <!-- Mistakes made and corrected. Each entry prevents the same mistake recurring. -->
 <!-- Format: [YYYY-MM-DD] Description of what went wrong and what to do instead. -->
+- **[2026-08-20] Go nil slice JSON 序列化为 null，前端 .length/.map 直读必崩（bug-239）**：`var mine []MyTaskItem` 空数据时返回 `"mine": null`。新部署后 admin 无待办 → Dashboard 渲染 `myTodo.mine.length` → TypeError → React 18 无错误边界卸载整树 → 全白板。凡 writeJSON 直接返回的 slice 一律 `make([]T, 0)` 保证输出 `[]`（GetMyTasks 的 mine/starting、ProjectList 已修；tasks.go:78 ListTasks、baseline.go:149、calendar.go:55、projects.go:688 等同类风险点待排查）。前端对 `res.data.data` 必须逐字段 `?? []` 兜底，不能只兜 data 层。**另注意**：时间敏感测试不能用固定日期——starting 窗口 [今天, 今天+7] 的测试数据必须用 time.Now() 相对日期（multi_owner_test/import_test 的 2026-08-12/14 已过期修复）。
 - **[2026-08-10] fieldCheck 键存在判定过宽导致静默数据覆盖**：`fieldCheck["xxx"]` 仅凭键存在就执行副作用(改派/写关联表),不比较新旧值是否一致——前端展开对象时总是携带所有键,导致每次无关字段变更都触发副作用(bug-238)。修改集合性字段(owner_ids/assignee_ids)时**必须先取旧值比较(集合语义),仅真正变化时才执行副作用**。
 - **[2026-08-10] INSERT...SELECT 空表静默 0 行**：`INSERT INTO t (...) SELECT ... FROM src WHERE ...` 在 src 无匹配行时插入 0 行且 Exec 不报错（err=nil），计数假增数据全丢（bug-173，CSV 导入空项目）。凡插入依赖源表行数的写法，源表可能为空时改用 VALUES 直插 + 单独查基数（如 MAX(sort_order)）。
 - **[2026-07-29] 财年范围计算**：`FiscalYearRange()` 中，自然年（startMonth=1）的起始日历年 = `2000+fiscalYear`（FY27→2027），跨年财年（startMonth>1）的起始日历年 = `2000+fiscalYear-1`（FY27→2026）。自然年的结束日期是同年 12-31 而非次年。`FiscalYearFromDate()` 中，自然年直接 `year-2000`，不因月份做 +1 调整。
