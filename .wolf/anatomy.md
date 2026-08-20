@@ -1,13 +1,14 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-20T11:35:34.416Z
-> Files: 2 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-20T12:10:12.612Z
+> Files: 8 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../tmp/
 
 
 ## ./
 
+- `README.md` — Project documentation (~1930 tok)
 
 ## .claude/
 
@@ -68,6 +69,7 @@
 
 ## backend/internal/mail/
 
+- `mail.go` — Send, SendPasswordReset, SendTemporaryPassword (~616 tok)
 
 ## backend/internal/models/
 
@@ -80,6 +82,7 @@
 
 ## backend/internal/settings/
 
+- `settings.go` — Get, GetInt, GetAll, Set (~741 tok)
 
 ## backend/internal/util/
 
@@ -114,9 +117,12 @@
 
 ## frontend/src/i18n/locales/
 
+- `en.ts` — English translation table (~5021 tok)
+- `zh.ts` — 中文翻译表(简体中文,默认语言) (~3625 tok)
 
 ## frontend/src/pages/
 
+- `SystemSettings.tsx` — SystemSettings (~4541 tok)
 
 ## frontend/src/stores/
 
