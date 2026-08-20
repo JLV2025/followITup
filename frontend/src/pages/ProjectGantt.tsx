@@ -122,6 +122,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     setSelectedIds(new Set());
   };
   const [projectName, setProjectName] = useState("");
+  const [projectStartDate, setProjectStartDate] = useState(""); // 正排锚点:新建任务默认开始日期
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [rowNumbers, setRowNumbers] = useState<Record<number, number>>({});
   const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
@@ -370,6 +371,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       try {
         const res = await api.get(`/api/projects/${projectId}`);
         setProjectName(res.data.data?.name || "");
+        setProjectStartDate(res.data.data?.start_date || "");
       } catch { /* ignore */ }
     };
     loadProjectName();
@@ -1305,6 +1307,7 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       {showModal && (
         <TaskDetailModal
           projectId={projectId}
+          projectStartDate={projectStartDate}
           task={modalTask}
           allTasks={allTasks}
           rowNumbers={rowNumbers}

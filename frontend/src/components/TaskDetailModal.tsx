@@ -43,6 +43,7 @@ interface Dependency {
 
 interface Props {
   projectId: number;
+  projectStartDate?: string; // 项目开始日期(正排锚点):新建任务的默认开始日期,而非写死今天
   task: Task | null; // null = 新建
   allTasks: Task[];
   rowNumbers?: Record<number, number>; // id → 项目内行号（甘特图 # 列顺序）
@@ -54,7 +55,7 @@ const DEP_TYPES = ["FS", "SS", "FF", "SF"];
 const STATUSES = ["open", "in_progress", "completed", "delayed"];
 const PRIORITIES = ["low", "medium", "high", "critical"];
 
-export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers, onClose, onSaved }: Props) {
+export default function TaskDetailModal({ projectId, projectStartDate, task, allTasks, rowNumbers, onClose, onSaved }: Props) {
   const { t } = useTranslation();
   const isNew = !task;
   // 父任务：起止日期/工期由子任务自动汇总，不允许直接编辑；也不支持设置前置任务
@@ -139,9 +140,11 @@ export default function TaskDetailModal({ projectId, task, allTasks, rowNumbers,
       setActualEnd(task.actual_end || "");
       loadDeps();
     } else {
+      // 新建任务默认开始日期 = 项目开始日期(用户设定锚点),无项目日期才回退今天——与保存后排程结果一致,避免弹窗显示与甘特图不符
       const today = new Date().toISOString().slice(0, 10);
-      setStartDate(today);
-      setEndDate(today);
+      const defaultStart = projectStartDate || today;
+      setStartDate(defaultStart);
+      setEndDate(defaultStart);
       setDuration(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
