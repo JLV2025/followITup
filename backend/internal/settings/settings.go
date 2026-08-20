@@ -18,6 +18,7 @@ const (
 	KeyFiscalStartMonth = "fiscal_start_month"
 	KeyDueReminderOn    = "due_reminder_enabled"
 	KeyDueReminderDays  = "due_reminder_days"
+	KeyBaseURL          = "base_url"
 )
 
 // Defaults 默认值（首次使用时写入）
@@ -31,13 +32,14 @@ var Defaults = map[string]string{
 	KeyFiscalStartMonth: "4",
 	KeyDueReminderOn:    "0",
 	KeyDueReminderDays:  "3",
+	KeyBaseURL:          "",
 }
 
 // AllKeys 所有合法 key（PUT 白名单）
 var AllKeys = []string{
 	KeySMTPHost, KeySMTPPort, KeySMTPUsername, KeySMTPPassword,
 	KeySMTPSender, KeyPasswordMinLen, KeyFiscalStartMonth,
-	KeyDueReminderOn, KeyDueReminderDays,
+	KeyDueReminderOn, KeyDueReminderDays, KeyBaseURL,
 }
 
 // 每个 db 实例的默认值只写入一次，避免每次 Get/GetAll 都发一遍 INSERT OR IGNORE

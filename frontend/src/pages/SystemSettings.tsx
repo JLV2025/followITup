@@ -16,6 +16,8 @@ export default function SystemSettings() {
   const { t } = useTranslation();
   // SMTP 配置
   const [smtp, setSmtp] = useState({ smtp_host: "", smtp_port: "25", smtp_username: "", smtp_password: "", smtp_sender: "" });
+  // 部署网址（邮件发送前提：邮件必须带服务器地址，未填写不发邮件）
+  const [baseURL, setBaseURL] = useState("");
   // 财年 + 密码策略
   const [fiscalStartMonth, setFiscalStartMonth] = useState(4);
   const [passwordMinLength, setPasswordMinLength] = useState(8);
@@ -29,6 +31,8 @@ export default function SystemSettings() {
   const [holidayType, setHolidayType] = useState("holiday");
   const [holidayLabel, setHolidayLabel] = useState("");
   const [message, setMessage] = useState("");
+  // 栏目分页：邮件通知 / 财年与密码 / 节假日
+  const [activeTab, setActiveTab] = useState<"smtp" | "fiscal" | "holiday">("smtp");
 
   const fetchHolidays = async () => {
     try {
@@ -53,6 +57,7 @@ export default function SystemSettings() {
       setPasswordMinLength(Number(d.password_min_length) || 8);
       setDueReminderOn(d.due_reminder_enabled === "1");
       setDueReminderDays(Number(d.due_reminder_days) || 3);
+      setBaseURL(d.base_url || "");
     }).catch(() => setMessage(i18n.t("settingsPage.loadConfigFail")));
     fetchHolidays();
   }, []);
@@ -108,8 +113,21 @@ export default function SystemSettings() {
     border: "1px solid var(--card-border)", fontSize: 14,
   };
 
+  // 分页标签样式：激活标签高亮底部边框
+  const tabStyle = (k: "smtp" | "fiscal" | "holiday") => ({
+    padding: "8px 16px",
+    border: "none",
+    background: "none",
+    borderBottom: activeTab === k ? "2px solid var(--primary)" : "2px solid transparent",
+    color: activeTab === k ? "var(--primary)" : "var(--text-secondary)",
+    fontWeight: activeTab === k ? 600 : 400,
+    cursor: "pointer",
+    fontSize: 14,
+    marginBottom: -1,
+  });
+
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+    <div style={{ maxWidth: 800, margin: "0 auto" }}>
       <div className="dashboard-header-row" style={{ marginBottom: 16 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 2 }}>{t("settingsPage.title")}</h1>
@@ -118,10 +136,27 @@ export default function SystemSettings() {
         <Link to="/" className="btn btn-ghost btn-sm">{t("nav.backDashboard")}</Link>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {/* SMTP */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, borderBottom: "1px solid var(--card-border)" }}>
+        <button style={tabStyle("smtp")} onClick={() => setActiveTab("smtp")}>{t("settingsPage.tabSmtp")}</button>
+        <button style={tabStyle("fiscal")} onClick={() => setActiveTab("fiscal")}>{t("settingsPage.tabFiscal")}</button>
+        <button style={tabStyle("holiday")} onClick={() => setActiveTab("holiday")}>{t("settingsPage.tabHoliday")}</button>
+      </div>
+
+      {activeTab === "smtp" && (
         <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>{t("settingsPage.sectionSmtp")}</h3>
+          {/* 部署网址：邮件发送前提 */}
+          <div className="form-group" style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 13 }}>{t("settingsPage.baseUrl")}</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input style={{ ...inputStyle, flex: 1 }} value={baseURL}
+                placeholder="https://server.example.com:8080"
+                onChange={(e) => setBaseURL(e.target.value)} />
+              <button className="btn btn-primary" onClick={() => saveSettings({ base_url: baseURL }, i18n.t("settingsPage.baseUrlSaved"))}>{t("settingsPage.save")}</button>
+            </div>
+            <span className="form-hint">{t("settingsPage.baseUrlHint")}</span>
+          </div>
+          <hr style={{ border: "none", borderTop: "1px solid var(--card-border)", margin: "12px 0 14px" }} />
           <div className="form-row" style={{ gap: 10 }}>
             <div className="form-group" style={{ marginBottom: 8, flex: 2 }}>
               <label style={{ fontSize: 13 }}>{t("settingsPage.smtpHost")}</label>
@@ -188,8 +223,9 @@ export default function SystemSettings() {
             <button className="btn btn-ghost btn-sm" onClick={runReminder} title={t("settingsPage.runNowTitle")}>{t("settingsPage.runNow")}</button>
           </div>
         </div>
+      )}
 
-        {/* 财年 + 密码策略 */}
+      {activeTab === "fiscal" && (
         <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>{t("settingsPage.sectionFiscal")}</h3>
           <div className="form-row" style={{ gap: 10 }}>
@@ -213,10 +249,10 @@ export default function SystemSettings() {
             保存
           </button>
         </div>
-      </div>
+      )}
 
-      {/* 节假日与补班 */}
-      <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14, marginTop: 14 }}>
+      {activeTab === "holiday" && (
+        <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 8, padding: 14 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}>{t("settingsPage.sectionHoliday")}</h3>
         <div className="form-row" style={{ gap: 8 }}>
           <div className="form-group" style={{ marginBottom: 8 }}>
@@ -286,6 +322,7 @@ export default function SystemSettings() {
           </tbody>
         </table>
       </div>
+      )}
 
       {message && <div className="form-error" style={{ marginTop: 16 }}>{message}</div>}
     </div>

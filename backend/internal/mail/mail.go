@@ -9,7 +9,12 @@ import (
 )
 
 // Send 发送纯文本邮件。smtp_username 为空时无需认证，否则用 PlainAuth。
+// 部署网址未配置时拒绝发送——邮件必须带服务器地址，否则收件人无法得知登录入口。
 func Send(db *sql.DB, to, subject, body string) error {
+	baseURL, err := settings.Get(db, settings.KeyBaseURL)
+	if err != nil || baseURL == "" {
+		return fmt.Errorf("部署网址未配置")
+	}
 	host, err := settings.Get(db, settings.KeySMTPHost)
 	if err != nil || host == "" {
 		return fmt.Errorf("SMTP 未配置")
@@ -24,6 +29,8 @@ func Send(db *sql.DB, to, subject, body string) error {
 	if sender == "" {
 		return fmt.Errorf("发件人未配置")
 	}
+
+	body = body + "\n\nSign in at: " + baseURL + "\n"
 
 	msg := []byte("To: " + to + "\r\n" +
 		"From: " + sender + "\r\n" +

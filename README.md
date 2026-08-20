@@ -20,7 +20,7 @@ FollowITup is a self-hosted, Gantt-chart-driven project management tool designed
 - **Real-time collaboration** — WebSocket-powered, edits broadcast to all online users in the same project
 - **Soft delete with recycle bin** — deleted projects and tasks can be recovered; restored tasks re-join the schedule immediately
 - **User management** — any logged-in user can create accounts (email-based, auto-derived display name, random password emailed out, forced password change on first login); admins can reset passwords, promote/demote admins, and delete users
-- **System settings** — admin page for SMTP (with test send), fiscal-year start month, holidays and makeup workdays (weekend-to-workday), password policy
+- **System settings** — tabbed admin page for deployment URL (emails are gated on it), SMTP (with test send), fiscal-year start month, holidays and makeup workdays (weekend-to-workday), password policy
 - **Fiscal year support** — projects grouped and statistics calculated by fiscal year (FY); configurable by admin
 - **Case-insensitive login** — email matching ignores case, no duplicate-variant accounts
 
