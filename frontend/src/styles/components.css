@@ -1556,11 +1556,11 @@
   max-width: 860px !important;
   max-height: 90vh;
   overflow-y: auto; /* 兜底：极端情况（小屏/超长依赖列表）仍可滚动 */
-  padding: 16px 20px !important;
+  padding: 14px 20px !important;
 }
 .task-detail-modal .task-detail-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1.15fr; /* 右栏(前置任务/约束)略宽，容纳"批量添加"按钮 */
   column-gap: 20px;
   align-items: start;
   min-width: 0;
@@ -1577,9 +1577,20 @@
   border-left: 1px solid var(--card-border);
   padding-left: 20px;
 }
-.task-detail-modal .form-group { margin-bottom: 8px; }
-.task-detail-modal .modal-divider { margin: 10px 0 8px; }
-.task-detail-modal .dep-list { max-height: 180px; overflow-y: auto; }
+/* 紧凑化：小显示器(如 1280x720)两栏弹窗不出现滚动条 */
+.task-detail-modal .form-group { margin-bottom: 6px; }
+.task-detail-modal .form-group label { margin-bottom: 4px; font-size: 13px; }
+.task-detail-modal .form-group input,
+.task-detail-modal .form-group select,
+.task-detail-modal .form-group textarea {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.task-detail-modal .modal-title { margin-bottom: 14px; }
+.task-detail-modal .modal-divider { margin: 6px 0 5px; }
+.task-detail-modal .modal-section-title { margin-bottom: 6px; }
+.task-detail-modal .dep-list { max-height: 120px; overflow-y: auto; }
+.task-detail-modal .dep-quick-add { padding: 8px 10px; margin-bottom: 6px; }
 
 .modal-divider {
   border: none;
@@ -1697,6 +1708,11 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.dep-add-row .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .dep-add-row select,

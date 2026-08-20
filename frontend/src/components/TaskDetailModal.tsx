@@ -161,6 +161,20 @@ export default function TaskDetailModal({ projectId, projectStartDate, task, all
     setDepLoading(false);
   };
 
+  // 加/删前置后刷新任务日期：后端排程已重算 start/end，弹窗同步，
+  // 否则保存时 handleSave 用旧日期覆盖排程结果（如任务2 加前置后 start 停在 8/24）
+  const refreshTaskDates = async () => {
+    if (!task) return;
+    try {
+      const res = await api.get(`/api/projects/${projectId}/tasks/${task.id}`);
+      const t = res.data?.data;
+      if (t) {
+        setStartDate(t.start_date || "");
+        setEndDate(t.end_date || "");
+      }
+    } catch { /* ignore */ }
+  };
+
   /** 快速添加前置任务：解析逗号/分号分隔的行号并逐个创建依赖 */
   const handleQuickAddPreds = async () => {
     if (!task || !quickPredIds.trim()) return;
@@ -193,6 +207,7 @@ export default function TaskDetailModal({ projectId, projectStartDate, task, all
     if (added > 0) {
       setQuickPredIds("");
       loadDeps();
+      refreshTaskDates();
     }
   };
 
@@ -209,6 +224,7 @@ export default function TaskDetailModal({ projectId, projectStartDate, task, all
       setNewPredId(null);
       setNewLag(0);
       loadDeps();
+      refreshTaskDates();
     } catch { /* ignore */ }
   };
 
@@ -218,6 +234,7 @@ export default function TaskDetailModal({ projectId, projectStartDate, task, all
     try {
       await api.delete(`/api/projects/${projectId}/dependencies/${depId}`);
       setDeps((prev) => prev.filter((d) => d.id !== depId));
+      refreshTaskDates();
     } catch { /* ignore */ }
   };
 
@@ -407,6 +424,14 @@ export default function TaskDetailModal({ projectId, projectStartDate, task, all
             </select>
           </div>
         </div>
+        <div className="form-group">
+          <label>{t("taskDetail.assignee")}</label>
+          <MultiUserSelect
+            users={users}
+            selectedIds={assigneeIds}
+            onChange={setAssigneeIds}
+          />
+        </div>
 
         <hr className="modal-divider" />
         <h4 className="modal-section-title">{t("taskDetail.sectionDates")}</h4>
@@ -505,14 +530,6 @@ export default function TaskDetailModal({ projectId, projectStartDate, task, all
               ))}
             </select>
           </div>
-        </div>
-        <div className="form-group">
-          <label>{t("taskDetail.assignee")}</label>
-          <MultiUserSelect
-            users={users}
-            selectedIds={assigneeIds}
-            onChange={setAssigneeIds}
-          />
         </div>
         </div>{/* 左栏结束 */}
 
