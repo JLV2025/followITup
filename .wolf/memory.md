@@ -2269,3 +2269,26 @@ cd backend && followitup.exe config.yaml   # 启动
 | 17:16 | 新建任务默认日期=项目开始日期(projectStartDate prop 链),非写死今天;实测弹窗/排程一致 | TaskDetailModal.tsx,ProjectGantt.tsx | 已修复并验证 | ~4000 |
 | 17:16 | Session end: 33 writes across 15 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 39 reads | ~97443 tok |
 | 17:25 | Session end: 33 writes across 15 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 41 reads | ~106666 tok |
+| 18:55 | Edited frontend/src/components/TaskDetailModal.tsx | removed 45 lines | ~8 |
+| 18:56 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 condition(s) | ~434 |
+| 18:58 | 新建任务弹窗两栏失衡(左3节右1节)致垂直滚动条; 把「状态」节从左栏移到右栏, 两栏各2节, 弹窗569px无滚动 | TaskDetailModal.tsx | hasVScroll:false | ~3k |
+| 18:57 | Session end: 2 writes across 1 files (TaskDetailModal.tsx) | 4 reads | ~442 tok |
+| 19:16 | Edited frontend/src/components/TaskDetailModal.tsx | added optional chaining | ~234 |
+| 19:16 | Edited frontend/src/components/TaskDetailModal.tsx | modified if() | ~28 |
+| 19:17 | Edited frontend/src/components/TaskDetailModal.tsx | 3→4 lines | ~26 |
+| 19:17 | Edited frontend/src/components/TaskDetailModal.tsx | 2→3 lines | ~47 |
+| 19:17 | Edited frontend/src/components/TaskDetailModal.tsx | modified if() | ~30 |
+| 19:20 | 修复任务加前置后日期被覆盖bug:加依赖后弹窗日期不刷新,保存时旧值覆盖排程;加refreshTaskDates()在加/删依赖后拉最新日期。浏览器实测任务2保存后8/25→8/27正确接任务1 | TaskDetailModal.tsx | 验证通过 | ~8k |
+| 19:20 | Session end: 7 writes across 1 files (TaskDetailModal.tsx) | 6 reads | ~8068 tok |
+| 19:20 | Session end: 7 writes across 1 files (TaskDetailModal.tsx) | 6 reads | ~8068 tok |
+| 19:23 | Edited frontend/src/styles/components.css | CSS: font-size, font-size | ~367 |
+| 19:26 | Session end: 8 writes across 2 files (TaskDetailModal.tsx, components.css) | 8 reads | ~8435 tok |
+| 19:30 | Edited frontend/src/components/TaskDetailModal.tsx | 53→52 lines | ~452 |
+| 19:30 | Edited frontend/src/styles/components.css | 7→7 lines | ~53 |
+| 19:30 | Edited frontend/src/styles/components.css | CSS: white-space, flex-shrink | ~38 |
+| 19:32 | Edited frontend/src/styles/components.css | 3→3 lines | ~51 |
+| 19:35 | Edited frontend/src/components/TaskDetailModal.tsx | reduced (-8 lines) | ~70 |
+| 19:35 | Edited frontend/src/components/TaskDetailModal.tsx | expanded (+8 lines) | ~121 |
+| 19:37 | Session end: 14 writes across 2 files (TaskDetailModal.tsx, components.css) | 8 reads | ~20744 tok |
+| 19:40 | Session end: 前端重构建(node_modules缺失→npm install)、建6测试用户、修复bug-257(加前置后日期被覆盖)、弹窗两栏布局优化(紧凑化+状态/优先级回左栏+负责人靠上+右栏加宽) | TaskDetailModal.tsx, components.css, buglog.json, cerebrum.md | 完成,弹窗无滚动+负责人下拉不撑滚动 | ~60k |
+| 19:39 | Session end: 14 writes across 2 files (TaskDetailModal.tsx, components.css) | 8 reads | ~20744 tok |

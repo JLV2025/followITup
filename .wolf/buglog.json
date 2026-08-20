@@ -4113,6 +4113,92 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-20T17:15:00.000Z"
+    },
+    {
+      "id": "bug-256",
+      "timestamp": "2026-08-20T11:16:47.648Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T11:16:47.648Z"
+    },
+    {
+      "id": "bug-257",
+      "timestamp": "2026-08-20T19:20:00+08:00",
+      "error_message": "创建任务后指定前置任务,任务2开始时间没自动接任务1(停8/24),任务3/4正常",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "编辑任务加前置依赖(handleAddDep/handleQuickAddPreds)后只loadDeps刷新依赖列表,不刷新startDate/endDate;保存时handleSave提交弹窗旧日期,后端UpdateTask全列覆盖排程结果。任务3/4因弹窗值本身已是正确排程值不受影响",
+      "fix": "加refreshTaskDates():加/删依赖后GET /tasks/{id}拉最新start/end刷新弹窗状态(不刷新duration避免覆盖未保存工期)",
+      "tags": [
+        "前端",
+        "排程",
+        "依赖",
+        "predecessor",
+        "TaskDetailModal",
+        "覆盖"
+      ],
+      "related_bugs": [
+        "bug-024",
+        "bug-028"
+      ],
+      "occurrences": 1,
+      "last_seen": "2026-08-20"
+    },
+    {
+      "id": "bug-258",
+      "timestamp": "2026-08-20T11:23:57.024Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "4 lines replaced/restructured",
+      "fix": "Rewrote 29→40 lines (4 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T11:23:57.024Z"
+    },
+    {
+      "id": "bug-259",
+      "timestamp": "2026-08-20T11:30:39.437Z",
+      "error_message": "CSS fix: grid-template-columns",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "grid-template-columns: 1fr 1fr → 1fr 1.15fr",
+      "fix": "Changed grid-template-columns: 1fr 1fr → 1fr 1.15fr",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-20T11:32:42.193Z"
+    },
+    {
+      "id": "bug-260",
+      "timestamp": "2026-08-20T11:35:26.557Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "7 lines replaced/restructured",
+      "fix": "Rewrote 17→9 lines (7 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-20T11:35:26.557Z"
     }
   ]
 }
