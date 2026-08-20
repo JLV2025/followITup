@@ -1,5 +1,6 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/client";
 import i18n from "../i18n";
@@ -114,6 +115,7 @@ export default function SystemSettings() {
           <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 2 }}>{t("settingsPage.title")}</h1>
           <p className="text-secondary" style={{ fontSize: 13 }}>{t("settingsPage.subtitle")}</p>
         </div>
+        <Link to="/" className="btn btn-ghost btn-sm">{t("nav.backDashboard")}</Link>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>

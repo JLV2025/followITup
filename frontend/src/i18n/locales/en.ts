@@ -15,7 +15,7 @@ export default {
     add: "Add",
     noData: "No data",
   },
-  nav: { login: "Sign in", logout: "Sign out", users: "User Management", settings: "System Settings" },
+  nav: { login: "Sign in", logout: "Sign out", users: "User Management", settings: "System Settings", backDashboard: "← Back to Dashboard" },
   date: { shortFormat: "{{month}} {{day}}" },
   months: {
     short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],

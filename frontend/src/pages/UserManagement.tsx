@@ -1,5 +1,6 @@
 import { getErrorMessage } from "../utils/errorMsg";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/client";
 import { useAuthStore } from "../stores/authStore";
@@ -111,9 +112,12 @@ export default function UserManagement() {
           <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 4 }}>{t("usersPage.title")}</h1>
           <p className="text-secondary">{t("usersPage.subtitle")}</p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? t("usersPage.cancel") : t("usersPage.addUser")}
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link to="/" className="btn btn-ghost btn-sm">{t("nav.backDashboard")}</Link>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
+            {showForm ? t("usersPage.cancel") : t("usersPage.addUser")}
+          </button>
+        </div>
       </div>
 
       {showForm && (

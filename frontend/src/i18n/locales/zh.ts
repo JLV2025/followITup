@@ -15,7 +15,7 @@ export default {
     add: "添加",
     noData: "暂无数据",
   },
-  nav: { login: "登录", logout: "退出", users: "用户管理", settings: "系统设置" },
+  nav: { login: "登录", logout: "退出", users: "用户管理", settings: "系统设置", backDashboard: "← 返回看板" },
   date: { shortFormat: "{{month}}{{day}}日" },
   months: {
     short: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
