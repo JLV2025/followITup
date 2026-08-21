@@ -396,7 +396,7 @@ export default function Dashboard() {
                       style={{ background: statusColor(p) }}
                     />
                     <span className="project-no">#{p.no}</span>
-                    <span className="project-name">{p.name}</span>
+                    <span className="project-name" title={p.name}>{p.name}</span>
                     {p.baseline_created_at && p.delay_days !== 0 && (
                       <span className={`delay-badge ${p.delay_days > 0 ? "neg" : "pos"}`}>
                         Δ {p.delay_days > 0 ? `+${p.delay_days}` : p.delay_days} {t("dashboard.delayDays")}

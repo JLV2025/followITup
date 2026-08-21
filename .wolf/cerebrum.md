@@ -8,9 +8,12 @@
 
 <!-- How the user likes things done. Code style, tools, patterns, communication. -->
 
+- 2026-08-21 看板卡片布局在意元素垂直对齐（"对强迫症患者友好"）：跨卡片重复元素应固定同一水平位置（如负责人小人头固定 75% 处），不随文本长度浮动。
+
 ## Key Learnings
 
 - **Project:** followITup
+- **[2026-08-21] flex 容器内元素改绝对定位后，剩余 `flex: 1` 元素会吃掉空出的空间并把后续元素顶到定位元素处**：看板卡片小人头改 `position: absolute; left: 70%` 后，`.project-name`（flex:1）把 hover"详情"链接顶到小人头左侧。必须把被顶的元素也移出流（link 改 absolute right:0 悬浮），而非只调 max-width。
 
 ## Do-Not-Repeat
 

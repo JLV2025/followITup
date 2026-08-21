@@ -439,6 +439,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  position: relative; /* 供悬浮的详情链接定位 */
 }
 
 .status-dot {
@@ -452,6 +453,7 @@
   font-size: 13px;
   font-weight: 500;
   flex: 1;
+  max-width: calc(70% - 190px); /* 名字区止于 70% 处前，不与固定小人头重叠（含徽章+复制钮约 190px） */
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -484,11 +486,13 @@
 }
 
 /* 项目所有者（卡片 body 第二行，超长省略+title） */
-/* 负责人：第一排靠右，小人头 + 定宽人名（30 个字，超长省略） */
+/* 负责人：第一排靠右，小人头固定卡片 70% 处（所有卡片垂直一条线），名字在右自适应省略 */
 .project-owner {
+  position: absolute;
+  left: 70%;
   display: flex; align-items: center; gap: 4px;
   font-size: 12px; color: var(--text-secondary);
-  flex-shrink: 0;
+  max-width: calc(30% - 120px); /* 右侧不越过详情链接列(100px+gap+padding14)，20 个半宽字符 + 图标 */
 }
 
 /* 小人头图标固定宽 */
@@ -503,11 +507,16 @@
 }
 
 .project-link {
+  position: absolute; /* 悬浮在 header 右端，不占行宽（否则 flex 的项目名会把它顶到小人头左侧） */
+  right: 0;
+  top: 0;
+  bottom: 0;
+  height: 18px;
+  margin: auto 0; /* 垂直居中于第一排 */
   font-size: 12px;
   color: var(--primary);
   opacity: 0;
   transition: opacity 0.15s ease;
-  flex-shrink: 0;
   /* 与第二排截止日期列同宽右对齐：owner 与百分比垂直对齐 */
   width: 100px;
   text-align: right;

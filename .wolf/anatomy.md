@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-08-21T07:33:53.160Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-08-21T08:23:36.252Z
 > Files: 25 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../../.claude/skills/work-wrap-up/
@@ -141,7 +141,7 @@
 
 ## frontend/src/pages/
 
-- `Dashboard.tsx` — Dashboard (~10261 tok)
+- `Dashboard.tsx` — Dashboard (~10266 tok)
 - `ProjectGantt.tsx` — ref 存储最新 allTasks，避免 useEffect 闭包捕获过期值 (~17014 tok)
 - `TaskListView.tsx` — 为任务列表计算每行的可视化深度（递归查找 parent chain） (~3417 tok)
 
@@ -151,7 +151,7 @@
 
 ## frontend/src/styles/
 
-- `components.css` — Styles: 84 rules, 1 vars (~11682 tok)
+- `components.css` — Styles: 85 rules, 1 vars (~11235 tok)
 
 ## frontend/src/utils/
 

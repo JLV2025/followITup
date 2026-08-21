@@ -4569,6 +4569,41 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-21T07:32:32.538Z"
+    },
+    {
+      "id": "bug-284",
+      "timestamp": "2026-08-21T08:18:28.134Z",
+      "error_message": "CSS fix: left, max-width",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "left: 75% → 70%; max-width: calc(25% - 134px) → calc(30% - 120px)",
+      "fix": "Changed left: 75% → 70%; max-width: calc(25% - 134px) → calc(30% - 120px)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-21T08:18:35.381Z"
+    },
+    {
+      "id": "bug-285",
+      "timestamp": "2026-08-21T16:30:00.000Z",
+      "error_message": "负责人小人头绝对定位后,hover 详情链接被 flex:1 项目名顶到小人头左侧(实测 link 545px < icon 673px)",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "flex 容器中元素改 position:absolute 移出文档流后,剩余 flex:1 元素(flex-grow)吃掉空出空间,把后续兄弟元素顶到定位元素位置",
+      "fix": ".project-link 同步改为 position:absolute; right:0 悬浮于 header 右端(垂直居中), 不再占文档流; .project-card-header 加 position:relative 作定位基准",
+      "tags": [
+        "css",
+        "flex-layout",
+        "absolute-positioning",
+        "dashboard"
+      ],
+      "related_bugs": [
+        "bug-284"
+      ],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T16:30:00.000Z"
     }
   ]
 }

@@ -2531,3 +2531,23 @@ cd backend && followitup.exe config.yaml   # 启动
 | 15:40 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |
 | 16:40 | 重新生成 exe:版本号+前端改动需重新编译嵌入(npm build→cp dist→go build),22.5MB;启动日志 v2.8.21+内嵌前端版本号/看板占满 1920 验证通过 | followitup.exe | 用户问"exe 是否需要重新生成"→需要(Go 源码版本号+前端产物都旧) | ~150 |
 | 15:42 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |
+| 15:47 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |
+
+## Session: 2026-08-21 16:03
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:09 | Edited frontend/src/styles/components.css | CSS: position, left, max-width | ~106 |
+| 16:09 | Edited frontend/src/styles/components.css | CSS: max-width | ~41 |
+| 16:09 | Edited frontend/src/pages/Dashboard.tsx | inline fix | ~24 |
+| 16:10 | 看板-项目状态总览：负责人小人头绝对定位卡片 75% 处（所有卡片竖线对齐），名字区 max-width 防重叠，项目名加 title | components.css, Dashboard.tsx | 完成,tsc 通过 | ~2.5k |
+| 16:10 | Session end: 3 writes across 2 files (components.css, Dashboard.tsx) | 2 reads | ~22114 tok |
+| 16:18 | Edited frontend/src/styles/components.css | 9→9 lines | ~92 |
+| 16:18 | Edited frontend/src/styles/components.css | inline fix | ~22 |
+| 16:18 | 负责人小人头位置 75%→70%，名字空间按 20 半宽字符(120px)设计，超出省略 | components.css | 完成 | ~1k |
+| 16:19 | Session end: 5 writes across 2 files (components.css, Dashboard.tsx) | 3 reads | ~22943 tok |
+| 16:23 | Edited frontend/src/styles/components.css | CSS: position | ~33 |
+| 16:23 | Edited frontend/src/styles/components.css | 10→15 lines | ~97 |
+| 16:24 | 构建 exe 并验证：1920 屏名字 22 字符完整显示、1366 屏省略；修 link 被 flex-grow 顶到小人头左侧的布局错位(改绝对定位悬浮) | components.css | 完成 | ~3k |
+| 16:25 | Session end: 7 writes across 2 files (components.css, Dashboard.tsx) | 6 reads | ~23073 tok |
+| 16:25 | Session end: 7 writes across 2 files (components.css, Dashboard.tsx) | 6 reads | ~23073 tok |
