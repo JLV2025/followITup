@@ -250,6 +250,10 @@ var migrations = []migration{
 		WHERE po.project_id = projects.id)
 	WHERE EXISTS (SELECT 1 FROM project_owners po WHERE po.project_id = projects.id);
 	`},
+	{10, `
+	-- 实际工期（v10）：实际开始/结束填入后由后端算好落库，供汇总报告对比计划 vs 实际
+	ALTER TABLE tasks ADD COLUMN actual_duration_days INTEGER NOT NULL DEFAULT 0;
+	`},
 }
 
 // migrate 执行所有未应用的迁移

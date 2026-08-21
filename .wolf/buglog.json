@@ -4280,6 +4280,295 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-21T00:52:00.000Z"
+    },
+    {
+      "id": "bug-266",
+      "timestamp": "2026-08-21T05:36:03.311Z",
+      "error_message": "Incorrect value in code",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "Had ', ?, ?, '",
+      "fix": "Changed to ', ?, '",
+      "tags": [
+        "auto-detected",
+        "wrong-value",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T05:36:03.311Z"
+    },
+    {
+      "id": "bug-267",
+      "timestamp": "2026-08-21T05:39:47.273Z",
+      "error_message": "Significant refactor of ",
+      "file": "backend/internal/scheduler/scheduler.go",
+      "root_cause": "5 lines replaced/restructured",
+      "fix": "Rewrote 8→8 lines (5 removed) | Also: // 队列：所有链尾（无后继、非父任务），end = 项目完成日期; if hasSucc[t.ID] || parentSet[t.ID] {",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "go"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-21T05:40:26.429Z"
+    },
+    {
+      "id": "bug-268",
+      "timestamp": "2026-08-21T05:45:43.194Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "10 lines replaced/restructured",
+      "fix": "Rewrote 13→3 lines (10 removed) | Also: start_date: startDate,; end_date: endDate || startDate,",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-21T05:48:30.150Z"
+    },
+    {
+      "id": "bug-269",
+      "timestamp": "2026-08-21T05:46:29.427Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/utils/date.ts",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check)",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T05:46:29.427Z"
+    },
+    {
+      "id": "bug-270",
+      "timestamp": "2026-08-21T05:47:24.604Z",
+      "error_message": "Null/undefined access in ",
+      "file": "frontend/src/components/TaskDetailModal.tsx",
+      "root_cause": "Property access on potentially null/undefined value",
+      "fix": "Added null safety (optional chaining or null check) | Also: // ==================== 计划/实际日期联动 ====================; // 计划派生侧：正排 end = start + 工期（里程碑为点）；倒排 start = end − 工期 | Also: <h4 className=\"modal-section-title\">{t(\"taskDetail.sectionPr; {/* 前置任务（编辑模式下可用；新建任务保存后可添加） */} | Also: {/* 右栏：日期与进度 / 状态 / 约束 */}; <h4 className=\"modal-section-title\">{t(\"taskDetail.sectionDa",
+      "tags": [
+        "auto-detected",
+        "null-safety",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 4,
+      "last_seen": "2026-08-21T05:49:56.215Z"
+    },
+    {
+      "id": "bug-271",
+      "timestamp": "2026-08-21T05:50:18.907Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/i18n/locales/zh.ts",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 37→46 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T05:50:18.907Z"
+    },
+    {
+      "id": "bug-272",
+      "timestamp": "2026-08-21T05:50:38.976Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/i18n/locales/en.ts",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 37→46 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "ts"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T05:50:38.976Z"
+    },
+    {
+      "id": "bug-273",
+      "timestamp": "2026-08-21T05:51:38.581Z",
+      "error_message": "CSS fix: grid-template-columns",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "grid-template-columns: 1fr 1.15fr → 1.15fr 1fr",
+      "fix": "Changed grid-template-columns: 1fr 1.15fr → 1.15fr 1fr",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 2,
+      "last_seen": "2026-08-21T05:51:43.270Z"
+    },
+    {
+      "id": "bug-274",
+      "timestamp": "2026-08-21T05:53:05.403Z",
+      "error_message": "Missing error handling in unknown",
+      "file": "frontend/src/pages/ProjectGantt.tsx",
+      "root_cause": "Code path had no error handling — exceptions would propagate uncaught",
+      "fix": "Added try/catch block",
+      "tags": [
+        "auto-detected",
+        "error-handling",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T05:53:05.403Z"
+    },
+    {
+      "id": "bug-275",
+      "timestamp": "2026-08-21T14:00:00.000Z",
+      "error_message": "CreateTask/ImportTasks 加 actual_duration_days 列后 SQL 报 \"20 values for 19 columns\"/\"missing argument with index 12\"，CreateTask 500 创建失败",
+      "file": "backend/internal/api/tasks.go",
+      "root_cause": "INSERT...SELECT / VALUES 中 ? 占位符数量与参数列表不匹配：CreateTask 的 SELECT 表达式 0 固定值后多写一个 ?（20 表达式 vs 19 列）；ImportTasks VALUES 把 actual_start 误写成 ? 而参数列表未增加。modernc.org/sqlite 报错信息不含具体语句，需临时加 log 定位",
+      "fix": "逐列核对列数=表达式数=?数=参数数：CreateTask SELECT 改为 14?+0+3?+COALESCE；ImportTasks VALUES 改为 11?+固定值。教训：改 INSERT 列清单后必须用列对齐法（列数=表达式数=?数=参数数）四段核对，不能只数 ?",
+      "tags": [
+        "sql",
+        "insert",
+        "parameter-count",
+        "actual_duration_days"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T14:00:00.000Z"
+    },
+    {
+      "id": "bug-276",
+      "timestamp": "2026-08-21T07:04:24.408Z",
+      "error_message": "CSS fix: grid-template-columns",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "grid-template-columns: repeat(4, 1fr) → repeat(5, 1fr)",
+      "fix": "Changed grid-template-columns: repeat(4, 1fr) → repeat(5, 1fr)",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 14,
+      "last_seen": "2026-08-21T07:11:23.230Z"
+    },
+    {
+      "id": "bug-277",
+      "timestamp": "2026-08-21T07:17:29.121Z",
+      "error_message": "Wrong return value",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Was returning: (",
+      "fix": "Now returns: () => { if (mainEl) mainEl.classList.remove(\"dashb",
+      "tags": [
+        "auto-detected",
+        "return-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T07:17:29.121Z"
+    },
+    {
+      "id": "bug-278",
+      "timestamp": "2026-08-21T07:17:56.438Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "4 lines replaced/restructured",
+      "fix": "Rewrote 7→4 lines (4 removed) | Also: /* 占满视口宽度：main-content 已由 dashboard-page 突破 1440px; width: 100%; | Also: max-width: 1200px;; margin: 0 auto; | Also: justify-content: space-between; /* 卡片收窄 25%（原均分 20; gap: 16px; /* 最小间距兜底 */",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 4,
+      "last_seen": "2026-08-21T07:27:47.043Z"
+    },
+    {
+      "id": "bug-279",
+      "timestamp": "2026-08-21T07:18:59.994Z",
+      "error_message": "Significant refactor of ",
+      "file": "frontend/src/index.css",
+      "root_cause": "2 lines replaced/restructured",
+      "fix": "Rewrote 10→5 lines (2 removed)",
+      "tags": [
+        "auto-detected",
+        "refactor",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T07:18:59.994Z"
+    },
+    {
+      "id": "bug-280",
+      "timestamp": "2026-08-21T07:19:09.402Z",
+      "error_message": "CSS fix: display",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "display: flex → grid",
+      "fix": "Changed display: flex → grid",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 5,
+      "last_seen": "2026-08-21T07:19:27.585Z"
+    },
+    {
+      "id": "bug-281",
+      "timestamp": "2026-08-21T07:23:10.230Z",
+      "error_message": "Wrong return value",
+      "file": "frontend/src/pages/Dashboard.tsx",
+      "root_cause": "Was returning: (",
+      "fix": "Now returns: () => { if (mainEl) mainEl.classList.remove(\"dashb",
+      "tags": [
+        "auto-detected",
+        "return-value",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T07:23:10.230Z"
+    },
+    {
+      "id": "bug-282",
+      "timestamp": "2026-08-21T07:25:11.955Z",
+      "error_message": "CSS fix: padding",
+      "file": "frontend/src/styles/components.css",
+      "root_cause": "padding: 20px → 14px",
+      "fix": "Changed padding: 20px → 14px",
+      "tags": [
+        "auto-detected",
+        "style-fix",
+        "css"
+      ],
+      "related_bugs": [],
+      "occurrences": 11,
+      "last_seen": "2026-08-21T07:33:47.299Z"
+    },
+    {
+      "id": "bug-283",
+      "timestamp": "2026-08-21T07:32:32.538Z",
+      "error_message": "Type error",
+      "file": "frontend/src/components/Navbar.tsx",
+      "root_cause": "Missing or incorrect type annotation",
+      "fix": "Added type assertion/annotation",
+      "tags": [
+        "auto-detected",
+        "type-fix",
+        "tsx"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T07:32:32.538Z"
     }
   ]
 }

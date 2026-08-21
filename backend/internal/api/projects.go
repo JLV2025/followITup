@@ -47,6 +47,7 @@ func (h *ProjectHandler) RegisterRoutes(r chi.Router) {
 		r.Post("/api/projects/{id}/restore", h.RestoreProject)
 		r.Put("/api/projects/{id}", h.UpdateProject)
 		r.Delete("/api/projects/{id}", h.DeleteProject)
+		r.Post("/api/projects/{id}/reschedule", h.RescheduleProject) // 节假日变更后手动全项目重排
 		r.Post("/api/projects/{id}/members", h.AddMember)
 		r.Delete("/api/projects/{id}/members/{userID}", h.RemoveMember)
 	})
@@ -99,6 +100,20 @@ func (h *ProjectHandler) DashboardStats(w http.ResponseWriter, r *http.Request) 
 	h.db.QueryRow(`SELECT EXISTS(
 		SELECT 1 FROM projects p WHERE p.deleted_at IS NULL AND p.status = 'active' AND p.baseline_created_at IS NOT NULL`+filter+`)`, args...).Scan(&hasBaseline)
 
+	// 计划 vs 实际完成天数（completed 任务；排除里程碑——工期 0/1 无对比意义）
+	var plannedDays, actualDays int
+	query = `SELECT COALESCE(SUM(t.duration_days), 0) FROM tasks t
+		JOIN projects p ON p.id = t.project_id
+		WHERE p.deleted_at IS NULL AND t.deleted_at IS NULL AND p.status = 'active'
+		AND t.status = 'completed' AND t.task_type != 'milestone'` + filter
+	h.db.QueryRow(query, args...).Scan(&plannedDays)
+	query = `SELECT COALESCE(SUM(t.actual_duration_days), 0) FROM tasks t
+		JOIN projects p ON p.id = t.project_id
+		WHERE p.deleted_at IS NULL AND t.deleted_at IS NULL AND p.status = 'active'
+		AND t.status = 'completed' AND t.task_type != 'milestone'
+		AND t.actual_start != '' AND t.actual_end != ''` + filter
+	h.db.QueryRow(query, args...).Scan(&actualDays)
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"active_projects":   activeCount,
 		"at_risk":           atRiskCount,
@@ -106,6 +121,8 @@ func (h *ProjectHandler) DashboardStats(w http.ResponseWriter, r *http.Request) 
 		"overall_progress":  int(overallPct),
 		"baseline_progress": int(baselineProgress),
 		"has_baseline":      hasBaseline,
+		"planned_days":      plannedDays,
+		"actual_days":       actualDays,
 	})
 }
 
@@ -322,14 +339,14 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.db.Query(
 		`SELECT id, name, description, task_type, status, priority, assignee,
 		 start_date, end_date, duration_days, progress_pct, manual_scheduled,
-		 constraint_type, constraint_date, sort_order, actual_start, actual_end
+		 constraint_type, constraint_date, sort_order, actual_start, actual_end, actual_duration_days
 		 FROM tasks WHERE project_id=? AND deleted_at IS NULL`, srcID)
 	if err == nil {
 		for rows.Next() {
 			var st srcTask
 			if err := rows.Scan(&st.t.ID, &st.t.Name, &st.t.Description, &st.t.TaskType, &st.t.Status, &st.t.Priority,
 				&st.t.Assignee, &st.t.StartDate, &st.t.EndDate, &st.t.DurationDays, &st.t.ProgressPct, &st.manual,
-				&st.t.ConstraintType, &st.t.ConstraintDate, &st.t.SortOrder, &st.t.ActualStart, &st.t.ActualEnd); err == nil {
+				&st.t.ConstraintType, &st.t.ConstraintDate, &st.t.SortOrder, &st.t.ActualStart, &st.t.ActualEnd, &st.t.ActualDurationDays); err == nil {
 				srcTasks = append(srcTasks, st)
 		}
 		}
@@ -342,11 +359,11 @@ func (h *ProjectHandler) CopyProject(w http.ResponseWriter, r *http.Request) {
 		r2, err := h.db.Exec(
 			`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
 			 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
-			 constraint_type, constraint_date, sort_order, actual_start, actual_end)
-			 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			 constraint_type, constraint_date, sort_order, actual_start, actual_end, actual_duration_days)
+			 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			newID, st.t.Name, st.t.Description, st.t.TaskType, st.t.Status, st.t.Priority, st.t.Assignee,
 			st.t.StartDate, st.t.EndDate, st.t.DurationDays, st.t.ProgressPct, st.manual,
-			st.t.ConstraintType, st.t.ConstraintDate, st.t.SortOrder, st.t.ActualStart, st.t.ActualEnd)
+			st.t.ConstraintType, st.t.ConstraintDate, st.t.SortOrder, st.t.ActualStart, st.t.ActualEnd, st.t.ActualDurationDays)
 		if err != nil {
 			log.Printf("[Copy] 任务[%d %s]插入失败: %v", st.t.ID, st.t.Name, err)
 			continue
@@ -580,6 +597,38 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "更新成功"})
+}
+
+// RescheduleProject 手动全项目重排（节假日变更后触发）。
+// 已完成任务日期冻结（历史事实），自动任务按当前日历重新排程。
+func (h *ProjectHandler) RescheduleProject(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+
+	var exists int
+	h.db.QueryRow(`SELECT COUNT(*) FROM projects WHERE id=? AND deleted_at IS NULL`, id).Scan(&exists)
+	if exists == 0 {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "项目不存在")
+		return
+	}
+
+	changes, err := scheduler.RecalculateAll(h.db, id)
+	if err != nil {
+		log.Printf("[Project] 项目 %d 手动重排失败: %v", id, err)
+		writeError(w, http.StatusInternalServerError, "SCHEDULE_FAILED", "重新排程失败")
+		return
+	}
+
+	// 广播给项目房间内其他在线用户（其页面自动刷新）
+	if h.hub != nil {
+		userID, _ := auth.GetUserID(r.Context())
+		userName, _ := auth.GetUserEmail(r.Context())
+		h.hub.BroadcastTaskUpdate(id, userID, userName, 0, nil)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "重新排程完成",
+		"changed": len(changes),
+	})
 }
 
 // DeleteProject 软删除项目

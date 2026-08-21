@@ -227,6 +227,13 @@ export default function Dashboard() {
 
   const statRiskClass = (stats?.at_risk ?? 0) > 0 ? "text-danger pulse-once" : "text-success";
 
+  // 看板页占满视口宽度（突破 .main-content 的 1440px 居中限制，与甘特图页同模式）
+  useEffect(() => {
+    const mainEl = document.querySelector(".main-content");
+    if (mainEl) mainEl.classList.add("dashboard-page");
+    return () => { if (mainEl) mainEl.classList.remove("dashboard-page"); };
+  }, []);
+
   return (
     <div className="dashboard">
       {/* 头部 */}
@@ -309,6 +316,19 @@ export default function Dashboard() {
               />
             </svg>
           </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">{t("dashboard.statPlanActual")}</span>
+          <span className="stat-value">
+            {(stats?.actual_days ?? 0) > 0
+              ? `${stats?.planned_days ?? 0} / ${stats?.actual_days ?? 0}`
+              : "—"}
+          </span>
+          {(stats?.actual_days ?? 0) > 0 && (stats?.actual_days ?? 0) > (stats?.planned_days ?? 0) && (
+            <div className="stat-delta neg">
+              Δ +{((stats?.actual_days ?? 0) - (stats?.planned_days ?? 0))}{t("dashboard.statPlanActualUnit")}
+            </div>
+          )}
         </div>
       </div>
 
@@ -393,14 +413,14 @@ export default function Dashboard() {
                     >
                       ⧉
                     </button>
-                    <span className="project-link">{t("dashboard.detail")}</span>
-                  </div>
-                  <div className="project-card-body">
-                    {/* 第二行:负责人(多值分号分隔,超长省略+title) */}
+                    {/* 第一排靠右：负责人（小人头 + 定宽人名，超长省略） */}
                     <span className="project-owner" title={p.owner || t("dashboard.ownerTitle")}>
                       <span className="owner-icon">👤</span>
                       <span className="owner-name">{p.owner || "—"}</span>
                     </span>
+                    <span className="project-link">{t("dashboard.detail")}</span>
+                  </div>
+                  <div className="project-card-body">
                     <div className="project-card-progress">
                       <div className="progress-bar">
                         <div

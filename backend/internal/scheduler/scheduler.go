@@ -32,18 +32,18 @@ type Dep struct {
 }
 
 type TaskInfo struct {
-	ID              int64
-	ParentID        *int64
-	StartDate       string
-	EndDate         string
-	DurationDays    int
-	ManualScheduled bool
-	ConstraintType  string
-	ConstraintDate  string
-	LateStart       string
-	LateFinish      string
-	TotalFloat      int
-	SortOrder       int // 项目内排序序号（隐式顺序依赖依据）
+	ID             int64
+	ParentID       *int64
+	StartDate      string
+	EndDate        string
+	DurationDays   int
+	ConstraintType string
+	ConstraintDate string
+	LateStart      string
+	LateFinish     string
+	TotalFloat     int
+	SortOrder      int  // 项目内排序序号（隐式顺序依赖依据）
+	Completed      bool // 已完成任务日期冻结（历史事实），不参与重算
 }
 
 // Recalculate 从 triggerTaskID 出发传播后继链。
@@ -110,13 +110,13 @@ func fixTriggerEnd(db *sql.DB, taskID int64) {
 	if taskID <= 0 {
 		return
 	}
-	var start, end string
-	var duration, manual int
+	var start, end, status string
+	var duration int
 	err := db.QueryRow(
-		`SELECT start_date, end_date, duration_days, manual_scheduled FROM tasks
-		 WHERE id = ? AND deleted_at IS NULL`, taskID).Scan(&start, &end, &duration, &manual)
-	if err != nil || manual != 0 || start == "" {
-		return
+		`SELECT start_date, end_date, duration_days, status FROM tasks
+		 WHERE id = ? AND deleted_at IS NULL`, taskID).Scan(&start, &end, &duration, &status)
+	if err != nil || start == "" || status == "completed" {
+		return // 已完成任务日期冻结（历史事实），不重算 end
 	}
 	cal, cerr := LoadCalendar(db, "", "")
 	if cerr != nil {
@@ -163,9 +163,6 @@ func ComputeTotalFloat(db *sql.DB, projectID int64) (map[int64]int, error) {
 	}
 	var heads []int64
 	for _, t := range tasks {
-		if t.ManualScheduled {
-			continue
-		}
 		if !predDeps[t.ID] {
 			if _, ok := implicitPred[t.ID]; !ok {
 				heads = append(heads, t.ID)
@@ -220,8 +217,8 @@ func recalcAllForward(db *sql.DB, projectID int64) (map[int64]map[string]string,
 	}
 	var heads []int64
 	for _, t := range tasks {
-		if t.ManualScheduled {
-			continue // 手动任务不入队（其后继仍可通过其它链头到达）
+		if t.Completed {
+			continue // 已完成任务日期冻结，不做链头锚定
 		}
 		if !predDeps[t.ID] {
 			if _, ok := implicitPred[t.ID]; !ok {
@@ -281,7 +278,8 @@ func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[stri
 
 	for i := range tasks {
 		t := &tasks[i]
-		if t.ConstraintType == ConstraintFinishNoLaterThan && t.EndDate > t.ConstraintDate {
+		// 已完成任务的 FNLT 超期是历史事实，不再标记冲突
+		if t.ConstraintType == ConstraintFinishNoLaterThan && !t.Completed && t.EndDate > t.ConstraintDate {
 			if changes[t.ID] == nil {
 				changes[t.ID] = make(map[string]string)
 			}
@@ -317,8 +315,8 @@ func recalc(db *sql.DB, projectID int64, startQueue []int64) (map[int64]map[stri
 
 func loadTasks(db *sql.DB, projectID int64) ([]TaskInfo, error) {
 	rows, err := db.Query(
-		`SELECT id, start_date, end_date, duration_days, manual_scheduled,
-		        constraint_type, constraint_date, parent_id, sort_order
+		`SELECT id, start_date, end_date, duration_days,
+		        constraint_type, constraint_date, parent_id, sort_order, status
 		 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`, projectID)
 	if err != nil {
 		return nil, err
@@ -327,12 +325,12 @@ func loadTasks(db *sql.DB, projectID int64) ([]TaskInfo, error) {
 	var tasks []TaskInfo
 	for rows.Next() {
 		var t TaskInfo
-		var manual int
-		if err := rows.Scan(&t.ID, &t.StartDate, &t.EndDate, &t.DurationDays, &manual,
-			&t.ConstraintType, &t.ConstraintDate, &t.ParentID, &t.SortOrder); err != nil {
+		var status string
+		if err := rows.Scan(&t.ID, &t.StartDate, &t.EndDate, &t.DurationDays,
+			&t.ConstraintType, &t.ConstraintDate, &t.ParentID, &t.SortOrder, &status); err != nil {
 			continue
 		}
-		t.ManualScheduled = manual != 0
+		t.Completed = status == "completed"
 		tasks = append(tasks, t)
 	}
 	return tasks, nil
@@ -422,7 +420,7 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 	if projectStart != "" {
 		for _, id := range startQueue {
 			t := taskMap[id]
-			if t == nil || t.ManualScheduled || parentSet[t.ID] {
+			if t == nil || t.Completed || parentSet[t.ID] {
 				continue
 			}
 			if len(predDeps[t.ID]) > 0 {
@@ -453,7 +451,12 @@ func forwardPass(tasks []TaskInfo, deps []Dep, startQueue []int64, parentSet map
 	// applyCandidate 计算候选日期并双向更新后继（前置变化 → 后继自动调整，含提前）
 	// 候选 = max(当前边候选, 该后继的全部显式前置候选, 隐式前驱结束时间)——多前置取 max 始终成立
 	applyCandidate := func(pred *TaskInfo, succ *TaskInfo, dep Dep) {
-		if pred == nil || succ == nil || succ.ManualScheduled || parentSet[succ.ID] {
+		if pred == nil || succ == nil || parentSet[succ.ID] {
+			return
+		}
+		// 已完成任务日期冻结（历史事实）：自身不重算，但入队让后继沿其冻结日期继续传播
+		if succ.Completed {
+			queue = append(queue, succ.ID)
 			return
 		}
 
@@ -668,7 +671,7 @@ func backwardPass(tasks []TaskInfo, deps []Dep, parentSet map[int64]bool, cal ma
 
 		for _, dep := range predecessors[item.id] {
 			pred := taskMap[dep.PredecessorID]
-			if pred == nil || pred.ManualScheduled {
+			if pred == nil {
 				continue
 			}
 			predLF := calcPredecessorLFFwd(succ, dep, cal)
@@ -948,11 +951,32 @@ func backwardScheduleWrite(tasks []TaskInfo, deps []Dep, finishDate string, cal 
 	queue := []int64{}
 	queued := make(map[int64]bool)
 
-	// 队列：所有链尾（无后继、非父任务、非 manual），end = 项目完成日期
+	// 队列初始化两级：
+	// ① 冻结锚点——completed（历史事实，end 保持自身值）或 FNLT（用户通过"编辑计划结束"锚定，
+	//    end = min(项目完成日期, 约束日期)）：不写回 changes，但入队沿冻结日期向前驱传播
+	// ② 链尾（无后继、非父任务、非 completed）：end = 项目完成日期
 	// 注意：必须用索引取指针（for i := range），range 副本更新不会影响 taskMap 指向的原始元素
 	for i := range tasks {
 		t := &tasks[i]
-		if hasSucc[t.ID] || parentSet[t.ID] || t.ManualScheduled {
+		if parentSet[t.ID] {
+			continue
+		}
+		if t.Completed || (t.ConstraintType == ConstraintFinishNoLaterThan && t.ConstraintDate != "") {
+			anchor := t.EndDate
+			if !t.Completed {
+				anchor = finishDate
+				if t.ConstraintDate != "" && t.ConstraintDate < anchor {
+					anchor = t.ConstraintDate
+				}
+			}
+			newEnd[t.ID] = anchor
+			t.EndDate = anchor
+			t.StartDate = SubWorkDays(cal, anchor, t.DurationDays)
+			queue = append(queue, t.ID)
+			queued[t.ID] = true
+			continue
+		}
+		if hasSucc[t.ID] {
 			continue
 		}
 		newEnd[t.ID] = finishDate
@@ -999,10 +1023,10 @@ func backwardScheduleWrite(tasks []TaskInfo, deps []Dep, finishDate string, cal 
 			default:
 				continue
 			}
-			// 多后继取最严格（更早）；父任务/manual 不重算，用当前日期继续传播
+			// 多后继取最严格（更早）；父任务/completed 不重算（冻结），用当前日期继续传播
 			if _, set := newEnd[pred.ID]; !set || candEnd < newEnd[pred.ID] {
 				newEnd[pred.ID] = candEnd
-				if !parentSet[pred.ID] && !pred.ManualScheduled {
+				if !parentSet[pred.ID] && !pred.Completed {
 					pred.EndDate = candEnd
 					pred.StartDate = SubWorkDays(cal, candEnd, pred.DurationDays)
 					changes[pred.ID] = map[string]string{

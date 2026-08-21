@@ -2352,3 +2352,182 @@ cd backend && followitup.exe config.yaml   # 启动
 | 08:52 | Session end: 5 writes across 2 files (build.bat, SKILL.md) | 2 reads | ~769 tok |
 | 08:53 | Session end: 5 writes across 2 files (build.bat, SKILL.md) | 2 reads | ~769 tok |
 | 08:5x | Session end(收工): pull master 9提交+build.bat 编码修复(纯ASCII,bug-265)+收工技能 Phase 6 gitnexus 索引(全局+ndm副本);exe v2.8.20 重建 | 5 files | 完成,待提交推送 | ~12k |
+| 08:56 | Session end: 5 writes across 2 files (build.bat, SKILL.md) | 2 reads | ~769 tok |
+
+## Session: 2026-08-21 10:54
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:28 | Created C:/Users/jingl/.claude/plans/dazzling-plotting-conway.md | — | ~859 |
+| 12:33 | Session end: 1 writes across 1 files (dazzling-plotting-conway.md) | 11 reads | ~920 tok |
+| 12:44 | Session end: 1 writes across 1 files (dazzling-plotting-conway.md) | 11 reads | ~920 tok |
+| 13:01 | Session end: 1 writes across 1 files (dazzling-plotting-conway.md) | 11 reads | ~920 tok |
+| 13:14 | Created C:/Users/jingl/.claude/plans/dazzling-plotting-conway.md | — | ~574 |
+| 13:23 | Created C:/Users/jingl/.claude/plans/dazzling-plotting-conway.md | — | ~1560 |
+| 13:27 | Edited backend/internal/scheduler/scheduler.go | 14→13 lines | ~77 |
+| 13:27 | Edited backend/internal/scheduler/scheduler.go | 8→8 lines | ~65 |
+| 13:27 | Edited backend/internal/scheduler/scheduler.go | 14→11 lines | ~56 |
+| 13:27 | Edited backend/internal/scheduler/scheduler.go | 14→11 lines | ~53 |
+| 13:27 | Edited backend/internal/scheduler/scheduler.go | modified loadTasks() | ~164 |
+| 13:27 | Edited backend/internal/scheduler/scheduler.go | 4→4 lines | ~20 |
+| 13:28 | Edited backend/internal/scheduler/scheduler.go | modified func() | ~37 |
+| 13:28 | Edited backend/internal/scheduler/scheduler.go | 5→5 lines | ~33 |
+| 13:28 | Edited backend/internal/scheduler/scheduler.go | 7→7 lines | ~52 |
+| 13:28 | Edited backend/internal/scheduler/scheduler.go | 4→4 lines | ~44 |
+| 13:28 | Edited backend/internal/scheduler/scheduler_test.go | — | ~0 |
+| 13:28 | Edited backend/internal/scheduler/scheduler_test.go | — | ~0 |
+| 13:28 | Edited backend/internal/scheduler/scheduler_test.go | — | ~0 |
+| 13:28 | Edited backend/internal/scheduler/scheduler_test.go | — | ~0 |
+| 13:30 | Edited backend/internal/db/sqlite.go | 3→7 lines | ~62 |
+| 13:30 | Edited backend/internal/models/models.go | 2→3 lines | ~41 |
+| 13:30 | Edited backend/internal/api/tasks.go | 6→7 lines | ~110 |
+| 13:30 | Edited backend/internal/api/tasks.go | 2→2 lines | ~37 |
+| 13:31 | Edited backend/internal/api/tasks.go | 2→1 lines | ~10 |
+| 13:31 | Edited backend/internal/api/tasks.go | 11→11 lines | ~191 |
+| 13:31 | Edited backend/internal/api/tasks.go | 5→6 lines | ~100 |
+| 13:31 | Edited backend/internal/api/tasks.go | 5→5 lines | ~68 |
+| 13:31 | Edited backend/internal/api/tasks.go | expanded (+15 lines) | ~270 |
+| 13:31 | Edited backend/internal/api/tasks.go | 4→2 lines | ~27 |
+| 13:32 | Edited backend/internal/api/tasks.go | 12→12 lines | ~187 |
+| 13:32 | Edited backend/internal/api/tasks.go | 13→12 lines | ~173 |
+| 13:32 | Edited backend/internal/api/tasks.go | removed 11 lines | ~12 |
+| 13:33 | Edited backend/internal/api/projects.go | modified Next() | ~214 |
+| 13:33 | Edited backend/internal/api/projects.go | 8→8 lines | ~179 |
+| 13:33 | Edited backend/internal/api/baseline_test.go | removed 30 lines | ~12 |
+| 13:33 | Edited backend/internal/api/baseline_test.go | 8→7 lines | ~20 |
+| 13:35 | Edited backend/internal/api/tasks.go | 3→3 lines | ~46 |
+| 13:35 | Edited backend/internal/api/import_test.go | 6→6 lines | ~83 |
+| 13:35 | Edited backend/internal/api/import_test.go | modified TestUpdateTaskInvalidActual() | ~139 |
+| 13:36 | Edited backend/internal/api/tasks.go | inline fix | ~22 |
+| 13:37 | Edited backend/internal/api/tasks.go | 4→5 lines | ~40 |
+| 13:38 | Edited backend/internal/api/tasks.go | 2→2 lines | ~29 |
+| 13:38 | Edited backend/internal/api/tasks.go | 5→4 lines | ~27 |
+| 13:39 | Edited backend/internal/scheduler/scheduler.go | 13→14 lines | ~90 |
+| 13:39 | Edited backend/internal/scheduler/scheduler.go | 8→8 lines | ~85 |
+| 13:39 | Edited backend/internal/scheduler/scheduler.go | modified loadTasks() | ~184 |
+| 13:40 | Edited backend/internal/scheduler/scheduler.go | 11→14 lines | ~67 |
+| 13:40 | Edited backend/internal/scheduler/scheduler.go | 4→4 lines | ~24 |
+| 13:40 | Edited backend/internal/scheduler/scheduler.go | modified func() | ~67 |
+| 13:40 | Edited backend/internal/scheduler/scheduler.go | 9→10 lines | ~82 |
+| 13:40 | Edited backend/internal/scheduler/scheduler.go | expanded (+21 lines) | ~306 |
+| 13:40 | Edited backend/internal/scheduler/scheduler.go | 4→4 lines | ~53 |
+| 13:40 | Edited backend/internal/scheduler/scheduler_test.go | modified TestCompletedTaskFrozenForward() | ~879 |
+| 13:42 | Edited backend/internal/api/projects.go | 2→3 lines | ~47 |
+| 13:42 | Edited backend/internal/api/projects.go | modified RescheduleProject() | ~277 |
+| 13:43 | Edited frontend/src/api/gantt-adapter.ts | 5→4 lines | ~26 |
+| 13:43 | Edited frontend/src/api/gantt-adapter.ts | 5→4 lines | ~34 |
+| 13:43 | Edited frontend/src/api/gantt-adapter.ts | 5→4 lines | ~44 |
+| 13:43 | Edited frontend/src/pages/ProjectGantt.tsx | 4→3 lines | ~25 |
+| 13:43 | Edited frontend/src/pages/ProjectGantt.tsx | 5→4 lines | ~40 |
+| 13:43 | Edited frontend/src/pages/ProjectGantt.tsx | 2→2 lines | ~39 |
+| 13:44 | Edited frontend/src/pages/TaskListView.tsx | 6→5 lines | ~26 |
+| 13:44 | Edited frontend/src/i18n/locales/zh.ts | 2→1 lines | ~7 |
+| 13:44 | Edited frontend/src/i18n/locales/en.ts | 2→1 lines | ~9 |
+| 13:45 | Edited frontend/src/components/TaskDetailModal.tsx | 4→3 lines | ~25 |
+| 13:45 | Edited frontend/src/components/TaskDetailModal.tsx | 3→2 lines | ~36 |
+| 13:45 | Edited frontend/src/components/TaskDetailModal.tsx | 3→2 lines | ~29 |
+| 13:45 | Edited frontend/src/components/TaskDetailModal.tsx | 3→2 lines | ~24 |
+| 13:45 | Edited frontend/src/components/TaskDetailModal.tsx | reduced (-10 lines) | ~42 |
+| 13:46 | Edited frontend/src/utils/date.ts | added optional chaining | ~642 |
+| 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | 33→34 lines | ~279 |
+| 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | 9→11 lines | ~111 |
+| 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | added nullish coalescing | ~97 |
+| 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | expanded (+8 lines) | ~178 |
+| 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: map, e | ~170 |
+| 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | added 1 condition(s) | ~127 |
+| 13:47 | Edited frontend/src/components/TaskDetailModal.tsx | 10→11 lines | ~122 |
+| 13:48 | Edited frontend/src/components/TaskDetailModal.tsx | added optional chaining | ~1304 |
+| 13:48 | Edited frontend/src/components/TaskDetailModal.tsx | added 4 condition(s) | ~566 |
+| 13:49 | Edited frontend/src/components/TaskDetailModal.tsx | 3→3 lines | ~27 |
+| 13:49 | Edited frontend/src/components/TaskDetailModal.tsx | added nullish coalescing | ~1597 |
+| 13:49 | Edited frontend/src/components/TaskDetailModal.tsx | CSS: 0 | ~1694 |
+| 13:50 | Edited frontend/src/i18n/locales/zh.ts | expanded (+9 lines) | ~381 |
+| 13:50 | Edited frontend/src/i18n/locales/en.ts | Date() → duration() | ~562 |
+| 13:51 | Edited frontend/src/pages/ProjectGantt.tsx | 2→4 lines | ~83 |
+| 13:51 | Edited frontend/src/pages/ProjectGantt.tsx | 9→11 lines | ~128 |
+| 13:51 | Edited frontend/src/pages/ProjectGantt.tsx | 9→11 lines | ~115 |
+| 13:51 | Edited frontend/src/styles/components.css | 7→7 lines | ~55 |
+| 13:51 | Edited frontend/src/styles/components.css | expanded (+7 lines) | ~152 |
+| 13:53 | Edited frontend/src/pages/ProjectGantt.tsx | added error handling | ~142 |
+| 13:53 | Edited frontend/src/pages/ProjectGantt.tsx | expanded (+9 lines) | ~147 |
+| 13:53 | Edited frontend/src/i18n/locales/zh.ts | 2→6 lines | ~66 |
+| 13:53 | Edited frontend/src/i18n/locales/en.ts | 2→6 lines | ~108 |
+| 13:54 | Edited backend/internal/api/projects.go | expanded (+16 lines) | ~363 |
+| 13:54 | Edited frontend/src/stores/dashboardStore.ts | 8→10 lines | ~66 |
+| 13:54 | Edited frontend/src/pages/Dashboard.tsx | expanded (+13 lines) | ~535 |
+| 13:55 | Edited frontend/src/i18n/locales/zh.ts | 2→4 lines | ~32 |
+| 13:55 | Edited frontend/src/i18n/locales/en.ts | 2→4 lines | ~42 |
+| 14:00 | 大功能交付:计划/实际日期联动+工期体系重构(P1-P7) | scheduler.go/tasks.go/projects.go/sqlite.go/models.go/TaskDetailModal.tsx/ProjectGantt.tsx/date.ts/Dashboard.tsx 等 19 文件 | manual_scheduled 废弃(拖拽已禁)、actual_duration_days 落库(migration v10)、completed 冻结+FNLT 倒排锚定、reschedule 端点+按钮、弹窗两栏新布局+实际工期联动+锚点编辑=约束+校验、Dashboard 计划/实际天数卡。后端测试全绿+前端构建通过+Playwright 端到端验证(节假日日历联动正确) | ~15000 |
+| 14:02 | Session end: 96 writes across 19 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 26 reads | ~70897 tok |
+| 15:04 | Edited frontend/src/pages/Dashboard.tsx | 41→41 lines | ~555 |
+| 15:04 | Edited frontend/src/styles/components.css | 6→6 lines | ~38 |
+| 15:04 | Edited frontend/src/styles/components.css | expanded (+10 lines) | ~79 |
+| 15:04 | Edited frontend/src/styles/components.css | expanded (+10 lines) | ~72 |
+| 15:04 | Edited frontend/src/styles/components.css | 6→7 lines | ~54 |
+| 15:04 | Edited frontend/src/styles/components.css | 9→9 lines | ~52 |
+| 15:04 | Edited frontend/src/styles/components.css | 8→8 lines | ~47 |
+| 15:04 | Edited frontend/src/styles/components.css | 14→17 lines | ~105 |
+| 15:05 | Edited frontend/src/styles/components.css | 7→7 lines | ~38 |
+| 15:10 | 看板布局调整:5 统计卡一排(总宽对齐下方模块)、时间线概览+100px(名称列 120→220,轨道宽度不变)、底部待办列+100px 对齐、项目卡片负责人移第一排靠右(30em 定宽省略)+进度条左端到卡片最左等长 | Dashboard.tsx/components.css | 5 卡一排、right/bottom 右列 calc(50%+100px)、mini-gantt --mini-left 258px、owner 移 header。Playwright DOM 测量验证全部达标 | ~1200 |
+| 15:08 | Session end: 105 writes across 19 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 29 reads | ~82116 tok |
+| 15:08 | Edited frontend/src/styles/components.css | 10→10 lines | ~57 |
+| 15:08 | Edited frontend/src/styles/components.css | 10→10 lines | ~56 |
+| 15:08 | Edited frontend/src/styles/components.css | 3→3 lines | ~37 |
+| 15:08 | Edited frontend/src/styles/components.css | 9→9 lines | ~52 |
+| 15:08 | Edited frontend/src/styles/components.css | 8→8 lines | ~47 |
+| 15:20 | 看板宽度微调:时间线概览+100px→50px(用户反馈 100px 右侧空白+滚动条),名称列 220→170,轨道 392px 不变;滚动条根因:非布局溢出(scrollW=clientW) | components.css | 50px 后 scrollW=clientW=1521 无滚动条,右栏 650/左栏 526 | ~300 |
+| 15:09 | Session end: 110 writes across 19 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 29 reads | ~82365 tok |
+| 15:11 | Edited frontend/src/styles/components.css | 4→5 lines | ~34 |
+| 15:12 | Session end: 111 writes across 19 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 29 reads | ~82399 tok |
+| 15:15 | Edited frontend/src/styles/components.css | CSS: width, padding, box-sizing | ~44 |
+| 15:17 | Edited frontend/src/pages/Dashboard.tsx | added 2 condition(s) | ~92 |
+| 15:17 | Edited frontend/src/index.css | 5→10 lines | ~51 |
+| 15:17 | Edited frontend/src/styles/components.css | 7→4 lines | ~29 |
+| 15:18 | Edited frontend/src/pages/Dashboard.tsx | removed 9 lines | ~12 |
+| 15:18 | Edited frontend/src/index.css | 10→5 lines | ~25 |
+| 15:19 | Edited frontend/src/styles/components.css | CSS: max-width, margin | ~16 |
+| 15:19 | Edited frontend/src/styles/components.css | CSS: grid-template-columns | ~31 |
+| 15:19 | Edited frontend/src/styles/components.css | 7→6 lines | ~42 |
+| 15:19 | Edited frontend/src/styles/components.css | 9→9 lines | ~52 |
+| 15:19 | Edited frontend/src/styles/components.css | 8→8 lines | ~47 |
+| 15:19 | Edited frontend/src/styles/components.css | CSS: grid-template-columns | ~32 |
+| 15:30 | 看板布局还原:时间线加宽系列改动(100→50px→容器放宽→占满)全部撤回,回原始 grid 1fr 1fr + 1200 居中;保留 5 卡一排+负责人第一排靠右+进度条等长(用户认可的第一轮状态) | Dashboard.tsx/index.css/components.css | 用户反馈"加宽之前页面正常",翻 git diff 还原加宽相关改动;实测容器 1200/左右 588/名称列 120 恢复 | ~400 |
+| 15:20 | Session end: 123 writes across 20 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 31 reads | ~83083 tok |
+| 15:23 | Edited frontend/src/pages/Dashboard.tsx | added 2 condition(s) | ~92 |
+| 15:23 | Edited frontend/src/index.css | 5→10 lines | ~51 |
+| 15:23 | Edited frontend/src/styles/components.css | CSS: width | ~29 |
+| 15:40 | 看板占满视口(用户拍板"对了"):Dashboard useEffect 给 main 加 dashboard-page class + index.css 突破 max-width:1440 + .dashboard width:100%;1920 下实测 x=32/宽 1856/左右 gap 32/无横向滚动条 | Dashboard.tsx/index.css/components.css | 关键:父容器 main-content 1440 居中才是空白根因,改 dashboard 自身 max-width 无效(1200/1400/flex 加宽全失败);用户显示器 1920(推翻 1536 假设) | ~500 |
+| 15:24 | Session end: 126 writes across 20 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 31 reads | ~83255 tok |
+| 15:25 | Edited frontend/src/styles/components.css | 7→7 lines | ~56 |
+| 15:25 | Edited frontend/src/styles/components.css | CSS: line-height | ~66 |
+| 15:25 | Edited frontend/src/styles/components.css | CSS: width, height | ~46 |
+| 15:26 | Edited frontend/src/styles/components.css | inline fix | ~14 |
+| 15:26 | Edited frontend/src/styles/components.css | 6→6 lines | ~37 |
+| 15:26 | Edited frontend/src/styles/components.css | CSS: justify-content | ~44 |
+| 15:26 | Edited frontend/src/styles/components.css | CSS: flex, min-width | ~74 |
+| 15:50 | 看板统计卡压缩:高度-25%(padding 20→12/value 32→26/ring 48→40)+宽度-25%(grid→flex,15% basis)+间距放大(space-between,116px) | components.css | 1920 实测 278×103(原 358×135),间距 116,5 卡同排无滚动 | ~200 |
+| 15:27 | Session end: 133 writes across 20 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 31 reads | ~83592 tok |
+| 15:27 | Edited frontend/src/styles/components.css | 6→5 lines | ~25 |
+| 15:27 | Edited frontend/src/styles/components.css | 3→3 lines | ~24 |
+| 15:58 | 统计卡间距回 16px+靠左固定(用户拍板):flex 0 0 15% 不伸缩,justify-content 默认 flex-start,右侧留 432px 备用 | components.css | 278×103 固定,间距 16,右侧留白(用户说以后用) | ~150 |
+| 15:29 | Session end: 135 writes across 20 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 31 reads | ~83641 tok |
+| 15:29 | Edited frontend/src/styles/components.css | CSS: 1 | ~42 |
+| 15:29 | Edited frontend/src/styles/components.css | CSS: 1 | ~76 |
+| 15:29 | Edited frontend/src/styles/components.css | 8→8 lines | ~47 |
+| 16:05 | 时间线名称:时间区 = 1:3(用户拍板"很好"):--mini-left 改 25% 百分比,name 列 calc(25% - 38px)(no26+gap12),name-text max-width 100% | components.css | 1920 实测名称区 210.5:时间区 655.5 = 1:3.1,名称列 179px | ~150 |
+| 15:30 | Session end: 138 writes across 20 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 31 reads | ~83806 tok |
+| 15:32 | Edited frontend/tsconfig.app.json | 2→3 lines | ~24 |
+| 15:32 | Edited frontend/src/components/Navbar.tsx | 4→5 lines | ~68 |
+| 15:32 | Edited frontend/src/styles/components.css | expanded (+9 lines) | ~58 |
+| 15:32 | Edited frontend/src/components/Navbar.tsx | added 1 import(s) | ~84 |
+| 15:33 | Edited frontend/src/styles/components.css | 9→9 lines | ~54 |
+| 15:33 | Edited frontend/src/styles/components.css | CSS: align-self, padding-bottom | ~61 |
+| 16:10 | 标题栏加版本号:Nabvar import package.json version(单一来源,tsconfig 开 resolveJsonModule),名称后显示 v2.8.20(11px 弱化+下对齐);名称字号 16→18 放大一号 | Navbar.tsx/tsconfig.app.json/components.css | 底部对齐(差 1px),版本号跟随 package.json 自动更新 | ~200 |
+| 15:34 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |
+| 16:20 | 低分辨率适配实测(用户问"会自动缩放吗"):1366x768/1280x720 看板+甘特图页全测,scrollW=clientW 无页面级横向溢出;容器全百分比自适应(max-width 上限+width 100%);甘特图内部横向滚动是 dhtmlx 设计行为 | 实测验证 | 1280 下 dashboard 1201px 自适应,无需改代码 | ~150 |
+| 15:37 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |
+| 15:38 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |
+| 16:35 | 版本号 2.8.20→2.8.21(7 处 sed 全局替换)+gitnexus analyze 索引更新(2589 symbols/6084 edges/227 flows,CLAUDE.md 自动刷新) | 版本文件+索引 | Navbar 版本号从 package.json 读取自动跟随 | ~100 |
+| 15:40 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |
+| 16:40 | 重新生成 exe:版本号+前端改动需重新编译嵌入(npm build→cp dist→go build),22.5MB;启动日志 v2.8.21+内嵌前端版本号/看板占满 1920 验证通过 | followitup.exe | 用户问"exe 是否需要重新生成"→需要(Go 源码版本号+前端产物都旧) | ~150 |
+| 15:42 | Session end: 144 writes across 22 files (dazzling-plotting-conway.md, scheduler.go, scheduler_test.go, sqlite.go, models.go) | 32 reads | ~84789 tok |

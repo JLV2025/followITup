@@ -107,11 +107,11 @@ func TestImportTasksStatusWordsAndGuards(t *testing.T) {
 	if pending != "open" {
 		t.Errorf("'待开始' → %q, want open", pending)
 	}
-	// actual 默认跟随计划
+	// 实际日期默认空白（任务完成后由用户手工填写）
 	var actualStart, actualEnd string
 	conn.QueryRow(`SELECT actual_start, actual_end FROM tasks WHERE project_id=? AND name='需求分析'`, pid).Scan(&actualStart, &actualEnd)
-	if actualStart != "2026-08-03" || actualEnd == "" {
-		t.Errorf("导入任务 actual = (%q,%q), want 跟随计划 (2026-08-03, 非空)", actualStart, actualEnd)
+	if actualStart != "" || actualEnd != "" {
+		t.Errorf("导入任务 actual = (%q,%q), want 默认空白", actualStart, actualEnd)
 	}
 	// 重复 WBS 未插入
 	var dupCnt int
@@ -156,7 +156,7 @@ func TestUpdateTaskPartialUpdateKeepsActual(t *testing.T) {
 	}
 }
 
-// UpdateTask 校验：实际开始晚于（计划兜底出的）实际结束 → 400 INVALID_ACTUAL
+// UpdateTask 校验：实际开始晚于实际结束 → 400 INVALID_ACTUAL
 func TestUpdateTaskInvalidActual(t *testing.T) {
 	conn, h := testTaskHandler(t)
 	pid := setupProject(t, conn)
@@ -166,7 +166,7 @@ func TestUpdateTaskInvalidActual(t *testing.T) {
 		"name": "任务B", "task_type": "task", "status": "in_progress",
 		"start_date": "2026-08-01", "end_date": "2026-08-10", "duration_days": 5,
 		"progress_pct": 30, "manual_scheduled": false, "version": 1,
-		"actual_start": "2026-08-15", // 晚于计划结束；actual_end 未传 → 兜底为计划结束 08-10
+		"actual_start": "2026-08-15", "actual_end": "2026-08-10", // 实际结束早于实际开始
 	}
 	body, _ := json.Marshal(payload)
 	r := chi.NewRouter()

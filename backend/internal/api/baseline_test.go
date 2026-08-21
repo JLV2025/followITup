@@ -2,7 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"strings"
 	"testing"
 	"time"
 
@@ -18,35 +17,6 @@ func testBaselineDB(t *testing.T) *sql.DB {
 	}
 	t.Cleanup(func() { d.Close() })
 	return d.Conn
-}
-
-// 实际日期默认取计划日期；用户显式值优先（用户选择 > 系统默认）
-func TestFillActualDates(t *testing.T) {
-	cases := []struct {
-		name        string
-		actualStart string
-		actualEnd   string
-		planStart   string
-		planEnd     string
-		wantStart   string
-		wantEnd     string
-	}{
-		{"空实际取计划开始", "", "", "2026-08-01", "2026-08-10", "2026-08-01", "2026-08-10"},
-		{"用户实际开始优先", "2026-07-25", "", "2026-08-01", "2026-08-10", "2026-07-25", "2026-08-10"},
-		{"用户实际结束优先", "", "2026-09-05", "2026-08-01", "2026-08-10", "2026-08-01", "2026-09-05"},
-		{"用户两者都填全用用户值", "2026-07-20", "2026-07-30", "2026-08-01", "2026-08-10", "2026-07-20", "2026-07-30"},
-		{"计划日期为空不填", "", "", "", "", "", ""},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			gotS, gotE := fillActualDates(c.actualStart, c.actualEnd, c.planStart, c.planEnd)
-			if gotS != c.wantStart || gotE != c.wantEnd {
-				t.Errorf("fillActualDates(%q,%q,%q,%q) = (%q,%q), want (%q,%q)",
-					c.actualStart, c.actualEnd, c.planStart, c.planEnd, gotS, gotE, c.wantStart, c.wantEnd)
-			}
-		})
-	}
-	_ = strings.TrimSpace // 保留占位避免未用导入
 }
 
 // 创建基线：所有任务 baseline_* = 当前值，projects 元数据写入

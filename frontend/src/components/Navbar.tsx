@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../stores/authStore";
 import i18n, { LANGS, setLanguage } from "../i18n";
+// 版本号单一来源：package.json（发版时同步更新，标题栏自动跟随）
+import { version as APP_VERSION } from "../../package.json";
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -22,6 +24,7 @@ export default function Navbar() {
         <Link to="/" className="navbar-brand">
           <img src="/logo.gif" alt="FollowITup" className="navbar-logo" />
           <span>FollowITup</span>
+          <span className="navbar-version">v{APP_VERSION}</span>
         </Link>
       </div>
       <div className="navbar-actions">

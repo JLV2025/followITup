@@ -33,7 +33,6 @@ interface Task {
   actual_end: string;
   baseline_start_date: string;
   baseline_end_date: string;
-  manual_scheduled: boolean;
   constraint_type: string;
   constraint_date: string;
   sort_order: number;
@@ -123,6 +122,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
   };
   const [projectName, setProjectName] = useState("");
   const [projectStartDate, setProjectStartDate] = useState(""); // 正排锚点:新建任务默认开始日期
+  const [projectEndDate, setProjectEndDate] = useState(""); // 倒排锚点:新建任务默认结束日期
+  const [scheduleDirection, setScheduleDirection] = useState("forward");
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [rowNumbers, setRowNumbers] = useState<Record<number, number>>({});
   const [baselineMenuOpen, setBaselineMenuOpen] = useState(false);
@@ -164,7 +165,6 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         end_date: src.end_date || "",
         duration_days: src.duration_days ?? 1,
         progress_pct: src.progress_pct ?? 0,
-        manual_scheduled: false,
       });
       fetchData(projectId, readonly);
     } catch (err: any) {
@@ -372,6 +372,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         const res = await api.get(`/api/projects/${projectId}`);
         setProjectName(res.data.data?.name || "");
         setProjectStartDate(res.data.data?.start_date || "");
+        setProjectEndDate(res.data.data?.end_date || "");
+        setScheduleDirection(res.data.data?.schedule_direction || "forward");
       } catch { /* ignore */ }
     };
     loadProjectName();
@@ -394,6 +396,18 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
     buildRowNumbers();
     setModalTask(null);
     setShowModal(true);
+  };
+
+  /** 节假日变更后手动全项目重排（已完成任务日期冻结，自动任务按当前日历重排） */
+  const handleReschedule = async () => {
+    if (!confirm(i18n.t("gantt.confirmReschedule"))) return;
+    try {
+      const res = await api.post(`/api/projects/${projectId}/reschedule`);
+      alert(i18n.t("gantt.rescheduled", { n: res.data?.data?.changed ?? 0 }));
+      fetchData(projectId, readonly);
+    } catch (err: any) {
+      alert(getErrorMessage(err, "common.unknownError"));
+    }
   };
 
   /** 弹窗保存后刷新 */
@@ -556,8 +570,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
       if (task.status === "in_progress") classes.push("gantt-task-inprogress");
       if (task.status === "open") classes.push("gantt-task-open");
       if (gantt.hasChild(task.id)) classes.push("gantt-task-parent");
-      // 关键路径：TF=0 的叶子/手动任务红色左缘标记（父任务由子任务汇总，不标记）
-      if (task.critical && !gantt.hasChild(task.id) && !task.manual_scheduled) classes.push("gantt-task-critical");
+      // 关键路径：TF=0 的叶子任务红色左缘标记（父任务由子任务汇总，不标记）
+      if (task.critical && !gantt.hasChild(task.id)) classes.push("gantt-task-critical");
       if (selectedTaskRef.current === task.id) classes.push("gantt-row-selected");
       const fm = useGanttStore.getState().focusMap;
       if (fm[task.id as number]) classes.push("gantt-task-focus");
@@ -1158,6 +1172,15 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
           {!readonly && (
             <button
               className="btn btn-ghost btn-sm"
+              onClick={handleReschedule}
+              title={t("gantt.rescheduleTitle")}
+            >
+              ↻ {t("gantt.reschedule")}
+            </button>
+          )}
+          {!readonly && (
+            <button
+              className="btn btn-ghost btn-sm"
               title={t("gantt.recycleTitle")}
               onClick={() => setShowRecycleBin(true)}
             >
@@ -1308,6 +1331,8 @@ export default function ProjectGantt({ readonly }: { readonly: boolean }) {
         <TaskDetailModal
           projectId={projectId}
           projectStartDate={projectStartDate}
+          projectEndDate={projectEndDate}
+          scheduleDirection={scheduleDirection}
           task={modalTask}
           allTasks={allTasks}
           rowNumbers={rowNumbers}

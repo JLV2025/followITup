@@ -19,7 +19,6 @@ export interface GanttTask {
   status?: string;
   assignee?: string;
   priority?: string;
-  manual_scheduled?: boolean;
   constraint_type?: string;
   constraint_date?: string;
   baseline_start_date?: string;
@@ -90,7 +89,6 @@ export function toGanttTask(t: any, readonly: boolean): GanttTask {
     status: t.status,
     assignee: t.assignee,
     priority: t.priority,
-    manual_scheduled: t.manual_scheduled,
     constraint_type: t.constraint_type || "",
     constraint_date: t.constraint_date || "",
     baseline_start_date: t.baseline_start_date || "",
@@ -120,7 +118,6 @@ export function fromGanttTask(gt: GanttTask): any {
     status: gt.status || "open",
     assignee: gt.assignee || "",
     priority: gt.priority || "medium",
-    manual_scheduled: gt.manual_scheduled || false,
     constraint_type: gt.constraint_type || "",
     constraint_date: gt.constraint_date || "",
     version: gt.version || 0,

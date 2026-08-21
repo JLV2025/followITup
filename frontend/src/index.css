@@ -1,4 +1,4 @@
-/* 全局样式 — FollowITup 2.8.20 */
+/* 全局样式 — FollowITup 2.8.21 */
 @import "./styles/components.css";
 
 :root {
@@ -78,6 +78,11 @@ body::before {
 .main-content.gantt-page {
   max-width: none;
   padding: 0;
+}
+
+/* 看板页面：占满视口宽度（消除 1440px 容器居中的右侧空白） */
+.main-content.dashboard-page {
+  max-width: none;
 }
 
 a {

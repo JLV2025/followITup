@@ -115,9 +115,9 @@ func TestCalcDatesSS(t *testing.T) {
 
 func TestForwardPass(t *testing.T) {
 	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-15", DurationDays: 14, ManualScheduled: false},
-		{ID: 2, StartDate: "2026-07-10", EndDate: "2026-07-20", DurationDays: 10, ManualScheduled: false},
-		{ID: 3, StartDate: "2026-07-25", EndDate: "2026-07-30", DurationDays: 5, ManualScheduled: false},
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-15", DurationDays: 14},
+		{ID: 2, StartDate: "2026-07-10", EndDate: "2026-07-20", DurationDays: 10},
+		{ID: 3, StartDate: "2026-07-25", EndDate: "2026-07-30", DurationDays: 5},
 	}
 	deps := []Dep{
 		{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0},
@@ -146,30 +146,12 @@ func TestForwardPass(t *testing.T) {
 	}
 }
 
-func TestManualScheduledBlocksCascade(t *testing.T) {
-	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4, ManualScheduled: false},
-		{ID: 2, StartDate: "2026-07-10", EndDate: "2026-07-20", DurationDays: 10, ManualScheduled: true},
-	}
-	deps := []Dep{
-		{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0},
-	}
-
-	tasks[0].EndDate = "2026-07-08"
-	tasks[0].DurationDays = 7
-
-	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "")
-	if _, ok := changes[2]; ok {
-		t.Error("手动锁定的任务不应被自动调整")
-	}
-}
-
 func TestMultiplePredecessorsMaxDate(t *testing.T) {
 	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4, ManualScheduled: false},
-		{ID: 2, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4, ManualScheduled: false},
-		{ID: 3, StartDate: "2026-07-01", EndDate: "2026-07-10", DurationDays: 9, ManualScheduled: false},
-		{ID: 4, StartDate: "2026-07-01", EndDate: "2026-07-02", DurationDays: 1, ManualScheduled: false},
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4},
+		{ID: 2, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4},
+		{ID: 3, StartDate: "2026-07-01", EndDate: "2026-07-10", DurationDays: 9},
+		{ID: 4, StartDate: "2026-07-01", EndDate: "2026-07-02", DurationDays: 1},
 	}
 	deps := []Dep{
 		{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0},
@@ -195,8 +177,8 @@ func TestStartNoEarlierThanConstraint(t *testing.T) {
 	// A(7/1→7/5) ──FS──→ B(7/25→7/29, SNET=7/20)
 	// B 当前日期 7/25 > 约束 floor 7/20，A 完成日期不会影响 B
 	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4, ManualScheduled: false},
-		{ID: 2, StartDate: "2026-07-25", EndDate: "2026-07-29", DurationDays: 4, ManualScheduled: false,
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 4},
+		{ID: 2, StartDate: "2026-07-25", EndDate: "2026-07-29", DurationDays: 4,
 			ConstraintType: ConstraintStartNoEarlierThan, ConstraintDate: "2026-07-20"},
 	}
 	deps := []Dep{
@@ -260,8 +242,8 @@ func TestConstraintConflict(t *testing.T) {
 	// A(10天) ──FS──→ B(5天, FNLT=7/10)
 	// 如果 A 已排到 7/15 完成 → B 最早 7/16 开始 → B 7/20 完成 > 7/10 deadline → 冲突
 	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-15", DurationDays: 14, ManualScheduled: false},
-		{ID: 2, StartDate: "2026-07-16", EndDate: "2026-07-20", DurationDays: 5, ManualScheduled: false,
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-15", DurationDays: 14},
+		{ID: 2, StartDate: "2026-07-16", EndDate: "2026-07-20", DurationDays: 5,
 			ConstraintType: ConstraintFinishNoLaterThan, ConstraintDate: "2026-07-10"},
 	}
 	deps := []Dep{
@@ -297,19 +279,6 @@ func TestImplicitOrderDependency(t *testing.T) {
 	}
 	if ch, ok := changes[3]; !ok || ch["start_date"] != "2026-07-09" {
 		t.Errorf("任务3 应跟随任务2 到 7/9（任务2 结束 7/9 独占式直接衔接），实际 changes=%v", changes[3])
-	}
-}
-
-// 隐式顺序依赖不适用于手动排程任务
-func TestImplicitOrderSkippedForManual(t *testing.T) {
-	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-03", DurationDays: 3, SortOrder: 0},
-		{ID: 2, StartDate: "2026-07-10", EndDate: "2026-07-12", DurationDays: 3, SortOrder: 1, ManualScheduled: true},
-	}
-	tasks[0].EndDate = "2026-07-06"
-	changes := forwardPass(tasks, nil, []int64{1}, map[int64]bool{}, map[string]string{}, "")
-	if _, ok := changes[2]; ok {
-		t.Error("手动排程任务不应被隐式顺序依赖修改")
 	}
 }
 
@@ -415,19 +384,6 @@ func TestBackwardScheduleDepTypes(t *testing.T) {
 	}
 }
 
-// 倒推：manual 任务不被改写，但链条沿其当前日期继续往前推
-func TestBackwardScheduleManualScheduled(t *testing.T) {
-	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5, ManualScheduled: true},
-		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-31", DurationDays: 7},
-	}
-	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
-	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
-	if _, ok := changes[1]; ok {
-		t.Error("manual 任务不应被倒推改写")
-	}
-}
-
 // 倒推：父任务不直接参与，其日期由子任务 rollup（迭代收敛在 backwardSchedule 内验证）
 func TestBackwardScheduleParentNotWritten(t *testing.T) {
 	pid := int64(10)
@@ -520,9 +476,9 @@ func TestChainHeadDurationChangePropagates(t *testing.T) {
 	// 链头 A(2天) ──FS──→ B(1天) ──FS──→ C(1天)
 	// A 时长从 2 天改为 1 天:end 提前 1 天 → B、C 应随之前移
 	tasks := []TaskInfo{
-		{ID: 1, StartDate: "2026-08-10", EndDate: "2026-08-12", DurationDays: 2, ManualScheduled: false},
-		{ID: 2, StartDate: "2026-08-12", EndDate: "2026-08-13", DurationDays: 1, ManualScheduled: false},
-		{ID: 3, StartDate: "2026-08-13", EndDate: "2026-08-14", DurationDays: 1, ManualScheduled: false},
+		{ID: 1, StartDate: "2026-08-10", EndDate: "2026-08-12", DurationDays: 2},
+		{ID: 2, StartDate: "2026-08-12", EndDate: "2026-08-13", DurationDays: 1},
+		{ID: 3, StartDate: "2026-08-13", EndDate: "2026-08-14", DurationDays: 1},
 	}
 	deps := []Dep{
 		{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0},
@@ -538,6 +494,82 @@ func TestChainHeadDurationChangePropagates(t *testing.T) {
 	}
 	if ch, ok := changes[3]; !ok || ch["start_date"] != "2026-08-12" {
 		t.Errorf("C 应提前到 08-12 开始,实际 changes=%v", changes[3])
+	}
+}
+
+// ============================================================================
+// 已完成任务冻结 + 倒排 FNLT 锚定测试（P3）
+// ============================================================================
+
+// 正排：A(进行中) → B(已完成) → C(进行中)。A 工期变化 → B 日期冻结不变，C 沿 B 冻结 end 重排
+func TestCompletedTaskFrozenForward(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-08-03", EndDate: "2026-08-05", DurationDays: 3},
+		{ID: 2, StartDate: "2026-08-06", EndDate: "2026-08-10", DurationDays: 3, Completed: true},
+		{ID: 3, StartDate: "2026-08-11", EndDate: "2026-08-12", DurationDays: 2},
+	}
+	deps := []Dep{
+		{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0},
+		{ID: 2, PredecessorID: 2, SuccessorID: 3, Type: FS, LagDays: 0},
+	}
+	// A 工期 3→5，fixTriggerEnd 已把 end 落到 08-07（内存模拟）
+	tasks[0].DurationDays = 5
+	tasks[0].EndDate = "2026-08-07"
+
+	changes := forwardPass(tasks, deps, []int64{1}, map[int64]bool{}, map[string]string{}, "2026-08-03")
+	if _, ok := changes[2]; ok {
+		t.Error("已完成任务 B 不应被重排")
+	}
+	if ch, ok := changes[3]; !ok || ch["start_date"] != "2026-08-10" {
+		t.Errorf("C 应沿 B 冻结 end(08-10) 直接衔接，实际 changes=%v", changes[3])
+	}
+}
+
+// 正排：链头已完成 + 项目开始日期变更 → 该任务 start 保持冻结
+func TestCompletedHeadNotAnchored(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-08-03", EndDate: "2026-08-05", DurationDays: 3, Completed: true},
+	}
+	changes := forwardPass(tasks, nil, []int64{1}, map[int64]bool{}, map[string]string{}, "2026-08-10")
+	if _, ok := changes[1]; ok {
+		t.Error("已完成链头不应被项目开始日期重新锚定")
+	}
+}
+
+// 倒排：已完成链尾 end 冻结（保持历史值），其前驱按冻结 end 前推
+func TestCompletedTailBackward(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-07-08", EndDate: "2026-07-20", DurationDays: 7, Completed: true},
+	}
+	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
+	// 项目完成日期 07-31 晚于 B 历史 end 07-20：B 保持 07-20 不被推到 07-31
+	changes := backwardScheduleWrite(tasks, deps, "2026-07-31", map[string]string{}, map[int64]bool{})
+	if _, ok := changes[2]; ok {
+		t.Error("已完成链尾不应被项目完成日期重写")
+	}
+	// A.end = B.start = SubWorkDays(07-20, 7) = 07-09；A.start = SubWorkDays(07-09, 5) = 07-02
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-07-09" || ch["start_date"] != "2026-07-02" {
+		t.Errorf("A 应沿 B 冻结 end 前推为 07-02~07-09，实际 %v", ch)
+	}
+}
+
+// 倒排：FNLT 约束任务作冻结锚点（用户"编辑计划结束"写入），end = min(项目完成, 约束)，
+// 不被全量倒推覆盖，其前驱按锚点日期推导
+func TestBackwardFNLTAnchor(t *testing.T) {
+	tasks := []TaskInfo{
+		{ID: 1, StartDate: "2026-07-01", EndDate: "2026-07-05", DurationDays: 5},
+		{ID: 2, StartDate: "2026-08-01", EndDate: "2026-09-30", DurationDays: 7,
+			ConstraintType: ConstraintFinishNoLaterThan, ConstraintDate: "2026-09-15"},
+	}
+	deps := []Dep{{ID: 1, PredecessorID: 1, SuccessorID: 2, Type: FS, LagDays: 0}}
+	changes := backwardScheduleWrite(tasks, deps, "2026-09-30", map[string]string{}, map[int64]bool{})
+	if _, ok := changes[2]; ok {
+		t.Error("FNLT 锚点任务不应被倒推改写")
+	}
+	// B.end = min(09-30, 09-15) = 09-15；B.start = SubWorkDays(09-15, 7) = 09-04 → A.end = 09-04
+	if ch, ok := changes[1]; !ok || ch["end_date"] != "2026-09-04" {
+		t.Errorf("A.end 应 = B.start = 09-04（沿 FNLT 锚点推导），实际 %v", ch)
 	}
 }
 

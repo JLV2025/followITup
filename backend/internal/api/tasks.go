@@ -64,6 +64,7 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 		        COALESCE(baseline_start_date, '') AS baseline_start_date, COALESCE(baseline_end_date, '') AS baseline_end_date,
 		        COALESCE(baseline_duration_days, 0) AS baseline_duration_days, COALESCE(baseline_progress_pct, 0) AS baseline_progress_pct,
 		        COALESCE(actual_start, '') AS actual_start, COALESCE(actual_end, '') AS actual_end,
+		        COALESCE(actual_duration_days, 0) AS actual_duration_days,
 		        manual_scheduled, constraint_type, constraint_date,
 		        sort_order, version,
 		        COALESCE(deleted_at, ''), created_at, updated_at
@@ -85,7 +86,7 @@ func (h *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 			&t.TaskType, &t.Status, &t.Priority, &t.Assignee,
 			&t.StartDate, &t.EndDate, &t.DurationDays, &t.ProgressPct,
 				&t.BaselineStartDate, &t.BaselineEndDate, &t.BaselineDurationDays, &t.BaselineProgressPct,
-			&t.ActualStart, &t.ActualEnd, &manualSched, &t.ConstraintType, &t.ConstraintDate,
+			&t.ActualStart, &t.ActualEnd, &t.ActualDurationDays, &manualSched, &t.ConstraintType, &t.ConstraintDate,
 			&t.SortOrder, &t.Version,
 			&deletedAt, &t.CreatedAt, &t.UpdatedAt); err != nil {
 			continue
@@ -213,6 +214,7 @@ func (h *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
 		`SELECT id, project_id, COALESCE(parent_id, 0), name, description, task_type, status, priority,
 		        assignee, start_date, end_date, duration_days, progress_pct,
 		        COALESCE(actual_start, '') AS actual_start, COALESCE(actual_end, '') AS actual_end,
+		        COALESCE(actual_duration_days, 0) AS actual_duration_days,
 		        manual_scheduled, constraint_type, constraint_date,
 		        sort_order, version,
 		        COALESCE(deleted_at, ''), created_at, updated_at
@@ -220,7 +222,7 @@ func (h *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
 	).Scan(&t.ID, &t.ProjectID, &parentID, &t.Name, &t.Description,
 		&t.TaskType, &t.Status, &t.Priority, &t.Assignee,
 		&t.StartDate, &t.EndDate, &t.DurationDays, &t.ProgressPct,
-		&t.ActualStart, &t.ActualEnd, &manualSched, &t.ConstraintType, &t.ConstraintDate,
+		&t.ActualStart, &t.ActualEnd, &t.ActualDurationDays, &manualSched, &t.ConstraintType, &t.ConstraintDate,
 		&t.SortOrder, &t.Version,
 		&deletedAt, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
@@ -271,8 +273,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		t.EndDate = scheduler.AddWorkDays(nil, t.StartDate, t.DurationDays)
 	}
 
-	// 实际日期默认跟随计划（实际开始=开始日，实际结束=结束日）；用户显式值优先
-	t.ActualStart, t.ActualEnd = fillActualDates(t.ActualStart, t.ActualEnd, t.StartDate, t.EndDate)
+	// 实际日期默认空白，任务完成后由用户手工填写（不再自动跟随计划日期）
 
 	// 解析负责人:assignee_ids 数组优先,其次旧 assignee 文本,都未指定时默认取项目全部 owner
 	var assigneeIDs []int64
@@ -318,9 +319,9 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	// 分配下一个 sort_order（单条 INSERT...SELECT 原子完成，消除并发创建重复序号）
 	result, err := h.db.Exec(
 		`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
-		 assignee, start_date, end_date, duration_days, progress_pct, actual_start, actual_end,
+		 assignee, start_date, end_date, duration_days, progress_pct, actual_start, actual_end, actual_duration_days,
 		 manual_scheduled, constraint_type, constraint_date, sort_order)
-		 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+		 SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?,
 		        COALESCE(MAX(sort_order), -1) + 1
 		 FROM tasks WHERE project_id = ? AND deleted_at IS NULL`,
 		projectID, t.ParentID, t.Name, t.Description, t.TaskType, t.Status, t.Priority,
@@ -529,17 +530,16 @@ func (h *TaskHandler) ImportTasks(w http.ResponseWriter, r *http.Request) {
 			skipReasons = append(skipReasons, fmt.Sprintf("行[%s %s]:负责人[%s]不是系统用户,已归未分配", row.wbs, row.name, m))
 		}
 		assigneeSnapshot := strings.Join(ownerNamesOf(h.db, assigneeIDs), "; ")
-		// 实际日期默认跟随计划（与 CreateTask 新语义一致：用户选择 > 系统默认）
-		actualStart, actualEnd := fillActualDates("", "", row.startDate, endDate)
+		// 实际日期默认空白，任务完成后由用户手工填写（不再自动跟随计划日期）
 
 		result, err := h.db.Exec(
 			`INSERT INTO tasks (project_id, parent_id, name, description, task_type, status, priority,
 			 assignee, start_date, end_date, duration_days, progress_pct, manual_scheduled,
-			 constraint_type, constraint_date, sort_order, actual_start, actual_end)
-			 VALUES (?, ?, ?, '', ?, ?, 'medium', ?, ?, ?, ?, ?, 0, '', '', ?, ?, ?)`,
+			 constraint_type, constraint_date, sort_order, actual_start, actual_end, actual_duration_days)
+			 VALUES (?, ?, ?, '', ?, ?, 'medium', ?, ?, ?, ?, ?, 0, '', '', ?, '', '', 0)`,
 			projectID, parentID, row.name, row.taskType, row.status,
 			assigneeSnapshot, row.startDate, endDate, row.duration, row.progress,
-			nextSort, actualStart, actualEnd,
+			nextSort,
 		)
 		if err != nil {
 			skipped++
@@ -698,6 +698,21 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	if _, provided := fieldCheck["actual_end"]; !provided {
 		h.db.QueryRow(`SELECT COALESCE(actual_end, '') FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&t.ActualEnd)
 	}
+	// actual_duration_days：实际开始/结束任一被提供时后端权威重算（工作日口径，含节假日日历），
+	// 前端不发送该字段；都未提供（脚本部分更新）时保留 DB 旧值
+	_, asProvided := fieldCheck["actual_start"]
+	_, aeProvided := fieldCheck["actual_end"]
+	if asProvided || aeProvided {
+		if t.ActualStart != "" && t.ActualEnd != "" {
+			if cal, cerr := scheduler.LoadCalendar(h.db, "", ""); cerr == nil {
+				t.ActualDurationDays = scheduler.CountWorkDays(cal, t.ActualStart, t.ActualEnd)
+			}
+		} else {
+			t.ActualDurationDays = 0 // 实际日期不完整 → 实际工期清零
+		}
+	} else {
+		h.db.QueryRow(`SELECT COALESCE(actual_duration_days, 0) FROM tasks WHERE id=? AND deleted_at IS NULL`, taskID).Scan(&t.ActualDurationDays)
+	}
 
 	// 负责人:assignee_ids/assignee 都未携带 → 保留 DB 旧关联(与 actual_* 同策略)
 	var assigneeIDs []int64
@@ -744,9 +759,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 实际日期：用户选择优先；未填则默认取计划日期（实际开始=开始日，实际结束=结束日）。
-	// 注意：请求体未传 actual_* 时上面已保留 DB 旧值，此处兜底只作用于"显式传空 = 恢复默认跟随计划"
-	t.ActualStart, t.ActualEnd = fillActualDates(t.ActualStart, t.ActualEnd, t.StartDate, t.EndDate)
+	// 实际日期默认空白，任务完成后由用户手工填写（显式传空 = 保持空白，不再自动跟随计划日期）
 	// 逻辑校验：实际结束不能早于实际开始（超出计划范围允许——提前/延期正是偏差可视化要表达的）
 	if t.ActualStart != "" && t.ActualEnd != "" && t.ActualEnd < t.ActualStart {
 		writeError(w, http.StatusBadRequest, "INVALID_ACTUAL", "实际结束不能早于实际开始(如未填写实际结束,请同时设置)")
@@ -775,12 +788,12 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		`UPDATE tasks SET
 		 name=?, description=?, task_type=?, status=?, priority=?, assignee=?,
 		 start_date=?, end_date=?, duration_days=?, progress_pct=?,
-		 actual_start=?, actual_end=?, manual_scheduled=?, constraint_type=?, constraint_date=?,
+		 actual_start=?, actual_end=?, actual_duration_days=?, manual_scheduled=?, constraint_type=?, constraint_date=?,
 		 parent_id=?, sort_order=?, version=?, updated_at=datetime('now')
 		 WHERE id=? AND deleted_at IS NULL AND version=?`,
 		t.Name, t.Description, t.TaskType, t.Status, t.Priority, t.Assignee,
 		t.StartDate, t.EndDate, t.DurationDays, t.ProgressPct,
-		t.ActualStart, t.ActualEnd, boolToInt2(t.ManualScheduled), t.ConstraintType, t.ConstraintDate,
+		t.ActualStart, t.ActualEnd, t.ActualDurationDays, boolToInt2(t.ManualScheduled), t.ConstraintType, t.ConstraintDate,
 		t.ParentID, t.SortOrder, t.Version,
 		taskID, oldVersion,
 	)
@@ -861,16 +874,6 @@ func (h *TaskHandler) UpdateTaskSortOrder(w http.ResponseWriter, r *http.Request
 
 // fillActualDates 实际日期默认取计划日期（实际开始=开始日，实际结束=结束日）；
 // 用户显式填写的值优先，留空则用计划日期（用户选择 > 系统默认）
-func fillActualDates(actualStart, actualEnd, planStart, planEnd string) (string, string) {
-	if actualStart == "" && planStart != "" {
-		actualStart = planStart
-	}
-	if actualEnd == "" && planEnd != "" {
-		actualEnd = planEnd
-	}
-	return actualStart, actualEnd
-}
-
 // splitOwnerNames 拆分负责人文本(分号/逗号/空白分隔),去重保序
 func splitOwnerNames(s string) []string {
 	raw := strings.FieldsFunc(s, func(r rune) bool { return r == ';' || r == ',' || r == '\n' })

@@ -9,6 +9,8 @@ interface DashboardStats {
   overall_progress: number;
   baseline_progress: number;
   has_baseline: boolean;
+  planned_days: number;
+  actual_days: number;
 }
 
 interface ProjectSummary {

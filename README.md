@@ -1,6 +1,6 @@
 # FollowITup
 
-> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v2.8.20
+> SmartSheet-like project management system · Single-file deployment · Gantt-driven · v2.8.21
 
 ## Languages
 
@@ -111,7 +111,7 @@ dhtmlx-gantt is GPL v2. This project is for internal use.
 
 # FollowITup（中文）
 
-> 类 SmartSheet 项目管理工具 · 单文件部署 · 甘特图驱动 · v2.8.20
+> 类 SmartSheet 项目管理工具 · 单文件部署 · 甘特图驱动 · v2.8.21
 
 ## 这是什么？
 

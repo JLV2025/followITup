@@ -76,7 +76,7 @@ cd /d D:\FollowITup
 followitup.exe config.yaml
 ```
 
-- 日志出现 `FollowITup v2.8.20 启动于 http://localhost:8081` 即成功
+- 日志出现 `FollowITup v2.8.21 启动于 http://localhost:8081` 即成功
 - 自动创建数据库与管理员:`admin@followitup.local` / `admin123`
 - **首次登录后立即修改管理员密码**(用户管理页)
 - 验证后 Ctrl+C 停止,注册服务

@@ -54,6 +54,7 @@ type Task struct {
 	BaselineProgressPct  float64   `json:"baseline_progress_pct"`
 	ActualStart     string    `json:"actual_start"`
 	ActualEnd       string    `json:"actual_end"`
+	ActualDurationDays int    `json:"actual_duration_days"`
 	ManualScheduled bool      `json:"manual_scheduled"` // false=自动排程 true=手动锁定
 	ConstraintType  string    `json:"constraint_type"`  // '' | start_no_earlier_than | finish_no_later_than
 	ConstraintDate  string    `json:"constraint_date"`  // YYYY-MM-DD 约束日期

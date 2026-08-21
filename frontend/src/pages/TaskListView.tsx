@@ -20,7 +20,6 @@ interface Task {
   end_date: string;
   duration_days: number;
   progress_pct: number;
-  manual_scheduled: boolean;
   sort_order: number;
   version: number;
 }
