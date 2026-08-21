@@ -4263,6 +4263,23 @@
       "related_bugs": [],
       "occurrences": 1,
       "last_seen": "2026-08-20T12:22:18.555Z"
+    },
+    {
+      "id": "bug-265",
+      "timestamp": "2026-08-21T00:52:00.000Z",
+      "error_message": "build.bat 通过管道执行时中文乱码,echo 行被当作命令执行 ('run' is not recognized)",
+      "file": "build.bat",
+      "root_cause": "bat 文件 GBK 编码,cmd 按系统代码页 936 解析行;chcp 65001 只影响输出显示不影响行解析;UTF-8 无 BOM 仍乱码",
+      "fix": "bat 文案全部改纯 ASCII 英文 + cd /d %~dp0 不依赖调用目录;已验证从任意目录完整构建成功",
+      "tags": [
+        "encoding",
+        "codepage",
+        "bat",
+        "build"
+      ],
+      "related_bugs": [],
+      "occurrences": 1,
+      "last_seen": "2026-08-21T00:52:00.000Z"
     }
   ]
 }

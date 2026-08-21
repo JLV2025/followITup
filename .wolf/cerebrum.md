@@ -105,3 +105,6 @@
 - **[2026-08-20] 系统设置 tab 分页 + 部署网址邮件门控(用户拍板)**：系统设置 3 栏目(邮件通知/财年与密码/节假日)改 tab 分页，单卡片 maxWidth 800 居中，消除 1536 视口下滚动。部署网址 base_url 作为邮件发送前提：settings 加 KeyBaseURL，mail.Send 入口统一检查非空(空则返回'部署网址未配置'拒发)，body 末尾追加英文 'Sign in at: <url>'(邮件模板只用英文)。settings 表 key-value 结构，加字段无需 migration。
 - **[2026-08-20] 版本号规则 v3(用户拍板)**：启用 2 大版本，今天 v2.8.20(主版本 2 + 月 + 日)。版本号位置 7 处：server.go 启动日志、README 英/中、package.json、package-lock.json、index.css/components.css 注释、docs/deployment-windows-server-2022.md。改版本用 sed 全局替换(v1.8.10→v2.8.20, 0.8.6→2.8.20)，历史 spec(docs/superpowers/)保留旧版本号不动。
 - **[2026-08-20] gitnexus 索引**：followITup 之前无 .gitnexus 索引(CLAUDE.md 记录 1181 symbols 过时)，跑 npx gitnexus analyze 建立(2479 symbols/5900 edges/217 flows,14.9s)。analyze 会自动更新 CLAUDE.md 和 AGENTS.md 的 gitnexus 统计块。收工技能已加 Phase 5 要求提交前更新索引。
+
+## Do-Not-Repeat（追加于 2026-08-21）
+- **[2026-08-21] Windows bat 编码（bug-265）**：.bat 含中文必须用**纯 ASCII**——cmd 按系统代码页(936)解析行，`chcp 65001` 只改输出不改解析，UTF-8 无 BOM 照样乱码（echo 行被当命令）。Git Bash 里跑 `cmd //c "xxx.bat < nul"` 可跳过 pause 阻塞；脚本内加 `cd /d "%~dp0"` 使其与调用目录无关。

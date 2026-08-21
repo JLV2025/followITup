@@ -2333,3 +2333,22 @@ cd backend && followitup.exe config.yaml   # 启动
 | 20:22 | Edited README.md | 3→1 lines | ~35 |
 | 20:23 | Session end: 39 writes across 10 files (TaskDetailModal.tsx, components.css, zh.ts, en.ts, SystemSettings.tsx) | 16 reads | ~26838 tok |
 | 20:20 | 版本号升 v2.8.20(7处) + 部署文档/README 补 base_url 说明 + 修正 README work-wrap-up 过时说明 + gitnexus analyze 建索引 + 收工技能加 Phase 5 gitnexus 索引 | server.go,README.md,docs/*,package*.json,index/components.css,SKILL.md(全局) | 完成 | ~8k |
+| 17:28 | Session end: 33 writes across 15 files (README.md, SKILL.md, Dashboard.tsx, tasks.go, main.go) | 41 reads | ~106666 tok |
+
+## Session: 2026-08-21 08:34
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:4x | pull master 快进 9 提交(1eb7aac→03a5a76):任务弹窗日期覆盖修复/系统设置 tab/版本 v2.8.20;memory.md 冲突手动合并(本地+远程追加都保留) | .wolf/memory.md | 完成 | ~500 |
+| 08:46 | pull 后重新构建单 exe(v2.8.20):前端 build→复制 frontend-dist→go build;build.bat 因 GBK 编码管道乱码,改手动分步执行 | backend/followitup.exe | 构建成功 19640832B | ~500 |
+| 08:47 | Created build.bat | — | ~184 |
+| 08:48 | Created build.bat | — | ~208 |
+| 08:48 | Edited build.bat | 3→4 lines | ~36 |
+| 08:52 | build.bat 改纯 ASCII(中文乱码 bug-265)+cd %~dp0;验证从任意目录完整构建成功,exe 08:49 | build.bat,buglog.json,cerebrum.md | 完成 | ~800 |
+| 08:49 | Session end: 3 writes across 1 files (build.bat) | 1 reads | ~457 tok |
+| 08:51 | Edited C:/Users/jingl/.claude/skills/work-wrap-up/SKILL.md | expanded (+13 lines) | ~146 |
+| 08:52 | Edited ../ndm/.claude/skills/work-wrap-up/SKILL.md | expanded (+13 lines) | ~146 |
+| 08:5x | 收工技能加 Phase 6 gitnexus 索引(status/analyze/clean+force/验证),全局+ndm 副本同步一致;此前 memory 记录的"Phase 5 gitnexus"实际未写入文件 | ~/.claude/skills/work-wrap-up/SKILL.md, ndm 副本 | 完成,两份一致 | ~600 |
+| 08:52 | Session end: 5 writes across 2 files (build.bat, SKILL.md) | 2 reads | ~769 tok |
+| 08:53 | Session end: 5 writes across 2 files (build.bat, SKILL.md) | 2 reads | ~769 tok |
+| 08:5x | Session end(收工): pull master 9提交+build.bat 编码修复(纯ASCII,bug-265)+收工技能 Phase 6 gitnexus 索引(全局+ndm副本);exe v2.8.20 重建 | 5 files | 完成,待提交推送 | ~12k |

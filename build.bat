@@ -1,32 +1,34 @@
 @echo off
-REM FollowITup 构建脚本 - Windows
-REM 用法: build.bat
+REM FollowITup build script - Windows
+REM Usage: build.bat
+REM NOTE: keep this file pure ASCII to avoid codepage issues
+cd /d "%~dp0"
 
-echo [1/3] 构建前端...
+echo [1/3] Building frontend...
 cd frontend
 call npm run build
 if %ERRORLEVEL% NEQ 0 (
-    echo 前端构建失败!
+    echo FRONTEND BUILD FAILED!
     exit /b 1
 )
 
-echo [2/3] 复制前端产物...
+echo [2/3] Copying frontend assets...
 cd ..
 rmdir /s /q backend\cmd\server\frontend-dist 2>nul
 xcopy /e /i frontend\dist backend\cmd\server\frontend-dist
 
-echo [3/3] 编译 Go 后端...
+echo [3/3] Compiling Go backend...
 cd backend
 go build -o followitup.exe ./cmd/server/
 if %ERRORLEVEL% NEQ 0 (
-    echo 后端编译失败!
+    echo BACKEND BUILD FAILED!
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo  构建完成: backend\followitup.exe
-echo  运行: backend\followitup.exe config.yaml
+echo  BUILD OK: backend\followitup.exe
+echo  Run: backend\followitup.exe config.yaml
 echo ========================================
 cd ..
 
